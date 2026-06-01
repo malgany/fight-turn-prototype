@@ -1,0 +1,1022 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fight Turn - Mobile Layout</title>
+    <style>
+      :root {
+        --action-panel-backplate: url("../../assets/ui/action-panel/backplate.png");
+        --panel: #101823;
+        --panel-2: #192333;
+        --line: #435067;
+        --text: #f2f6ff;
+        --muted: #93a4bc;
+        --red: #e63737;
+        --blue: #2f9dff;
+        --yellow: #f5bd22;
+        --orange: #f28a22;
+        --green: #78bd46;
+        --purple: #9a4adf;
+        --teal: #43c5c8;
+        --floor: #2d3037;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #0a0d12;
+        color: var(--text);
+        font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+      }
+
+      .phone {
+        position: relative;
+        container-type: inline-size;
+        width: min(100vw, 540px, 56.25vh);
+        aspect-ratio: 9 / 16;
+        overflow: hidden;
+        border: 3px solid #2b3445;
+        background: #050912;
+        box-shadow: 0 0 0 6px #080b11, 0 24px 70px rgba(0, 0, 0, 0.55);
+      }
+
+      .sky,
+      .far-buildings,
+      .near-buildings,
+      .floor,
+      .fight-layer,
+      .hud,
+      .resolution,
+      .controls {
+        position: absolute;
+        inset-inline: 0;
+      }
+
+      .sky {
+        top: 0;
+        height: 67%;
+        background:
+          radial-gradient(circle at 75% 22%, #d9f3ff 0 1.4%, transparent 1.6%),
+          radial-gradient(circle at 18% 10%, #28476a 0 0.3%, transparent 0.45%),
+          radial-gradient(circle at 46% 17%, #5a87be 0 0.22%, transparent 0.36%),
+          linear-gradient(#080d1b 0%, #10223a 52%, #17263a 100%);
+      }
+
+      .far-buildings {
+        top: 30%;
+        height: 31%;
+        opacity: 0.78;
+        background:
+          linear-gradient(to top, #101927 0 66%, transparent 66%) 4% 100% / 13% 74% no-repeat,
+          linear-gradient(to top, #121d2d 0 70%, transparent 70%) 19% 100% / 11% 58% no-repeat,
+          linear-gradient(to top, #0e1827 0 73%, transparent 73%) 35% 100% / 16% 68% no-repeat,
+          linear-gradient(to top, #142237 0 62%, transparent 62%) 56% 100% / 14% 54% no-repeat,
+          linear-gradient(to top, #0f1a29 0 77%, transparent 77%) 75% 100% / 17% 76% no-repeat,
+          linear-gradient(to top, #17253b 0 67%, transparent 67%) 92% 100% / 12% 61% no-repeat;
+      }
+
+      .near-buildings {
+        top: 38%;
+        height: 25%;
+        background:
+          linear-gradient(to top, #182032 0 72%, transparent 72%) 0 100% / 16% 92% no-repeat,
+          linear-gradient(to top, #111927 0 78%, transparent 78%) 84% 100% / 20% 96% no-repeat,
+          repeating-linear-gradient(90deg, transparent 0 7%, rgba(95, 145, 204, 0.35) 7% 8%, transparent 8% 13%),
+          linear-gradient(to bottom, transparent 0 34%, rgba(36, 48, 69, 0.8) 34% 37%, transparent 37%);
+      }
+
+      .floor {
+        bottom: 38%;
+        height: 20%;
+        background:
+          linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px) 0 0 / 100% 18%,
+          linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px) 0 0 / 12% 100%,
+          linear-gradient(160deg, #404046, var(--floor) 42%, #171b22);
+        border-top: 3px solid #4a5967;
+      }
+
+      .floor::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(105deg, transparent 0 46%, rgba(54, 135, 214, 0.24) 47% 49%, transparent 50%),
+          linear-gradient(78deg, transparent 0 58%, rgba(235, 83, 89, 0.22) 59% 61%, transparent 62%);
+        opacity: 0.75;
+      }
+
+      .hud {
+        top: 1.5%;
+        height: 11%;
+        display: grid;
+        grid-template-columns: 1fr 17% 1fr;
+        align-items: center;
+        gap: 2%;
+        padding: 0 3%;
+        z-index: 20;
+      }
+
+      .fighter-hud {
+        display: grid;
+        grid-template-columns: 25% 1fr;
+        align-items: center;
+        gap: 4%;
+      }
+
+      .fighter-hud.right {
+        grid-template-columns: 1fr 25%;
+      }
+
+      .portrait {
+        aspect-ratio: 1;
+        border: 3px solid #526078;
+        background: linear-gradient(145deg, #263245, #0f1722);
+        display: grid;
+        place-items: center;
+        color: #dbe6f6;
+        font-size: clamp(18px, 7cqw, 38px);
+        text-shadow: 0 2px 0 #000;
+      }
+
+      .bars {
+        display: grid;
+        gap: 14%;
+      }
+
+      .health {
+        position: relative;
+        height: clamp(14px, 4cqw, 28px);
+        border: 3px solid #59657a;
+        background: #121824;
+        padding: 2px;
+        overflow: hidden;
+      }
+
+      .health-fill {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(#ff5555, var(--red));
+        transition: width 360ms ease;
+      }
+
+      .right .health-fill {
+        margin-left: auto;
+      }
+
+      .health-value {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-family: Arial, sans-serif;
+        font-size: clamp(8px, 2.5cqw, 13px);
+        font-weight: 900;
+        color: #fff;
+        text-shadow: 0 1px 2px #000, 0 0 4px #000;
+      }
+
+      .super-meter {
+        display: flex;
+        gap: 4%;
+      }
+
+      .pip {
+        width: 28%;
+        height: clamp(9px, 2.4cqw, 18px);
+        transform: skewX(-15deg);
+        background: var(--blue);
+        border: 2px solid #7fd2ff;
+        opacity: 1;
+        transition: opacity 180ms ease, filter 180ms ease;
+      }
+
+      .pip.empty {
+        opacity: 0.22;
+        filter: grayscale(1);
+      }
+
+      .right .pip {
+        background: var(--yellow);
+        border-color: #ffe071;
+      }
+
+      .timer {
+        aspect-ratio: 1;
+        border: 3px solid #526078;
+        background: #111722;
+        display: grid;
+        place-items: center;
+        font-size: clamp(25px, 10cqw, 58px);
+        color: #fff;
+        text-shadow: 0 3px 0 #000;
+      }
+
+      .turn-meter {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 38%;
+        height: 1.3%;
+        z-index: 55;
+        background: #08131d;
+        border-block: 2px solid #243a55;
+        box-shadow: 0 -2px 0 rgba(0, 0, 0, 0.5), 0 0 18px rgba(47, 157, 255, 0.25);
+      }
+
+      .turn-meter-fill {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, #41d8ff, #2f9dff 62%, #2065df);
+        box-shadow: 0 0 14px rgba(65, 216, 255, 0.75);
+        transition: width 100ms linear;
+      }
+
+      .turn-status {
+        position: absolute;
+        left: 50%;
+        bottom: calc(38% + 1.9%);
+        translate: -50% 0;
+        z-index: 56;
+        padding: 0.2em 0.65em;
+        border: 2px solid rgba(99, 215, 255, 0.75);
+        background: rgba(5, 13, 22, 0.82);
+        color: #cdefff;
+        font-size: clamp(10px, 3.1cqw, 16px);
+        text-shadow: 0 2px 0 #000;
+        pointer-events: none;
+      }
+
+      .fight-layer {
+        top: 13%;
+        height: 49%;
+        z-index: 10;
+      }
+
+      .fighter {
+        position: absolute;
+        bottom: 10%;
+        width: 16%;
+        height: 28%;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        box-shadow: inset 0 -12px 0 rgba(0, 0, 0, 0.25), 0 12px 22px rgba(0, 0, 0, 0.35);
+      }
+
+      .fighter::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: -28%;
+        width: 62%;
+        aspect-ratio: 1;
+        translate: -50% 0;
+        border-radius: 50%;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .fighter.p1 {
+        left: 20%;
+        background: linear-gradient(#f45b55, #9f1d25);
+      }
+
+      .fighter.p1::before {
+        background: #e4473f;
+      }
+
+      .fighter.p2 {
+        right: 20%;
+        background: linear-gradient(#4fb0ff, #1b4f9b);
+      }
+
+      .fighter.p2::before {
+        background: #2789e8;
+      }
+
+      .fighter.hit {
+        animation: hit-shake 260ms ease;
+      }
+
+      .fighter.attack-left {
+        animation: attack-left 360ms ease;
+      }
+
+      .fighter.attack-right {
+        animation: attack-right 360ms ease;
+      }
+
+      @keyframes hit-shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5%); }
+        50% { transform: translateX(5%); }
+        75% { transform: translateX(-3%); }
+      }
+
+      @keyframes attack-left {
+        0%, 100% { transform: translateX(0); }
+        48% { transform: translateX(38%); }
+      }
+
+      @keyframes attack-right {
+        0%, 100% { transform: translateX(0); }
+        48% { transform: translateX(-38%); }
+      }
+
+      .resolution {
+        top: 21%;
+        z-index: 30;
+        display: grid;
+        justify-items: center;
+        gap: 0.8rem;
+        opacity: 0;
+        transform: translateY(-6px);
+        transition: opacity 160ms ease, transform 160ms ease;
+        pointer-events: none;
+      }
+
+      .resolution.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .notice {
+        width: 42%;
+        min-height: clamp(38px, 8vw, 64px);
+        display: flex;
+        align-items: center;
+        gap: 7%;
+        padding: 0 4%;
+        border: 3px solid currentColor;
+        background: rgba(9, 18, 31, 0.86);
+        font-size: clamp(16px, 5cqw, 30px);
+        letter-spacing: 0;
+        text-shadow: 0 2px 0 #000;
+      }
+
+      .notice.fast {
+        color: #63d7ff;
+      }
+
+      .notice.advantage {
+        color: #ffd157;
+        translate: 0.5rem 0;
+      }
+
+      .notice-icon {
+        width: 1.4em;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: currentColor;
+        color: #0b1422;
+        font-size: 0.78em;
+      }
+
+      .controls {
+        bottom: 0;
+        height: 38%;
+        background: var(--action-panel-backplate) center / 100% 100% no-repeat;
+        z-index: 40;
+      }
+
+      .action {
+        --x: 50%;
+        --y: 50%;
+        --size: 17%;
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        width: var(--size);
+        aspect-ratio: 1;
+        translate: -50% -50%;
+        border: 0;
+        padding: 0;
+        border-radius: 50%;
+        appearance: none;
+        background: transparent;
+        cursor: pointer;
+        color: var(--text);
+        font: inherit;
+        transition: filter 130ms ease, scale 130ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .action.selected::before {
+        filter: brightness(1.28) drop-shadow(0 0 13px rgba(99, 215, 255, 0.75));
+      }
+
+      .action.disabled {
+        cursor: not-allowed;
+        filter: grayscale(1) brightness(0.58);
+      }
+
+      .action::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: var(--button-image) center / contain no-repeat;
+        filter: drop-shadow(0 10px 7px rgba(0, 0, 0, 0.42));
+        transition: filter 130ms ease, transform 130ms ease;
+      }
+
+      .action::after {
+        content: "";
+        position: absolute;
+        inset: 13%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.78) 0 16%, rgba(255, 255, 255, 0.22) 36%, transparent 68%);
+        mix-blend-mode: screen;
+        opacity: 0;
+        scale: 0.74;
+        transition: opacity 180ms ease, scale 180ms ease;
+      }
+
+      .action:focus-visible {
+        outline: 3px solid #f2f6ff;
+        outline-offset: 6px;
+      }
+
+      .action:active,
+      .action.is-held {
+        scale: 0.94;
+      }
+
+      .action:active::before,
+      .action.is-held::before {
+        filter: brightness(1.35) drop-shadow(0 0 14px rgba(255, 255, 255, 0.45));
+        transform: translateY(2%);
+      }
+
+      .action.flash::after {
+        opacity: 1;
+        scale: 1.2;
+      }
+
+      .action-label {
+        position: absolute;
+        left: 50%;
+        top: calc(100% + 6%);
+        translate: -50% 0;
+        font-size: clamp(11px, 3.4cqw, 18px);
+        line-height: 1;
+        white-space: nowrap;
+        color: #f2f6ff;
+        text-shadow: 0 2px 0 #000, 0 0 7px rgba(255, 255, 255, 0.18);
+        pointer-events: none;
+      }
+
+      .action:nth-child(1) {
+        --button-image: url("../../assets/ui/action-panel/buttons/poke.png");
+        --x: 17.8%;
+        --y: 24.2%;
+      }
+
+      .action:nth-child(2) {
+        --button-image: url("../../assets/ui/action-panel/buttons/combo.png");
+        --x: 38.2%;
+        --y: 24.2%;
+      }
+
+      .action:nth-child(3) {
+        --button-image: url("../../assets/ui/action-panel/buttons/grab.png");
+        --x: 58.4%;
+        --y: 24.2%;
+      }
+
+      .action:nth-child(4) {
+        --button-image: url("../../assets/ui/action-panel/buttons/special.png");
+        --x: 79.5%;
+        --y: 24.2%;
+      }
+
+      .action:nth-child(5) {
+        --button-image: url("../../assets/ui/action-panel/buttons/super.png");
+        --x: 50%;
+        --y: 51%;
+        --size: 15.5%;
+      }
+
+      .action:nth-child(6) {
+        --button-image: url("../../assets/ui/action-panel/buttons/block.png");
+        --x: 30.8%;
+        --y: 71.8%;
+      }
+
+      .action:nth-child(7) {
+        --button-image: url("../../assets/ui/action-panel/buttons/crouch.png");
+        --x: 50%;
+        --y: 71.8%;
+        --size: 15.5%;
+      }
+
+      .action:nth-child(8) {
+        --button-image: url("../../assets/ui/action-panel/buttons/jump.png");
+        --x: 69.4%;
+        --y: 71.8%;
+      }
+
+      .action-hit {
+        position: absolute;
+        inset: 0;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: transparent;
+      }
+
+      .battle-over {
+        position: absolute;
+        inset: 0;
+        z-index: 80;
+        display: none;
+        place-items: center;
+        background: rgba(4, 8, 14, 0.74);
+      }
+
+      .battle-over.show {
+        display: grid;
+      }
+
+      .battle-over-panel {
+        display: grid;
+        justify-items: center;
+        gap: 0.75rem;
+        padding: 1.2rem 1.4rem;
+        border: 3px solid #5d6d88;
+        background: rgba(12, 20, 31, 0.94);
+        box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
+      }
+
+      .battle-over-title {
+        font-size: clamp(24px, 8cqw, 42px);
+        text-shadow: 0 3px 0 #000;
+      }
+
+      .reset-button {
+        border: 3px solid #63d7ff;
+        background: linear-gradient(#1d5d88, #12324d);
+        color: #f2f6ff;
+        font: inherit;
+        font-size: clamp(15px, 4cqw, 22px);
+        padding: 0.45em 0.9em;
+        cursor: pointer;
+        text-shadow: 0 2px 0 #000;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="phone" aria-label="Fight Turn mobile battle layout prototype">
+      <div class="sky"></div>
+      <div class="far-buildings"></div>
+      <div class="near-buildings"></div>
+      <div class="floor"></div>
+
+      <section class="hud" aria-label="HUD superior">
+        <div class="fighter-hud">
+          <div class="portrait">P1</div>
+          <div class="bars">
+            <div class="health">
+              <div class="health-fill" id="p1HealthFill"></div>
+              <div class="health-value" id="p1HealthText">100%</div>
+            </div>
+            <div class="super-meter" id="p1SuperMeter"><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div>
+          </div>
+        </div>
+
+        <div class="timer" id="roundClock">10</div>
+
+        <div class="fighter-hud right">
+          <div class="bars">
+            <div class="health">
+              <div class="health-fill" id="p2HealthFill"></div>
+              <div class="health-value" id="p2HealthText">100%</div>
+            </div>
+            <div class="super-meter" id="p2SuperMeter"><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div>
+          </div>
+          <div class="portrait">P2</div>
+        </div>
+      </section>
+
+      <section class="resolution" aria-label="Resolucao do turno">
+        <div class="notice fast"><div class="notice-icon">!</div><div id="noticePrimary">READY</div></div>
+        <div class="notice advantage"><div class="notice-icon">*</div><div id="noticeSecondary">CHOOSE</div></div>
+      </section>
+
+      <section class="fight-layer" aria-label="Arena de luta">
+        <div class="fighter p1" id="p1Fighter" aria-label="Placeholder jogador 1"></div>
+        <div class="fighter p2" id="p2Fighter" aria-label="Placeholder jogador 2"></div>
+      </section>
+
+      <section class="turn-meter" aria-label="Tempo do turno">
+        <div class="turn-meter-fill" id="turnMeterFill"></div>
+      </section>
+      <div class="turn-status" id="turnStatus">P1: escolha uma acao</div>
+
+      <section class="controls" aria-label="Painel de acoes">
+        <button class="action" type="button" aria-label="Poke" data-action="Poke">
+          <span class="action-hit"></span>
+          <span class="action-label">POKE</span>
+        </button>
+        <button class="action" type="button" aria-label="Combo" data-action="Combo">
+          <span class="action-hit"></span>
+          <span class="action-label">COMBO</span>
+        </button>
+        <button class="action" type="button" aria-label="Grab" data-action="Grab">
+          <span class="action-hit"></span>
+          <span class="action-label">GRAB</span>
+        </button>
+        <button class="action" type="button" aria-label="Special" data-action="Special">
+          <span class="action-hit"></span>
+          <span class="action-label">SPECIAL</span>
+        </button>
+        <button class="action" type="button" aria-label="Super" data-action="Super">
+          <span class="action-hit"></span>
+          <span class="action-label">SUPER</span>
+        </button>
+        <button class="action" type="button" aria-label="Block" data-action="Block">
+          <span class="action-hit"></span>
+          <span class="action-label">BLOCK</span>
+        </button>
+        <button class="action" type="button" aria-label="Crouch" data-action="Crouch">
+          <span class="action-hit"></span>
+          <span class="action-label">CROUCH</span>
+        </button>
+        <button class="action" type="button" aria-label="Jump" data-action="Jump">
+          <span class="action-hit"></span>
+          <span class="action-label">JUMP</span>
+        </button>
+      </section>
+
+      <section class="battle-over" id="battleOver" aria-label="Fim da batalha">
+        <div class="battle-over-panel">
+          <div class="battle-over-title" id="battleOverTitle">YOU WIN</div>
+          <button class="reset-button" type="button" id="resetButton">RESTART</button>
+        </div>
+      </section>
+    </main>
+    <script>
+      const TURN_DURATION = 10000;
+      const TURN_BREAK = 1700;
+      const attackActions = ["Poke", "Combo", "Grab", "Special", "Super"];
+      const actionData = {
+        Poke: { speed: 1, damage: 4 },
+        Combo: { speed: 2, damage: 12 },
+        Grab: { speed: 3, damage: 12 },
+        Special: { speed: 4, damage: 18 },
+        Super: { speed: 5, damage: 25 },
+        Block: { type: "defense" },
+        Crouch: { type: "movement" },
+        Jump: { type: "movement" },
+      };
+      const blockChip = { Poke: 1, Combo: 2, Special: 2, Super: 3 };
+      const tradeDamage = { Poke: 3, Combo: 4, Grab: 0, Special: 5, Super: 8 };
+
+      const state = {
+        phase: "choosing",
+        selectedAction: null,
+        aiAction: null,
+        advantage: null,
+        turnStartedAt: 0,
+        timerId: null,
+        p1: { health: 100, super: 0 },
+        p2: { health: 100, super: 0 },
+      };
+
+      const el = {
+        actionButtons: [...document.querySelectorAll(".action")],
+        p1HealthFill: document.querySelector("#p1HealthFill"),
+        p2HealthFill: document.querySelector("#p2HealthFill"),
+        p1HealthText: document.querySelector("#p1HealthText"),
+        p2HealthText: document.querySelector("#p2HealthText"),
+        p1SuperMeter: document.querySelector("#p1SuperMeter"),
+        p2SuperMeter: document.querySelector("#p2SuperMeter"),
+        roundClock: document.querySelector("#roundClock"),
+        turnMeterFill: document.querySelector("#turnMeterFill"),
+        turnStatus: document.querySelector("#turnStatus"),
+        resolution: document.querySelector(".resolution"),
+        noticePrimary: document.querySelector("#noticePrimary"),
+        noticeSecondary: document.querySelector("#noticeSecondary"),
+        p1Fighter: document.querySelector("#p1Fighter"),
+        p2Fighter: document.querySelector("#p2Fighter"),
+        battleOver: document.querySelector("#battleOver"),
+        battleOverTitle: document.querySelector("#battleOverTitle"),
+        resetButton: document.querySelector("#resetButton"),
+      };
+
+      function clampPercent(value) {
+        if (!Number.isFinite(value)) {
+          return 0;
+        }
+
+        return Math.max(0, Math.min(100, Math.round(value)));
+      }
+
+      function canUseAction(side, action) {
+        if (action !== "Super") {
+          return true;
+        }
+
+        return state[side].super >= 3;
+      }
+
+      function pickAiAction() {
+        const actions = ["Poke", "Combo", "Grab", "Special", "Block", "Crouch", "Jump"];
+        if (state.p2.super >= 3) {
+          actions.push("Super");
+        }
+        return actions[Math.floor(Math.random() * actions.length)];
+      }
+
+      function updateHud() {
+        const p1Health = clampPercent(state.p1.health);
+        const p2Health = clampPercent(state.p2.health);
+
+        el.p1HealthFill.style.width = `${p1Health}%`;
+        el.p2HealthFill.style.width = `${p2Health}%`;
+        el.p1HealthText.textContent = `${p1Health}%`;
+        el.p2HealthText.textContent = `${p2Health}%`;
+
+        updateSuperMeter(el.p1SuperMeter, state.p1.super);
+        updateSuperMeter(el.p2SuperMeter, state.p2.super);
+
+        el.actionButtons.forEach((button) => {
+          const isSelected = button.dataset.action === state.selectedAction;
+          const isDisabled = state.phase !== "choosing" || !canUseAction("p1", button.dataset.action);
+          button.classList.toggle("selected", isSelected);
+          button.classList.toggle("disabled", isDisabled);
+          button.disabled = isDisabled;
+        });
+      }
+
+      function updateSuperMeter(meter, value) {
+        [...meter.querySelectorAll(".pip")].forEach((pip, index) => {
+          pip.classList.toggle("empty", index >= value);
+        });
+      }
+
+      function flashNotice(primary, secondary) {
+        el.noticePrimary.textContent = primary;
+        el.noticeSecondary.textContent = secondary;
+        el.resolution.classList.add("show");
+        window.clearTimeout(flashNotice.timeout);
+        flashNotice.timeout = window.setTimeout(() => {
+          el.resolution.classList.remove("show");
+        }, 1300);
+      }
+
+      function animateHit(winner) {
+        const attacker = winner === "p1" ? el.p1Fighter : el.p2Fighter;
+        const defender = winner === "p1" ? el.p2Fighter : el.p1Fighter;
+        const attackClass = winner === "p1" ? "attack-left" : "attack-right";
+
+        attacker.classList.remove("attack-left", "attack-right");
+        defender.classList.remove("hit");
+        void attacker.offsetWidth;
+        attacker.classList.add(attackClass);
+        defender.classList.add("hit");
+
+        window.setTimeout(() => {
+          attacker.classList.remove(attackClass);
+          defender.classList.remove("hit");
+        }, 420);
+      }
+
+      function applyDamage(targetSide, amount, sourceAction, options = {}) {
+        if (!Number.isFinite(amount) || amount <= 0) {
+          return;
+        }
+
+        state[targetSide].health = clampPercent(state[targetSide].health - amount);
+
+        const grantsSuper = ["Combo", "Grab", "Special", "Super"].includes(sourceAction);
+        if (grantsSuper && !options.blocked) {
+          state[targetSide].super = Math.min(3, state[targetSide].super + 1);
+        }
+      }
+
+      function consumeSuper(side, action) {
+        if (action === "Super") {
+          state[side].super = 0;
+        }
+      }
+
+      function resolveAttackVsAttack(p1Action, p2Action) {
+        if (p1Action === p2Action) {
+          if (p1Action === "Grab") {
+            return { type: "draw", primary: "GRAB BREAK", secondary: "NEUTRAL" };
+          }
+
+          const damage = tradeDamage[p1Action] || 0;
+          applyDamage("p1", damage, p2Action);
+          applyDamage("p2", damage, p1Action);
+          return { type: "trade", primary: "TRADE", secondary: `${p1Action.toUpperCase()} VS ${p2Action.toUpperCase()}` };
+        }
+
+        const p1Speed = actionData[p1Action].speed;
+        const p2Speed = actionData[p2Action].speed;
+        const speedGap = Math.abs(p1Speed - p2Speed);
+        let winner = p1Speed < p2Speed ? "p1" : "p2";
+
+        if (state.advantage && speedGap <= 1) {
+          winner = state.advantage;
+        }
+
+        return resolveHit(winner, p1Action, p2Action, speedGap <= 1 && state.advantage === winner);
+      }
+
+      function resolveHit(winner, p1Action, p2Action, advantageWin = false) {
+        const loser = winner === "p1" ? "p2" : "p1";
+        const action = winner === "p1" ? p1Action : p2Action;
+        applyDamage(loser, actionData[action].damage, action);
+        state.advantage = winner;
+        animateHit(winner);
+        return {
+          type: "hit",
+          primary: advantageWin ? "ADVANTAGE" : action.toUpperCase(),
+          secondary: `${winner.toUpperCase()} HIT -${actionData[action].damage}%`,
+        };
+      }
+
+      function resolveAttackVsResponse(attacker, attack, response) {
+        const defender = attacker === "p1" ? "p2" : "p1";
+        const wins = {
+          Poke: ["Crouch", "Jump"],
+          Combo: ["Jump"],
+          Grab: ["Block"],
+          Special: ["Crouch", "Jump"],
+          Super: ["Jump"],
+        };
+
+        if (response === "Block" && blockChip[attack] !== undefined) {
+          applyDamage(defender, blockChip[attack], attack, { blocked: true });
+          state.advantage = defender;
+          return {
+            type: "blocked",
+            primary: attack === "Super" ? "PUNISH" : "BLOCK",
+            secondary: `${defender.toUpperCase()} +ADV`,
+          };
+        }
+
+        if (response === "Crouch" && ["Combo", "Grab", "Super"].includes(attack)) {
+          state.advantage = defender;
+          return { type: "evade", primary: "CROUCH", secondary: `${defender.toUpperCase()} +ADV` };
+        }
+
+        if (response === "Jump" && attack === "Grab") {
+          state.advantage = defender;
+          return { type: "evade", primary: "JUMP", secondary: `${defender.toUpperCase()} +ADV` };
+        }
+
+        if (wins[attack] && wins[attack].includes(response)) {
+          const p1Action = attacker === "p1" ? attack : response;
+          const p2Action = attacker === "p2" ? attack : response;
+          return resolveHit(attacker, p1Action, p2Action);
+        }
+
+        state.advantage = null;
+        return { type: "draw", primary: "NEUTRAL", secondary: `${attack.toUpperCase()} WHIFF` };
+      }
+
+      function resolveTurn() {
+        state.phase = "resolving";
+        window.clearInterval(state.timerId);
+
+        const p1Action = state.selectedAction;
+        const p2Action = state.aiAction;
+
+        consumeSuper("p1", p1Action);
+        consumeSuper("p2", p2Action);
+
+        let result;
+        if (!p1Action && !p2Action) {
+          state.advantage = null;
+          result = { type: "draw", primary: "TIME OUT", secondary: "DRAW" };
+        } else if (!p1Action) {
+          if (attackActions.includes(p2Action)) {
+            result = resolveHit("p2", "Wait", p2Action);
+            result.primary = "NO INPUT";
+          } else {
+            state.advantage = null;
+            result = { type: "draw", primary: "NO INPUT", secondary: "NEUTRAL" };
+          }
+        } else if (!p2Action) {
+          if (attackActions.includes(p1Action)) {
+            result = resolveHit("p1", p1Action, "Wait");
+            result.primary = "FREE HIT";
+          } else {
+            state.advantage = null;
+            result = { type: "draw", primary: "NEUTRAL", secondary: "NO ATTACK" };
+          }
+        } else if (attackActions.includes(p1Action) && attackActions.includes(p2Action)) {
+          result = resolveAttackVsAttack(p1Action, p2Action);
+        } else if (attackActions.includes(p1Action)) {
+          result = resolveAttackVsResponse("p1", p1Action, p2Action);
+        } else if (attackActions.includes(p2Action)) {
+          result = resolveAttackVsResponse("p2", p2Action, p1Action);
+        } else {
+          state.advantage = null;
+          result = { type: "draw", primary: "NEUTRAL", secondary: `${p1Action.toUpperCase()} / ${p2Action.toUpperCase()}` };
+        }
+
+        el.turnMeterFill.style.width = "0%";
+        el.roundClock.textContent = "0";
+        el.turnStatus.textContent = `P1 ${p1Action || "WAIT"} / P2 ${p2Action || "WAIT"}`;
+        flashNotice(result.primary, result.secondary);
+        updateHud();
+
+        if (state.p1.health <= 0 || state.p2.health <= 0) {
+          window.setTimeout(showGameOver, 900);
+          return;
+        }
+
+        window.setTimeout(startTurn, TURN_BREAK);
+      }
+
+      function tickTurn() {
+        const elapsed = Date.now() - state.turnStartedAt;
+        const remaining = Math.max(0, TURN_DURATION - elapsed);
+        const ratio = remaining / TURN_DURATION;
+        el.turnMeterFill.style.width = `${ratio * 100}%`;
+        el.roundClock.textContent = String(Math.ceil(remaining / 1000));
+
+        if (remaining <= 0) {
+          resolveTurn();
+        }
+      }
+
+      function startTurn() {
+        state.phase = "choosing";
+        state.selectedAction = null;
+        state.aiAction = pickAiAction();
+        state.turnStartedAt = Date.now();
+        el.turnStatus.textContent = "P1: escolha uma acao";
+        el.turnMeterFill.style.width = "100%";
+        el.roundClock.textContent = "10";
+        el.resolution.classList.remove("show");
+        updateHud();
+        window.clearInterval(state.timerId);
+        state.timerId = window.setInterval(tickTurn, 100);
+      }
+
+      function showGameOver() {
+        state.phase = "over";
+        window.clearInterval(state.timerId);
+        updateHud();
+
+        if (state.p1.health <= 0 && state.p2.health <= 0) {
+          el.battleOverTitle.textContent = "DRAW";
+        } else {
+          el.battleOverTitle.textContent = state.p2.health <= 0 ? "YOU WIN" : "YOU LOSE";
+        }
+
+        el.battleOver.classList.add("show");
+      }
+
+      function resetBattle() {
+        state.p1.health = 100;
+        state.p2.health = 100;
+        state.p1.super = 0;
+        state.p2.super = 0;
+        state.advantage = null;
+        el.battleOver.classList.remove("show");
+        startTurn();
+      }
+
+      el.actionButtons.forEach((button) => {
+        const release = () => button.classList.remove("is-held");
+
+        button.addEventListener("pointerdown", () => {
+          if (button.disabled) {
+            return;
+          }
+          button.classList.add("is-held", "flash");
+          window.setTimeout(() => button.classList.remove("flash"), 180);
+        });
+
+        button.addEventListener("click", () => {
+          if (state.phase !== "choosing" || button.disabled) {
+            return;
+          }
+
+          state.selectedAction = button.dataset.action;
+          el.turnStatus.textContent = `P1 escolheu ${state.selectedAction.toUpperCase()}`;
+          updateHud();
+        });
+
+        button.addEventListener("pointerup", release);
+        button.addEventListener("pointercancel", release);
+        button.addEventListener("pointerleave", release);
+      });
+
+      el.resetButton.addEventListener("click", resetBattle);
+
+      resetBattle();
+    </script>
+  </body>
+</html>
