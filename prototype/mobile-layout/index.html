@@ -363,7 +363,7 @@
         line-height: 1;
         text-shadow: 0 2px 0 #000, 0 0 10px rgba(255, 32, 32, 0.95);
         pointer-events: none;
-        animation: damage-float-up 820ms ease-out both;
+        animation: damage-float-up 1700ms ease-out both;
       }
 
       @keyframes hit-shake {
@@ -389,9 +389,11 @@
       }
 
       @keyframes damage-float-up {
-        0% { opacity: 0; transform: translateY(12%) scale(0.84); }
-        18% { opacity: 1; transform: translateY(0) scale(1.08); }
-        100% { opacity: 0; transform: translateY(-115%) scale(0.96); }
+        0% { opacity: 0; transform: translateY(14%) scale(0.84); }
+        12% { opacity: 1; transform: translateY(0) scale(1.08); }
+        48% { opacity: 1; transform: translateY(-72%) scale(1); }
+        78% { opacity: 0.55; transform: translateY(-132%) scale(0.98); }
+        100% { opacity: 0; transform: translateY(-185%) scale(0.94); }
       }
 
       @keyframes token-reveal {
@@ -1174,7 +1176,7 @@
         popup.textContent = `-${amount}%`;
         fighter.append(popup);
         popup.addEventListener("animationend", () => popup.remove(), { once: true });
-        window.setTimeout(() => popup.remove(), 1000);
+        window.setTimeout(() => popup.remove(), 1900);
       }
 
       function animateHit(winner) {
