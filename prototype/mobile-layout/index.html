@@ -739,10 +739,10 @@
           <img id="p2TokenImage" src="../../assets/ui/action-panel/buttons/question.png" alt="">
         </div>
         <div class="fighter p1" id="p1Fighter" aria-label="Personagem jogador 1">
-          <img class="fighter-sprite" id="p1Sprite" src="../../assets/characters/ninja-idle/ninja-idle-001.png" alt="">
+          <img class="fighter-sprite" id="p1Sprite" src="../../assets/characters/ninja-idle/ninja-idle-001.webp" alt="">
         </div>
         <div class="fighter p2" id="p2Fighter" aria-label="Personagem jogador 2">
-          <img class="fighter-sprite" id="p2Sprite" src="../../assets/characters/ninja-idle/ninja-idle-001.png" alt="">
+          <img class="fighter-sprite" id="p2Sprite" src="../../assets/characters/ninja-idle/ninja-idle-001.webp" alt="">
         </div>
       </section>
 
@@ -797,10 +797,10 @@
       const TURN_BREAK = 2800;
       const RESULT_REVEAL_DELAY = 720;
       const IDLE_FRAME_COUNT = 45;
-      const IDLE_FRAME_INTERVAL = 100;
+      const IDLE_FRAME_INTERVAL = 77;
       const idleFrames = Array.from(
         { length: IDLE_FRAME_COUNT },
-        (_, index) => `../../assets/characters/ninja-idle/ninja-idle-${String(index + 1).padStart(3, "0")}.png`
+        (_, index) => `../../assets/characters/ninja-idle/ninja-idle-${String(index + 1).padStart(3, "0")}.webp`
       );
       const attackActions = ["Poke", "Combo", "Grab", "Special", "Super"];
       const actionNames = {
