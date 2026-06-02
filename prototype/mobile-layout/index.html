@@ -88,14 +88,52 @@
       }
 
       .portrait {
+        position: relative;
         aspect-ratio: 1;
         border: 3px solid #526078;
         background: linear-gradient(145deg, #263245, #0f1722);
         display: grid;
         place-items: center;
+        overflow: hidden;
+        isolation: isolate;
         color: #dbe6f6;
         font-size: clamp(18px, 7cqw, 38px);
         text-shadow: 0 2px 0 #000;
+        transition: border-color 180ms ease, box-shadow 180ms ease;
+      }
+
+      .portrait.is-advantage {
+        border-color: #ffd157;
+        box-shadow: 0 0 16px rgba(255, 116, 24, 0.92), inset 0 0 14px rgba(255, 209, 87, 0.32);
+      }
+
+      .portrait-label {
+        position: relative;
+        z-index: 2;
+      }
+
+      .portrait.is-advantage .portrait-label {
+        color: #fff4ba;
+        text-shadow: 0 2px 0 #000, 0 0 8px rgba(255, 176, 36, 0.85);
+      }
+
+      .advantage-fire-canvas {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 160ms ease;
+      }
+
+      .portrait.is-advantage .advantage-fire-canvas {
+        opacity: 1;
+      }
+
+      .advantage-fire-video {
+        display: none;
       }
 
       .bars {
@@ -650,7 +688,10 @@
 
       <section class="hud" aria-label="HUD superior">
         <div class="fighter-hud">
-          <div class="portrait">P1</div>
+          <div class="portrait" id="p1Portrait">
+            <canvas class="advantage-fire-canvas" id="p1AdvantageFire" aria-hidden="true"></canvas>
+            <span class="portrait-label">P1</span>
+          </div>
           <div class="bars">
             <div class="health">
               <div class="health-fill" id="p1HealthFill"></div>
@@ -670,9 +711,23 @@
             </div>
             <div class="super-meter" id="p2SuperMeter"><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div>
           </div>
-          <div class="portrait">P2</div>
+          <div class="portrait" id="p2Portrait">
+            <canvas class="advantage-fire-canvas" id="p2AdvantageFire" aria-hidden="true"></canvas>
+            <span class="portrait-label">P2</span>
+          </div>
         </div>
       </section>
+
+      <video
+        class="advantage-fire-video"
+        id="advantageFireVideo"
+        src="../../assets/effects/advantage-fire-chroma.mp4"
+        muted
+        loop
+        playsinline
+        preload="auto"
+        aria-hidden="true"
+      ></video>
 
       <section class="resolution" aria-label="Resolucao do turno">
         <div class="notice fast" id="noticePrimary">READY</div>
@@ -808,6 +863,11 @@
         p2HealthFill: document.querySelector("#p2HealthFill"),
         p1HealthText: document.querySelector("#p1HealthText"),
         p2HealthText: document.querySelector("#p2HealthText"),
+        p1Portrait: document.querySelector("#p1Portrait"),
+        p2Portrait: document.querySelector("#p2Portrait"),
+        p1AdvantageFire: document.querySelector("#p1AdvantageFire"),
+        p2AdvantageFire: document.querySelector("#p2AdvantageFire"),
+        advantageFireVideo: document.querySelector("#advantageFireVideo"),
         p1SuperMeter: document.querySelector("#p1SuperMeter"),
         p2SuperMeter: document.querySelector("#p2SuperMeter"),
         roundClock: document.querySelector("#roundClock"),
@@ -840,6 +900,139 @@
         el.p1Sprite.src = idleFrames[idleFrameIndex];
         el.p2Sprite.src = idleFrames[idleFrameIndex];
       }, 140);
+
+      const advantageFire = {
+        animationFrame: null,
+        sourceCanvas: document.createElement("canvas"),
+      };
+      advantageFire.sourceContext = advantageFire.sourceCanvas.getContext("2d");
+
+      function updateAdvantagePortraits() {
+        const p1HasAdvantage = state.advantage === "p1";
+        const p2HasAdvantage = state.advantage === "p2";
+
+        el.p1Portrait.classList.toggle("is-advantage", p1HasAdvantage);
+        el.p2Portrait.classList.toggle("is-advantage", p2HasAdvantage);
+
+        if (p1HasAdvantage || p2HasAdvantage) {
+          startAdvantageFire();
+        } else {
+          stopAdvantageFire();
+        }
+      }
+
+      function startAdvantageFire() {
+        if (!el.advantageFireVideo || advantageFire.animationFrame) {
+          return;
+        }
+
+        el.advantageFireVideo.play().catch(() => {
+          // Muted autoplay is normally allowed; a blocked play call will retry on the next HUD update.
+        });
+        advantageFire.animationFrame = window.requestAnimationFrame(renderAdvantageFire);
+      }
+
+      function stopAdvantageFire() {
+        if (advantageFire.animationFrame) {
+          window.cancelAnimationFrame(advantageFire.animationFrame);
+          advantageFire.animationFrame = null;
+        }
+
+        [el.p1AdvantageFire, el.p2AdvantageFire].forEach(clearCanvas);
+        if (el.advantageFireVideo) {
+          el.advantageFireVideo.pause();
+        }
+      }
+
+      function clearCanvas(canvas) {
+        const context = canvas.getContext("2d");
+        context.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      function renderAdvantageFire() {
+        const activeCanvases = [
+          state.advantage === "p1" ? el.p1AdvantageFire : null,
+          state.advantage === "p2" ? el.p2AdvantageFire : null,
+        ].filter(Boolean);
+
+        if (!activeCanvases.length) {
+          stopAdvantageFire();
+          return;
+        }
+
+        activeCanvases.forEach(renderChromaKeyVideoToCanvas);
+        advantageFire.animationFrame = window.requestAnimationFrame(renderAdvantageFire);
+      }
+
+      function renderChromaKeyVideoToCanvas(canvas) {
+        const video = el.advantageFireVideo;
+        if (!video || !video.videoWidth || !video.videoHeight) {
+          return;
+        }
+
+        syncCanvasSize(canvas);
+        const context = canvas.getContext("2d");
+        const source = advantageFire.sourceCanvas;
+        const sourceContext = advantageFire.sourceContext;
+
+        if (source.width !== canvas.width || source.height !== canvas.height) {
+          source.width = canvas.width;
+          source.height = canvas.height;
+        }
+
+        sourceContext.clearRect(0, 0, source.width, source.height);
+        const cover = coverRect(video.videoWidth, video.videoHeight, source.width, source.height);
+        sourceContext.drawImage(video, cover.x, cover.y, cover.width, cover.height);
+
+        const frame = sourceContext.getImageData(0, 0, source.width, source.height);
+        removeGreenScreen(frame.data);
+        sourceContext.putImageData(frame, 0, 0);
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(source, 0, 0);
+      }
+
+      function syncCanvasSize(canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.max(1, Math.round(rect.width * pixelRatio));
+        const height = Math.max(1, Math.round(rect.height * pixelRatio));
+
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+        }
+      }
+
+      function coverRect(sourceWidth, sourceHeight, targetWidth, targetHeight) {
+        const scale = Math.max(targetWidth / sourceWidth, targetHeight / sourceHeight);
+        const width = sourceWidth * scale;
+        const height = sourceHeight * scale;
+
+        return {
+          x: (targetWidth - width) / 2,
+          y: (targetHeight - height) / 2,
+          width,
+          height,
+        };
+      }
+
+      function removeGreenScreen(pixels) {
+        for (let index = 0; index < pixels.length; index += 4) {
+          const red = pixels[index];
+          const green = pixels[index + 1];
+          const blue = pixels[index + 2];
+          const greenLead = green - Math.max(red, blue);
+
+          if (green < 62 || greenLead <= 12) {
+            continue;
+          }
+
+          const alphaCut = Math.min(1, Math.max(0, (greenLead - 12) / 62));
+          pixels[index + 3] = Math.round(pixels[index + 3] * (1 - alphaCut));
+          pixels[index + 1] = Math.min(green, Math.round((red + blue) * 0.46));
+        }
+      }
 
       function clampPercent(value) {
         if (!Number.isFinite(value)) {
@@ -876,6 +1069,7 @@
 
         updateSuperMeter(el.p1SuperMeter, state.p1.super);
         updateSuperMeter(el.p2SuperMeter, state.p2.super);
+        updateAdvantagePortraits();
 
         el.actionButtons.forEach((button) => {
           const isSelected = button.dataset.action === state.selectedAction;
