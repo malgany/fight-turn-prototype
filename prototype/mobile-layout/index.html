@@ -739,10 +739,10 @@
           <img id="p2TokenImage" src="../../assets/ui/action-panel/buttons/question.png" alt="">
         </div>
         <div class="fighter p1" id="p1Fighter" aria-label="Personagem jogador 1">
-          <img class="fighter-sprite" id="p1Sprite" src="../../assets/characters/thiaguinho-idle/ezgif-frame-001.png" alt="">
+          <img class="fighter-sprite" id="p1Sprite" src="../../assets/characters/ninja-idle/ninja-idle-001.png" alt="">
         </div>
         <div class="fighter p2" id="p2Fighter" aria-label="Personagem jogador 2">
-          <img class="fighter-sprite" id="p2Sprite" src="../../assets/characters/thiaguinho-idle/ezgif-frame-001.png" alt="">
+          <img class="fighter-sprite" id="p2Sprite" src="../../assets/characters/ninja-idle/ninja-idle-001.png" alt="">
         </div>
       </section>
 
@@ -796,15 +796,12 @@
       const TURN_DURATION = 5000;
       const TURN_BREAK = 2800;
       const RESULT_REVEAL_DELAY = 720;
-      const idleFrames = [
-        "../../assets/characters/thiaguinho-idle/ezgif-frame-001.png",
-        "../../assets/characters/thiaguinho-idle/ezgif-frame-002.png",
-        "../../assets/characters/thiaguinho-idle/ezgif-frame-003.png",
-        "../../assets/characters/thiaguinho-idle/ezgif-frame-004.png",
-        "../../assets/characters/thiaguinho-idle/ezgif-frame-005.png",
-        "../../assets/characters/thiaguinho-idle/ezgif-frame-006.png",
-        "../../assets/characters/thiaguinho-idle/ezgif-frame-007.png",
-      ];
+      const IDLE_FRAME_COUNT = 45;
+      const IDLE_FRAME_INTERVAL = 100;
+      const idleFrames = Array.from(
+        { length: IDLE_FRAME_COUNT },
+        (_, index) => `../../assets/characters/ninja-idle/ninja-idle-${String(index + 1).padStart(3, "0")}.png`
+      );
       const attackActions = ["Poke", "Combo", "Grab", "Special", "Super"];
       const actionNames = {
         Poke: "POKE",
@@ -893,7 +890,7 @@
         idleFrameIndex = (idleFrameIndex + 1) % idleFrames.length;
         el.p1Sprite.src = idleFrames[idleFrameIndex];
         el.p2Sprite.src = idleFrames[idleFrameIndex];
-      }, 140);
+      }, IDLE_FRAME_INTERVAL);
 
       const advantageFire = {
         animationFrame: null,
