@@ -1106,6 +1106,8 @@
         state.turnStartedAt = Date.now();
         el.turnStatus.textContent = "P1: escolha uma acao";
         setChoiceDisplay(false);
+        el.noticePrimary.textContent = "READY";
+        el.noticeSecondary.textContent = "Escolha uma acao antes do tempo acabar";
         el.turnMeterFill.style.width = "100%";
         el.roundClock.textContent = "10";
         el.resolution.classList.remove("show");
