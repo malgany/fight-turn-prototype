@@ -7,6 +7,7 @@
     <style>
       :root {
         --action-panel-backplate: url("../../assets/ui/action-panel/backplate.png");
+        --arena-background: url("../../assets/backgrounds/city-street-arena.png");
         --panel: #101823;
         --panel-2: #192333;
         --line: #435067;
@@ -19,7 +20,6 @@
         --green: #78bd46;
         --purple: #9a4adf;
         --teal: #43c5c8;
-        --floor: #2d3037;
       }
 
       * {
@@ -47,10 +47,7 @@
         box-shadow: 0 0 0 6px #080b11, 0 24px 70px rgba(0, 0, 0, 0.55);
       }
 
-      .sky,
-      .far-buildings,
-      .near-buildings,
-      .floor,
+      .arena-background,
       .fight-layer,
       .hud,
       .resolution,
@@ -59,57 +56,13 @@
         inset-inline: 0;
       }
 
-      .sky {
+      .arena-background {
         top: 0;
-        height: 67%;
-        background:
-          radial-gradient(circle at 75% 22%, #d9f3ff 0 1.4%, transparent 1.6%),
-          radial-gradient(circle at 18% 10%, #28476a 0 0.3%, transparent 0.45%),
-          radial-gradient(circle at 46% 17%, #5a87be 0 0.22%, transparent 0.36%),
-          linear-gradient(#080d1b 0%, #10223a 52%, #17263a 100%);
-      }
-
-      .far-buildings {
-        top: 30%;
-        height: 31%;
-        opacity: 0.78;
-        background:
-          linear-gradient(to top, #101927 0 66%, transparent 66%) 4% 100% / 13% 74% no-repeat,
-          linear-gradient(to top, #121d2d 0 70%, transparent 70%) 19% 100% / 11% 58% no-repeat,
-          linear-gradient(to top, #0e1827 0 73%, transparent 73%) 35% 100% / 16% 68% no-repeat,
-          linear-gradient(to top, #142237 0 62%, transparent 62%) 56% 100% / 14% 54% no-repeat,
-          linear-gradient(to top, #0f1a29 0 77%, transparent 77%) 75% 100% / 17% 76% no-repeat,
-          linear-gradient(to top, #17253b 0 67%, transparent 67%) 92% 100% / 12% 61% no-repeat;
-      }
-
-      .near-buildings {
-        top: 38%;
-        height: 25%;
-        background:
-          linear-gradient(to top, #182032 0 72%, transparent 72%) 0 100% / 16% 92% no-repeat,
-          linear-gradient(to top, #111927 0 78%, transparent 78%) 84% 100% / 20% 96% no-repeat,
-          repeating-linear-gradient(90deg, transparent 0 7%, rgba(95, 145, 204, 0.35) 7% 8%, transparent 8% 13%),
-          linear-gradient(to bottom, transparent 0 34%, rgba(36, 48, 69, 0.8) 34% 37%, transparent 37%);
-      }
-
-      .floor {
         bottom: 38%;
-        height: 20%;
+        z-index: 0;
         background:
-          linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px) 0 0 / 100% 18%,
-          linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px) 0 0 / 12% 100%,
-          linear-gradient(160deg, #404046, var(--floor) 42%, #171b22);
-        border-top: 3px solid #4a5967;
-      }
-
-      .floor::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background:
-          linear-gradient(105deg, transparent 0 46%, rgba(54, 135, 214, 0.24) 47% 49%, transparent 50%),
-          linear-gradient(78deg, transparent 0 58%, rgba(235, 83, 89, 0.22) 59% 61%, transparent 62%);
-        opacity: 0.75;
+          linear-gradient(to bottom, rgba(4, 8, 14, 0.05), rgba(4, 8, 14, 0.18)),
+          var(--arena-background) center bottom / cover no-repeat;
       }
 
       .hud {
@@ -253,73 +206,6 @@
         pointer-events: none;
       }
 
-      .choice-strip {
-        position: absolute;
-        inset-inline: 3%;
-        top: 13%;
-        z-index: 31;
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
-        align-items: center;
-        gap: 2%;
-        pointer-events: none;
-      }
-
-      .choice-card {
-        min-height: clamp(42px, 11cqw, 62px);
-        display: grid;
-        align-content: center;
-        gap: 0.12rem;
-        padding: 0.28rem 0.45rem;
-        border: 2px solid #465875;
-        background: rgba(7, 16, 28, 0.86);
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 18px rgba(0, 0, 0, 0.34);
-      }
-
-      .choice-card.right {
-        text-align: right;
-        border-color: #6b5a2a;
-      }
-
-      .choice-label {
-        font-family: Arial, sans-serif;
-        font-size: clamp(8px, 2.4cqw, 12px);
-        font-weight: 900;
-        color: #93a4bc;
-        text-shadow: none;
-      }
-
-      .choice-action {
-        font-size: clamp(14px, 4.4cqw, 24px);
-        line-height: 1;
-        color: #f2f6ff;
-        text-shadow: 0 2px 0 #000;
-      }
-
-      .choice-state {
-        font-family: Arial, sans-serif;
-        font-size: clamp(8px, 2.3cqw, 11px);
-        font-weight: 800;
-        color: #63d7ff;
-        text-shadow: none;
-      }
-
-      .choice-card.right .choice-state {
-        color: #ffd157;
-      }
-
-      .versus {
-        display: grid;
-        place-items: center;
-        width: clamp(34px, 8.6cqw, 48px);
-        aspect-ratio: 1;
-        border: 2px solid #526078;
-        background: #111722;
-        color: #fff;
-        font-size: clamp(16px, 4.8cqw, 26px);
-        text-shadow: 0 2px 0 #000;
-      }
-
       .fight-layer {
         top: 13%;
         height: 49%;
@@ -344,6 +230,71 @@
         right: 5%;
       }
 
+      .battle-token {
+        position: absolute;
+        top: 27%;
+        z-index: 36;
+        width: 18%;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        filter: drop-shadow(0 11px 8px rgba(0, 0, 0, 0.48));
+        transform-origin: center;
+        pointer-events: none;
+        transition: opacity 160ms ease, scale 160ms ease;
+      }
+
+      .battle-token.p1 {
+        left: 17.5%;
+      }
+
+      .battle-token.p2 {
+        right: 17.5%;
+      }
+
+      .battle-token.is-hidden {
+        opacity: 0;
+        scale: 0.72;
+      }
+
+      .battle-token img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        user-select: none;
+      }
+
+      .battle-token.revealing {
+        animation: token-reveal 640ms ease both;
+      }
+
+      .battle-token.p1.clash-win {
+        animation: p1-token-win 900ms ease both;
+      }
+
+      .battle-token.p2.clash-win {
+        animation: p2-token-win 900ms ease both;
+      }
+
+      .battle-token.p1.clash-lose {
+        animation: p1-token-lose 900ms ease both;
+      }
+
+      .battle-token.p2.clash-lose {
+        animation: p2-token-lose 900ms ease both;
+      }
+
+      .battle-token.p1.clash-trade,
+      .battle-token.p1.clash-neutral {
+        animation: p1-token-trade 820ms ease both;
+      }
+
+      .battle-token.p2.clash-trade,
+      .battle-token.p2.clash-neutral {
+        animation: p2-token-trade 820ms ease both;
+      }
+
       .fighter-sprite {
         width: 100%;
         height: 100%;
@@ -358,6 +309,10 @@
 
       .fighter.hit {
         animation: hit-shake 260ms ease;
+      }
+
+      .fighter.hit .fighter-sprite {
+        animation: sprite-damage-flash 260ms ease;
       }
 
       .fighter.attack-left {
@@ -383,6 +338,59 @@
       @keyframes attack-right {
         0%, 100% { transform: translateX(0); }
         48% { transform: translateX(-38%); }
+      }
+
+      @keyframes sprite-damage-flash {
+        0%, 100% { filter: none; }
+        50% { filter: brightness(1.75) saturate(1.7) drop-shadow(0 0 18px rgba(255, 48, 48, 0.9)); }
+      }
+
+      @keyframes token-reveal {
+        0% { transform: rotateY(0deg) scale(1); }
+        42% { transform: rotateY(88deg) scale(1.12); filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.55)); }
+        100% { transform: rotateY(360deg) scale(1); }
+      }
+
+      @keyframes p1-token-win {
+        0% { opacity: 1; transform: translateX(0) scale(1); }
+        22% { opacity: 1; transform: translateX(-18%) scale(0.96); }
+        56%, 100% { opacity: 1; transform: translate(195%, -6%) scale(1.12); }
+      }
+
+      @keyframes p2-token-win {
+        0% { opacity: 1; transform: translateX(0) scale(1); }
+        22% { opacity: 1; transform: translateX(18%) scale(0.96); }
+        56%, 100% { opacity: 1; transform: translate(-195%, -6%) scale(1.12); }
+      }
+
+      @keyframes p1-token-lose {
+        0% { opacity: 1; transform: translateX(0) scale(1); filter: drop-shadow(0 11px 8px rgba(0, 0, 0, 0.48)); }
+        22% { opacity: 1; transform: translateX(-18%) scale(0.96); }
+        52% { opacity: 1; transform: translate(170%, -6%) scale(1.05); }
+        68% { opacity: 1; transform: translateX(-32%) scale(0.86); filter: brightness(1.55) drop-shadow(0 0 16px rgba(255, 37, 37, 0.9)); }
+        100% { opacity: 0; transform: translateX(-78%) scale(0.62); filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 37, 37, 0.7)); }
+      }
+
+      @keyframes p2-token-lose {
+        0% { opacity: 1; transform: translateX(0) scale(1); filter: drop-shadow(0 11px 8px rgba(0, 0, 0, 0.48)); }
+        22% { opacity: 1; transform: translateX(18%) scale(0.96); }
+        52% { opacity: 1; transform: translate(-170%, -6%) scale(1.05); }
+        68% { opacity: 1; transform: translateX(32%) scale(0.86); filter: brightness(1.55) drop-shadow(0 0 16px rgba(255, 37, 37, 0.9)); }
+        100% { opacity: 0; transform: translateX(78%) scale(0.62); filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 37, 37, 0.7)); }
+      }
+
+      @keyframes p1-token-trade {
+        0%, 100% { opacity: 1; transform: translateX(0) scale(1); }
+        26% { opacity: 1; transform: translateX(-18%) scale(0.96); }
+        54% { opacity: 1; transform: translate(184%, -6%) scale(1.08); }
+        72% { opacity: 1; transform: translateX(-16%) scale(0.94); }
+      }
+
+      @keyframes p2-token-trade {
+        0%, 100% { opacity: 1; transform: translateX(0) scale(1); }
+        26% { opacity: 1; transform: translateX(18%) scale(0.96); }
+        54% { opacity: 1; transform: translate(-184%, -6%) scale(1.08); }
+        72% { opacity: 1; transform: translateX(16%) scale(0.94); }
       }
 
       .resolution {
@@ -634,10 +642,7 @@
   </head>
   <body>
     <main class="phone" aria-label="Fight Turn mobile battle layout prototype">
-      <div class="sky"></div>
-      <div class="far-buildings"></div>
-      <div class="near-buildings"></div>
-      <div class="floor"></div>
+      <div class="arena-background" aria-hidden="true"></div>
 
       <section class="hud" aria-label="HUD superior">
         <div class="fighter-hud">
@@ -651,7 +656,7 @@
           </div>
         </div>
 
-        <div class="timer" id="roundClock">10</div>
+        <div class="timer" id="roundClock">5</div>
 
         <div class="fighter-hud right">
           <div class="bars">
@@ -665,26 +670,18 @@
         </div>
       </section>
 
-      <section class="choice-strip" aria-label="Acoes escolhidas">
-        <div class="choice-card">
-          <div class="choice-label">P1 VOCE</div>
-          <div class="choice-action" id="p1ChoiceText">---</div>
-          <div class="choice-state" id="p1ChoiceState">ESCOLHA</div>
-        </div>
-        <div class="versus">VS</div>
-        <div class="choice-card right">
-          <div class="choice-label">P2 CPU</div>
-          <div class="choice-action" id="p2ChoiceText">???</div>
-          <div class="choice-state" id="p2ChoiceState">OCULTO</div>
-        </div>
-      </section>
-
       <section class="resolution" aria-label="Resolucao do turno">
         <div class="notice fast" id="noticePrimary">READY</div>
         <div class="notice advantage" id="noticeSecondary">Escolha uma acao antes do tempo acabar</div>
       </section>
 
       <section class="fight-layer" aria-label="Arena de luta">
+        <div class="battle-token p1 is-hidden" id="p1Token" aria-label="Acao escolhida pelo jogador">
+          <img id="p1TokenImage" src="../../assets/ui/action-panel/buttons/question.png" alt="">
+        </div>
+        <div class="battle-token p2" id="p2Token" aria-label="Acao escolhida pela CPU">
+          <img id="p2TokenImage" src="../../assets/ui/action-panel/buttons/question.png" alt="">
+        </div>
         <div class="fighter p1" id="p1Fighter" aria-label="Personagem jogador 1">
           <img class="fighter-sprite" id="p1Sprite" src="../../assets/characters/thiaguinho-idle/ezgif-frame-001.png" alt="">
         </div>
@@ -741,8 +738,9 @@
       </section>
     </main>
     <script>
-      const TURN_DURATION = 10000;
+      const TURN_DURATION = 5000;
       const TURN_BREAK = 2800;
+      const RESULT_REVEAL_DELAY = 720;
       const idleFrames = [
         "../../assets/characters/thiaguinho-idle/ezgif-frame-001.png",
         "../../assets/characters/thiaguinho-idle/ezgif-frame-002.png",
@@ -763,6 +761,18 @@
         Crouch: "CROUCH",
         Jump: "JUMP",
         Wait: "WAIT",
+      };
+      const actionImages = {
+        Poke: "../../assets/ui/action-panel/buttons/poke.png",
+        Combo: "../../assets/ui/action-panel/buttons/combo.png",
+        Grab: "../../assets/ui/action-panel/buttons/grab.png",
+        Special: "../../assets/ui/action-panel/buttons/special.png",
+        Super: "../../assets/ui/action-panel/buttons/super.png",
+        Block: "../../assets/ui/action-panel/buttons/block.png",
+        Crouch: "../../assets/ui/action-panel/buttons/crouch.png",
+        Jump: "../../assets/ui/action-panel/buttons/jump.png",
+        Question: "../../assets/ui/action-panel/buttons/question.png",
+        Wait: "../../assets/ui/action-panel/buttons/question.png",
       };
       const actionData = {
         Poke: { speed: 1, damage: 4 },
@@ -799,10 +809,10 @@
         roundClock: document.querySelector("#roundClock"),
         turnMeterFill: document.querySelector("#turnMeterFill"),
         turnStatus: document.querySelector("#turnStatus"),
-        p1ChoiceText: document.querySelector("#p1ChoiceText"),
-        p2ChoiceText: document.querySelector("#p2ChoiceText"),
-        p1ChoiceState: document.querySelector("#p1ChoiceState"),
-        p2ChoiceState: document.querySelector("#p2ChoiceState"),
+        p1Token: document.querySelector("#p1Token"),
+        p2Token: document.querySelector("#p2Token"),
+        p1TokenImage: document.querySelector("#p1TokenImage"),
+        p2TokenImage: document.querySelector("#p2TokenImage"),
         resolution: document.querySelector(".resolution"),
         noticePrimary: document.querySelector("#noticePrimary"),
         noticeSecondary: document.querySelector("#noticeSecondary"),
@@ -882,11 +892,62 @@
         return actionNames[action] || "---";
       }
 
-      function setChoiceDisplay(revealCpu = false) {
-        el.p1ChoiceText.textContent = state.selectedAction ? displayActionName(state.selectedAction) : "---";
-        el.p1ChoiceState.textContent = state.selectedAction ? "TRAVADO" : "ESCOLHA";
-        el.p2ChoiceText.textContent = revealCpu ? displayActionName(state.aiAction) : "???";
-        el.p2ChoiceState.textContent = revealCpu ? "REVELADO" : "OCULTO";
+      function clearTokenAnimationClasses() {
+        const classes = ["revealing", "clash-win", "clash-lose", "clash-trade", "clash-neutral"];
+        el.p1Token.classList.remove(...classes);
+        el.p2Token.classList.remove(...classes);
+      }
+
+      function actionImage(action) {
+        return actionImages[action] || actionImages.Question;
+      }
+
+      function setTokenDisplay(revealCpu = false) {
+        clearTokenAnimationClasses();
+        el.p1TokenImage.src = actionImage(state.selectedAction || "Question");
+        el.p2TokenImage.src = revealCpu ? actionImage(state.aiAction || "Question") : actionImages.Question;
+        el.p1Token.classList.toggle("is-hidden", !state.selectedAction);
+        el.p2Token.classList.remove("is-hidden");
+      }
+
+      function revealCpuToken() {
+        el.p2Token.classList.remove("revealing");
+        void el.p2Token.offsetWidth;
+        el.p2Token.classList.add("revealing");
+
+        window.setTimeout(() => {
+          el.p2TokenImage.src = actionImage(state.aiAction || "Question");
+        }, 230);
+      }
+
+      function animateTokenClash(result) {
+        clearTokenAnimationClasses();
+        void el.p1Token.offsetWidth;
+
+        if (result.type === "trade") {
+          el.p1Token.classList.add("clash-trade");
+          el.p2Token.classList.add("clash-trade");
+          return;
+        }
+
+        if (!result.winner || !result.loser) {
+          el.p1Token.classList.add("clash-neutral");
+          el.p2Token.classList.add("clash-neutral");
+          return;
+        }
+
+        el[`${result.winner}Token`].classList.add("clash-win");
+        el[`${result.loser}Token`].classList.add("clash-lose");
+      }
+
+      function flashDamagedFighters(damagedSides) {
+        damagedSides.forEach((side) => {
+          const fighter = side === "p1" ? el.p1Fighter : el.p2Fighter;
+          fighter.classList.remove("hit");
+          void fighter.offsetWidth;
+          fighter.classList.add("hit");
+          window.setTimeout(() => fighter.classList.remove("hit"), 320);
+        });
       }
 
       function flashNotice(primary, secondary, duration = 2300) {
@@ -968,13 +1029,18 @@
       function resolveAttackVsAttack(p1Action, p2Action) {
         if (p1Action === p2Action) {
           if (p1Action === "Grab") {
-            return { type: "draw", primary: "AGARRAO QUEBRADO", secondary: "Os dois tentaram agarrar" };
+            return { type: "draw", primary: "AGARRAO QUEBRADO", secondary: "Os dois tentaram agarrar", damaged: [] };
           }
 
           const damage = tradeDamage[p1Action] || 0;
           applyDamage("p1", damage, p2Action);
           applyDamage("p2", damage, p1Action);
-          return { type: "trade", primary: "TRADE", secondary: `${displayActionName(p1Action)} vs ${displayActionName(p2Action)}` };
+          return {
+            type: "trade",
+            primary: "TRADE",
+            secondary: `${displayActionName(p1Action)} vs ${displayActionName(p2Action)}`,
+            damaged: damage > 0 ? ["p1", "p2"] : [],
+          };
         }
 
         const p1Speed = actionData[p1Action].speed;
@@ -994,11 +1060,13 @@
         const action = winner === "p1" ? p1Action : p2Action;
         applyDamage(loser, actionData[action].damage, action);
         state.advantage = winner;
-        animateHit(winner);
         return {
           type: "hit",
+          winner,
+          loser,
           primary: advantageWin ? "VANTAGEM DECIDIU" : `${displayActionName(action)} ACERTOU`,
           secondary: `${winner.toUpperCase()} venceu o turno`,
+          damaged: [loser],
         };
       }
 
@@ -1017,19 +1085,36 @@
           state.advantage = defender;
           return {
             type: "blocked",
+            winner: defender,
+            loser: attacker,
             primary: attack === "Super" ? "SUPER PUNIDO" : "BLOQUEOU",
             secondary: `${defender.toUpperCase()} segurou ${displayActionName(attack)}`,
+            damaged: blockChip[attack] > 0 ? [defender] : [],
           };
         }
 
         if (response === "Crouch" && ["Combo", "Grab", "Super"].includes(attack)) {
           state.advantage = defender;
-          return { type: "evade", primary: "ABAIXOU", secondary: `${defender.toUpperCase()} evitou ${displayActionName(attack)}` };
+          return {
+            type: "evade",
+            winner: defender,
+            loser: attacker,
+            primary: "ABAIXOU",
+            secondary: `${defender.toUpperCase()} evitou ${displayActionName(attack)}`,
+            damaged: [],
+          };
         }
 
         if (response === "Jump" && attack === "Grab") {
           state.advantage = defender;
-          return { type: "evade", primary: "PULOU", secondary: `${defender.toUpperCase()} escapou do agarrao` };
+          return {
+            type: "evade",
+            winner: defender,
+            loser: attacker,
+            primary: "PULOU",
+            secondary: `${defender.toUpperCase()} escapou do agarrao`,
+            damaged: [],
+          };
         }
 
         if (wins[attack] && wins[attack].includes(response)) {
@@ -1039,12 +1124,13 @@
         }
 
         state.advantage = null;
-        return { type: "draw", primary: "NEUTRO", secondary: `${displayActionName(attack)} nao conectou` };
+        return { type: "draw", primary: "NEUTRO", secondary: `${displayActionName(attack)} nao conectou`, damaged: [] };
       }
 
       function resolveTurn() {
         state.phase = "resolving";
         window.clearInterval(state.timerId);
+        updateHud();
 
         const p1Action = state.selectedAction;
         const p2Action = state.aiAction;
@@ -1052,7 +1138,7 @@
           p1: state.p1.health,
           p2: state.p2.health,
         };
-        setChoiceDisplay(true);
+        revealCpuToken();
 
         consumeSuper("p1", p1Action);
         consumeSuper("p2", p2Action);
@@ -1060,14 +1146,14 @@
         let result;
         if (!p1Action && !p2Action) {
           state.advantage = null;
-          result = { type: "draw", primary: "TEMPO ESGOTADO", secondary: "Ninguem escolheu ataque" };
+          result = { type: "draw", primary: "TEMPO ESGOTADO", secondary: "Ninguem escolheu ataque", damaged: [] };
         } else if (!p1Action) {
           if (attackActions.includes(p2Action)) {
             result = resolveHit("p2", "Wait", p2Action);
             result.primary = "P1 SEM ACAO";
           } else {
             state.advantage = null;
-            result = { type: "draw", primary: "P1 SEM ACAO", secondary: "CPU tambem nao atacou" };
+            result = { type: "draw", primary: "P1 SEM ACAO", secondary: "CPU tambem nao atacou", damaged: [] };
           }
         } else if (!p2Action) {
           if (attackActions.includes(p1Action)) {
@@ -1075,7 +1161,7 @@
             result.primary = "GOLPE LIVRE";
           } else {
             state.advantage = null;
-            result = { type: "draw", primary: "NEUTRO", secondary: "Sem ataque direto" };
+            result = { type: "draw", primary: "NEUTRO", secondary: "Sem ataque direto", damaged: [] };
           }
         } else if (attackActions.includes(p1Action) && attackActions.includes(p2Action)) {
           result = resolveAttackVsAttack(p1Action, p2Action);
@@ -1085,22 +1171,37 @@
           result = resolveAttackVsResponse("p2", p2Action, p1Action);
         } else {
           state.advantage = null;
-          result = { type: "draw", primary: "NEUTRO", secondary: `${displayActionName(p1Action)} vs ${displayActionName(p2Action)}` };
+          result = { type: "draw", primary: "NEUTRO", secondary: `${displayActionName(p1Action)} vs ${displayActionName(p2Action)}`, damaged: [] };
         }
 
         el.turnMeterFill.style.width = "0%";
         el.roundClock.textContent = "0";
-        const damageDetail = formatDamageDetail(beforeHealth, result);
-        el.turnStatus.textContent = `P1 ${displayActionName(p1Action || "Wait")} / P2 ${displayActionName(p2Action || "Wait")}`;
-        flashNotice(result.primary, `${result.secondary}${damageDetail ? ` | ${damageDetail}` : ""}`);
-        updateHud();
+        el.turnStatus.textContent = "Revelando a acao da CPU";
 
-        if (state.p1.health <= 0 || state.p2.health <= 0) {
-          window.setTimeout(showGameOver, 900);
-          return;
-        }
+        window.setTimeout(() => {
+          animateTokenClash(result);
 
-        window.setTimeout(startTurn, TURN_BREAK);
+          if (result.type === "hit" && result.winner) {
+            window.setTimeout(() => animateHit(result.winner), 250);
+          } else if (result.type === "trade") {
+            window.setTimeout(() => flashDamagedFighters(result.damaged || []), 250);
+          }
+
+          window.setTimeout(() => {
+            flashDamagedFighters(result.damaged || []);
+            const damageDetail = formatDamageDetail(beforeHealth, result);
+            el.turnStatus.textContent = `P1 ${displayActionName(p1Action || "Wait")} / P2 ${displayActionName(p2Action || "Wait")}`;
+            flashNotice(result.primary, `${result.secondary}${damageDetail ? ` | ${damageDetail}` : ""}`);
+            updateHud();
+
+            if (state.p1.health <= 0 || state.p2.health <= 0) {
+              window.setTimeout(showGameOver, 900);
+              return;
+            }
+
+            window.setTimeout(startTurn, TURN_BREAK);
+          }, 360);
+        }, RESULT_REVEAL_DELAY);
       }
 
       function tickTurn() {
@@ -1121,11 +1222,11 @@
         state.aiAction = pickAiAction();
         state.turnStartedAt = Date.now();
         el.turnStatus.textContent = "P1: escolha uma acao";
-        setChoiceDisplay(false);
+        setTokenDisplay(false);
         el.noticePrimary.textContent = "READY";
         el.noticeSecondary.textContent = "Escolha uma acao antes do tempo acabar";
         el.turnMeterFill.style.width = "100%";
-        el.roundClock.textContent = "10";
+        el.roundClock.textContent = "5";
         el.resolution.classList.remove("show");
         updateHud();
         window.clearInterval(state.timerId);
@@ -1174,7 +1275,7 @@
 
           state.selectedAction = button.dataset.action;
           el.turnStatus.textContent = `P1 escolheu ${state.selectedAction.toUpperCase()}`;
-          setChoiceDisplay(false);
+          setTokenDisplay(false);
           updateHud();
         });
 
