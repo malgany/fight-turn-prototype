@@ -265,6 +265,10 @@
         user-select: none;
       }
 
+      .battle-token.p2.is-action img {
+        transform: scaleX(-1);
+      }
+
       .battle-token.revealing {
         animation: token-reveal 640ms ease both;
       }
@@ -354,42 +358,42 @@
       @keyframes p1-token-win {
         0% { opacity: 1; transform: translateX(0) scale(1); }
         22% { opacity: 1; transform: translateX(-18%) scale(0.96); }
-        56%, 100% { opacity: 1; transform: translate(195%, -6%) scale(1.12); }
+        56%, 100% { opacity: 1; transform: translate(118%, -6%) scale(1.12); }
       }
 
       @keyframes p2-token-win {
         0% { opacity: 1; transform: translateX(0) scale(1); }
         22% { opacity: 1; transform: translateX(18%) scale(0.96); }
-        56%, 100% { opacity: 1; transform: translate(-195%, -6%) scale(1.12); }
+        56%, 100% { opacity: 1; transform: translate(-118%, -6%) scale(1.12); }
       }
 
       @keyframes p1-token-lose {
         0% { opacity: 1; transform: translateX(0) scale(1); filter: drop-shadow(0 11px 8px rgba(0, 0, 0, 0.48)); }
         22% { opacity: 1; transform: translateX(-18%) scale(0.96); }
-        52% { opacity: 1; transform: translate(170%, -6%) scale(1.05); }
-        68% { opacity: 1; transform: translateX(-32%) scale(0.86); filter: brightness(1.55) drop-shadow(0 0 16px rgba(255, 37, 37, 0.9)); }
+        52% { opacity: 1; transform: translate(110%, -6%) scale(1.05); }
+        68% { opacity: 1; transform: translateX(-36%) scale(0.86); filter: brightness(1.55) drop-shadow(0 0 16px rgba(255, 37, 37, 0.9)); }
         100% { opacity: 0; transform: translateX(-78%) scale(0.62); filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 37, 37, 0.7)); }
       }
 
       @keyframes p2-token-lose {
         0% { opacity: 1; transform: translateX(0) scale(1); filter: drop-shadow(0 11px 8px rgba(0, 0, 0, 0.48)); }
         22% { opacity: 1; transform: translateX(18%) scale(0.96); }
-        52% { opacity: 1; transform: translate(-170%, -6%) scale(1.05); }
-        68% { opacity: 1; transform: translateX(32%) scale(0.86); filter: brightness(1.55) drop-shadow(0 0 16px rgba(255, 37, 37, 0.9)); }
+        52% { opacity: 1; transform: translate(-110%, -6%) scale(1.05); }
+        68% { opacity: 1; transform: translateX(36%) scale(0.86); filter: brightness(1.55) drop-shadow(0 0 16px rgba(255, 37, 37, 0.9)); }
         100% { opacity: 0; transform: translateX(78%) scale(0.62); filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 37, 37, 0.7)); }
       }
 
       @keyframes p1-token-trade {
         0%, 100% { opacity: 1; transform: translateX(0) scale(1); }
         26% { opacity: 1; transform: translateX(-18%) scale(0.96); }
-        54% { opacity: 1; transform: translate(184%, -6%) scale(1.08); }
+        54% { opacity: 1; transform: translate(112%, -6%) scale(1.08); }
         72% { opacity: 1; transform: translateX(-16%) scale(0.94); }
       }
 
       @keyframes p2-token-trade {
         0%, 100% { opacity: 1; transform: translateX(0) scale(1); }
         26% { opacity: 1; transform: translateX(18%) scale(0.96); }
-        54% { opacity: 1; transform: translate(-184%, -6%) scale(1.08); }
+        54% { opacity: 1; transform: translate(-112%, -6%) scale(1.08); }
         72% { opacity: 1; transform: translateX(16%) scale(0.94); }
       }
 
@@ -908,15 +912,18 @@
         el.p2TokenImage.src = revealCpu ? actionImage(state.aiAction || "Question") : actionImages.Question;
         el.p1Token.classList.toggle("is-hidden", !state.selectedAction);
         el.p2Token.classList.remove("is-hidden");
+        el.p2Token.classList.toggle("is-action", revealCpu && Boolean(state.aiAction));
       }
 
       function revealCpuToken() {
         el.p2Token.classList.remove("revealing");
+        el.p2Token.classList.remove("is-action");
         void el.p2Token.offsetWidth;
         el.p2Token.classList.add("revealing");
 
         window.setTimeout(() => {
           el.p2TokenImage.src = actionImage(state.aiAction || "Question");
+          el.p2Token.classList.toggle("is-action", Boolean(state.aiAction));
         }, 230);
       }
 
