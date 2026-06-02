@@ -229,21 +229,6 @@
         transition: width 100ms linear;
       }
 
-      .turn-status {
-        position: absolute;
-        left: 50%;
-        bottom: calc(38% + 1.9%);
-        translate: -50% 0;
-        z-index: 56;
-        padding: 0.2em 0.65em;
-        border: 2px solid rgba(99, 215, 255, 0.75);
-        background: rgba(5, 13, 22, 0.82);
-        color: #cdefff;
-        font-size: clamp(10px, 3.1cqw, 16px);
-        text-shadow: 0 2px 0 #000;
-        pointer-events: none;
-      }
-
       .fight-layer {
         top: 13%;
         height: 49%;
@@ -365,6 +350,22 @@
         animation: attack-right 360ms ease;
       }
 
+      .damage-float {
+        position: absolute;
+        left: 50%;
+        top: 15%;
+        z-index: 6;
+        translate: -50% 0;
+        color: #ff3434;
+        font-family: Arial, sans-serif;
+        font-size: clamp(18px, 6.5cqw, 34px);
+        font-weight: 1000;
+        line-height: 1;
+        text-shadow: 0 2px 0 #000, 0 0 10px rgba(255, 32, 32, 0.95);
+        pointer-events: none;
+        animation: damage-float-up 820ms ease-out both;
+      }
+
       @keyframes hit-shake {
         0%, 100% { transform: translateX(0); }
         25% { transform: translateX(-5%); }
@@ -385,6 +386,12 @@
       @keyframes sprite-damage-flash {
         0%, 100% { filter: none; }
         50% { filter: brightness(1.75) saturate(1.7) drop-shadow(0 0 18px rgba(255, 48, 48, 0.9)); }
+      }
+
+      @keyframes damage-float-up {
+        0% { opacity: 0; transform: translateY(12%) scale(0.84); }
+        18% { opacity: 1; transform: translateY(0) scale(1.08); }
+        100% { opacity: 0; transform: translateY(-115%) scale(0.96); }
       }
 
       @keyframes token-reveal {
@@ -436,11 +443,10 @@
       }
 
       .resolution {
-        top: 22%;
+        top: 15.5%;
         z-index: 30;
         display: grid;
         justify-items: center;
-        gap: 0.34rem;
         opacity: 0;
         transform: translateY(-6px);
         transition: opacity 160ms ease, transform 160ms ease;
@@ -469,16 +475,6 @@
 
       .notice.fast {
         color: #63d7ff;
-      }
-
-      .notice.advantage {
-        color: #ffd157;
-        width: 70%;
-        min-height: clamp(26px, 5.6vw, 38px);
-        font-family: Arial, sans-serif;
-        font-size: clamp(10px, 2.8cqw, 15px);
-        font-weight: 900;
-        text-shadow: 0 1px 0 #000;
       }
 
       .notice-icon {
@@ -731,7 +727,6 @@
 
       <section class="resolution" aria-label="Resolucao do turno">
         <div class="notice fast" id="noticePrimary">READY</div>
-        <div class="notice advantage" id="noticeSecondary">Escolha uma acao antes do tempo acabar</div>
       </section>
 
       <section class="fight-layer" aria-label="Arena de luta">
@@ -752,7 +747,6 @@
       <section class="turn-meter" aria-label="Tempo do turno">
         <div class="turn-meter-fill" id="turnMeterFill"></div>
       </section>
-      <div class="turn-status" id="turnStatus">P1: escolha uma acao</div>
 
       <section class="controls" aria-label="Painel de acoes">
         <button class="action" type="button" aria-label="Poke" data-action="Poke">
@@ -872,14 +866,12 @@
         p2SuperMeter: document.querySelector("#p2SuperMeter"),
         roundClock: document.querySelector("#roundClock"),
         turnMeterFill: document.querySelector("#turnMeterFill"),
-        turnStatus: document.querySelector("#turnStatus"),
         p1Token: document.querySelector("#p1Token"),
         p2Token: document.querySelector("#p2Token"),
         p1TokenImage: document.querySelector("#p1TokenImage"),
         p2TokenImage: document.querySelector("#p2TokenImage"),
         resolution: document.querySelector(".resolution"),
         noticePrimary: document.querySelector("#noticePrimary"),
-        noticeSecondary: document.querySelector("#noticeSecondary"),
         p1Fighter: document.querySelector("#p1Fighter"),
         p2Fighter: document.querySelector("#p2Fighter"),
         p1Sprite: document.querySelector("#p1Sprite"),
@@ -1151,9 +1143,8 @@
         });
       }
 
-      function flashNotice(primary, secondary, duration = 2300) {
+      function flashNotice(primary, duration = 1800) {
         el.noticePrimary.textContent = primary;
-        el.noticeSecondary.textContent = secondary;
         el.resolution.classList.add("show");
         window.clearTimeout(flashNotice.timeout);
         flashNotice.timeout = window.setTimeout(() => {
@@ -1161,34 +1152,29 @@
         }, duration);
       }
 
-      function formatDamageDetail(beforeHealth, result) {
-        const p1Loss = beforeHealth.p1 - state.p1.health;
-        const p2Loss = beforeHealth.p2 - state.p2.health;
-        const chunks = [];
+      function getDamageLosses(beforeHealth) {
+        return {
+          p1: Math.max(0, beforeHealth.p1 - state.p1.health),
+          p2: Math.max(0, beforeHealth.p2 - state.p2.health),
+        };
+      }
 
-        if (p1Loss > 0) {
-          chunks.push(`P1 -${p1Loss}%`);
-        }
-        if (p2Loss > 0) {
-          chunks.push(`P2 -${p2Loss}%`);
-        }
-        if (result.type === "blocked") {
-          chunks.push("bloqueio");
-        }
-        if (result.type === "evade") {
-          chunks.push("desviou");
-        }
-        if (result.type === "draw") {
-          chunks.push("sem dano");
-        }
-        if (result.type === "trade") {
-          chunks.push("troca");
-        }
-        if (state.advantage) {
-          chunks.push(`vantagem ${state.advantage.toUpperCase()}`);
-        }
+      function showDamagePopups(damageLosses) {
+        Object.entries(damageLosses).forEach(([side, amount]) => {
+          if (amount > 0) {
+            createDamagePopup(side, amount);
+          }
+        });
+      }
 
-        return chunks.join(" | ");
+      function createDamagePopup(side, amount) {
+        const fighter = side === "p1" ? el.p1Fighter : el.p2Fighter;
+        const popup = document.createElement("span");
+        popup.className = "damage-float";
+        popup.textContent = `-${amount}%`;
+        fighter.append(popup);
+        popup.addEventListener("animationend", () => popup.remove(), { once: true });
+        window.setTimeout(() => popup.remove(), 1000);
       }
 
       function animateHit(winner) {
@@ -1377,7 +1363,6 @@
 
         el.turnMeterFill.style.width = "0%";
         el.roundClock.textContent = "0";
-        el.turnStatus.textContent = "Revelando a acao da CPU";
 
         window.setTimeout(() => {
           animateTokenClash(result);
@@ -1390,9 +1375,8 @@
 
           window.setTimeout(() => {
             flashDamagedFighters(result.damaged || []);
-            const damageDetail = formatDamageDetail(beforeHealth, result);
-            el.turnStatus.textContent = `P1 ${displayActionName(p1Action || "Wait")} / P2 ${displayActionName(p2Action || "Wait")}`;
-            flashNotice(result.primary, `${result.secondary}${damageDetail ? ` | ${damageDetail}` : ""}`);
+            showDamagePopups(getDamageLosses(beforeHealth));
+            flashNotice(result.primary);
             updateHud();
 
             if (state.p1.health <= 0 || state.p2.health <= 0) {
@@ -1422,10 +1406,8 @@
         state.selectedAction = null;
         state.aiAction = pickAiAction();
         state.turnStartedAt = Date.now();
-        el.turnStatus.textContent = "P1: escolha uma acao";
         setTokenDisplay(false);
         el.noticePrimary.textContent = "READY";
-        el.noticeSecondary.textContent = "Escolha uma acao antes do tempo acabar";
         el.turnMeterFill.style.width = "100%";
         el.roundClock.textContent = "5";
         el.resolution.classList.remove("show");
@@ -1475,7 +1457,6 @@
           }
 
           state.selectedAction = button.dataset.action;
-          el.turnStatus.textContent = `P1 escolheu ${state.selectedAction.toUpperCase()}`;
           setTokenDisplay(false);
           updateHud();
         });
