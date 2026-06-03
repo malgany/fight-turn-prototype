@@ -1000,17 +1000,6 @@
           0 0 28px rgba(67, 197, 200, 0.42);
       }
 
-      .title-mark {
-        margin-top: 2%;
-        padding: 0.18em 0.48em;
-        border: 3px solid #63d7ff;
-        background: rgba(8, 20, 34, 0.82);
-        color: #63d7ff;
-        font-size: clamp(13px, 4cqw, 22px);
-        line-height: 1;
-        text-shadow: 0 2px 0 #000;
-      }
-
       .menu-actions {
         display: grid;
         gap: clamp(10px, 3cqw, 18px);
@@ -1038,19 +1027,22 @@
 
       .menu-button:focus-visible,
       .help-tab:focus-visible,
-      .help-back:focus-visible {
+      .help-back:focus-visible,
+      .audio-toggle:focus-within {
         outline: 3px solid #f2f6ff;
         outline-offset: 5px;
       }
 
       .menu-button:active,
       .help-tab:active,
-      .help-back:active {
+      .help-back:active,
+      .audio-toggle:active {
         transform: translateY(3px);
         box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.07), 0 7px 0 rgba(0, 0, 0, 0.42);
       }
 
-      .help-screen {
+      .help-screen,
+      .options-screen {
         grid-template-rows: minmax(0, 1fr);
         padding: 5% 5% 6%;
         background:
@@ -1058,7 +1050,8 @@
           var(--arena-background) center / cover no-repeat;
       }
 
-      .help-scroll {
+      .help-scroll,
+      .options-scroll {
         display: grid;
         gap: clamp(12px, 3cqw, 18px);
         align-content: start;
@@ -1117,7 +1110,8 @@
 
       .help-intro,
       .rule-card,
-      .quick-card {
+      .quick-card,
+      .option-card {
         border: 3px solid #41516a;
         background: rgba(12, 20, 31, 0.9);
         box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.04);
@@ -1242,6 +1236,130 @@
         text-shadow: 0 3px 0 #000;
         box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.07), 0 10px 0 rgba(0, 0, 0, 0.42);
       }
+
+      .option-card {
+        display: grid;
+        gap: 0.85rem;
+        padding: 0.95rem;
+      }
+
+      .option-title {
+        margin: 0;
+        color: #63d7ff;
+        font-size: clamp(18px, 5.2cqw, 30px);
+        line-height: 1;
+        text-shadow: 0 2px 0 #000;
+      }
+
+      .option-text {
+        margin: 0;
+        font-family: "Anime Ace BB", Arial, sans-serif;
+        font-size: clamp(11px, 2.9cqw, 15px);
+        font-weight: 900;
+        line-height: 1.28;
+        color: #dce8f7;
+      }
+
+      .audio-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.85rem;
+        min-height: clamp(58px, 14cqw, 78px);
+        padding: 0.65rem 0.8rem;
+        border: 3px solid #31425a;
+        background: rgba(12, 20, 31, 0.92);
+        color: #f2f6ff;
+        cursor: pointer;
+        text-shadow: 0 2px 0 #000;
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.04), 0 8px 0 rgba(0, 0, 0, 0.38);
+      }
+
+      .audio-toggle-label {
+        display: grid;
+        gap: 0.25rem;
+        min-width: 0;
+      }
+
+      .audio-toggle-title {
+        font-size: clamp(16px, 4.8cqw, 26px);
+        line-height: 1;
+      }
+
+      .audio-toggle-state {
+        color: #a9bdd5;
+        font-size: clamp(10px, 2.8cqw, 14px);
+        line-height: 1;
+      }
+
+      .audio-toggle input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .audio-switch {
+        position: relative;
+        flex: 0 0 auto;
+        width: clamp(58px, 15cqw, 82px);
+        height: clamp(32px, 8cqw, 44px);
+        border: 3px solid #526078;
+        background: #111b2a;
+        box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.3);
+      }
+
+      .audio-switch::after {
+        content: "";
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: calc(50% - 6px);
+        bottom: 4px;
+        background: #93a4bc;
+        box-shadow: 0 2px 0 #000;
+        transition: transform 140ms ease, background 140ms ease;
+      }
+
+      .audio-toggle input:checked + .audio-switch {
+        border-color: #63d7ff;
+        background: #12324d;
+        box-shadow: 0 0 14px rgba(99, 215, 255, 0.28), inset 0 0 0 2px rgba(255, 255, 255, 0.06);
+      }
+
+      .audio-toggle input:checked + .audio-switch::after {
+        transform: translateX(calc(100% + 4px));
+        background: #63d7ff;
+      }
+
+      .volume-control {
+        display: grid;
+        gap: 0.55rem;
+        padding: 0.72rem 0.8rem;
+        border: 3px solid #31425a;
+        background: rgba(12, 20, 31, 0.72);
+        color: #f2f6ff;
+        text-shadow: 0 2px 0 #000;
+      }
+
+      .volume-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        font-size: clamp(12px, 3.4cqw, 18px);
+        line-height: 1;
+      }
+
+      .volume-value {
+        color: #63d7ff;
+        white-space: nowrap;
+      }
+
+      .volume-slider {
+        width: 100%;
+        accent-color: #63d7ff;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
@@ -1249,12 +1367,12 @@
       <section class="screen start-screen" id="startScreen" aria-label="Tela inicial">
         <div class="title-stack">
           <h1 class="game-title">Fight Turner</h1>
-          <div class="title-mark">TURN BASED FIGHT</div>
         </div>
 
         <nav class="menu-actions" aria-label="Menu principal">
           <button class="menu-button primary" type="button" id="playButton">JOGAR</button>
           <button class="menu-button" type="button" id="helpButton">AJUDA</button>
+          <button class="menu-button" type="button" id="optionsButton">OPÇÕES</button>
         </nav>
       </section>
 
@@ -1391,6 +1509,49 @@
           </div>
 
           <button class="help-back" type="button" id="backFromHelpButton">VOLTAR</button>
+        </div>
+      </section>
+
+      <section class="screen options-screen is-hidden" id="optionsScreen" aria-label="Opções">
+        <div class="options-scroll">
+          <h2 class="help-title">Opções</h2>
+
+          <section class="option-card" aria-label="Configurações de áudio">
+            <h3 class="option-title">Áudio</h3>
+            <p class="option-text">Ative ou desative efeitos e música separadamente.</p>
+            <label class="audio-toggle">
+              <span class="audio-toggle-label">
+                <span class="audio-toggle-title">Efeitos</span>
+                <span class="audio-toggle-state" id="audioToggleState">LIGADO</span>
+              </span>
+              <input type="checkbox" id="audioToggle" checked>
+              <span class="audio-switch" aria-hidden="true"></span>
+            </label>
+            <label class="volume-control">
+              <span class="volume-header">
+                <span>Volume dos efeitos</span>
+                <span class="volume-value" id="sfxVolumeValue">85%</span>
+              </span>
+              <input class="volume-slider" type="range" id="sfxVolumeSlider" min="0" max="100" value="85">
+            </label>
+            <label class="audio-toggle">
+              <span class="audio-toggle-label">
+                <span class="audio-toggle-title">Música</span>
+                <span class="audio-toggle-state" id="musicToggleState">LIGADO</span>
+              </span>
+              <input type="checkbox" id="musicToggle" checked>
+              <span class="audio-switch" aria-hidden="true"></span>
+            </label>
+            <label class="volume-control">
+              <span class="volume-header">
+                <span>Volume da música</span>
+                <span class="volume-value" id="musicVolumeValue">70%</span>
+              </span>
+              <input class="volume-slider" type="range" id="musicVolumeSlider" min="0" max="100" value="70">
+            </label>
+          </section>
+
+          <button class="help-back" type="button" id="backFromOptionsButton">VOLTAR</button>
         </div>
       </section>
 
@@ -1567,6 +1728,12 @@
       const HEALTH_TRAIL_HOLD = 520;
       const HEALTH_TRAIL_DELAY = RESULT_REVEAL_DELAY + 360 + HEALTH_TRAIL_HOLD;
       const CHARACTER_CONFIG_PATH = "../../assets/characters/ninja/ninja.json";
+      const MENU_MUSIC_PATH = "../../assets/audio/i-fall-i-rise-fire-in-m.mp3";
+      const BATTLE_MUSIC_PATH = "../../assets/audio/combo-clash-arena.mp3";
+      const AUDIO_STORAGE_KEY = "fightTurn.audioEnabled";
+      const SFX_VOLUME_STORAGE_KEY = "fightTurn.sfxVolume";
+      const MUSIC_STORAGE_KEY = "fightTurn.musicEnabled";
+      const MUSIC_VOLUME_STORAGE_KEY = "fightTurn.musicVolume";
       const characterConfig = await loadCharacterConfig(CHARACTER_CONFIG_PATH);
       const idleAnimation = characterConfig.animations.idle;
       const getUpAnimation = characterConfig.animations.getUp;
@@ -1629,6 +1796,10 @@
         p2: { health: 100, super: 0 },
         healthTrail: { p1: 100, p2: 100 },
         healthTrailTimers: { p1: null, p2: null },
+        audioEnabled: readAudioPreference(),
+        sfxVolume: readSfxVolumePreference(),
+        musicEnabled: readMusicPreference(),
+        musicVolume: readMusicVolumePreference(),
       };
 
       const el = {
@@ -1663,11 +1834,22 @@
         p2Sprite: document.querySelector("#p2Sprite"),
         startScreen: document.querySelector("#startScreen"),
         helpScreen: document.querySelector("#helpScreen"),
+        optionsScreen: document.querySelector("#optionsScreen"),
         helpTabs: [...document.querySelectorAll(".help-tab")],
         helpPanels: [...document.querySelectorAll(".help-panel")],
         playButton: document.querySelector("#playButton"),
         helpButton: document.querySelector("#helpButton"),
+        optionsButton: document.querySelector("#optionsButton"),
         backFromHelpButton: document.querySelector("#backFromHelpButton"),
+        backFromOptionsButton: document.querySelector("#backFromOptionsButton"),
+        audioToggle: document.querySelector("#audioToggle"),
+        audioToggleState: document.querySelector("#audioToggleState"),
+        sfxVolumeSlider: document.querySelector("#sfxVolumeSlider"),
+        sfxVolumeValue: document.querySelector("#sfxVolumeValue"),
+        musicToggle: document.querySelector("#musicToggle"),
+        musicToggleState: document.querySelector("#musicToggleState"),
+        musicVolumeSlider: document.querySelector("#musicVolumeSlider"),
+        musicVolumeValue: document.querySelector("#musicVolumeValue"),
         battleOver: document.querySelector("#battleOver"),
         battleOverTitle: document.querySelector("#battleOverTitle"),
         resetButton: document.querySelector("#resetButton"),
@@ -1683,6 +1865,469 @@
 
       let idleFrameIndex = 0;
       const spriteAnimations = { p1: null, p2: null };
+      const audioState = {
+        context: null,
+        masterGain: null,
+        sfxGain: null,
+        musicGain: null,
+        noiseBuffer: null,
+        musicTimerId: null,
+        musicTrack: null,
+        musicStep: 0,
+        userActivated: false,
+        musicElements: {},
+        musicSources: {},
+      };
+
+      function readAudioPreference() {
+        try {
+          return window.localStorage.getItem(AUDIO_STORAGE_KEY) !== "false";
+        } catch {
+          return true;
+        }
+      }
+
+      function writeAudioPreference(enabled) {
+        try {
+          window.localStorage.setItem(AUDIO_STORAGE_KEY, String(enabled));
+        } catch {
+          // Storage can be unavailable in private modes; the in-memory setting still works.
+        }
+      }
+
+      function readSfxVolumePreference() {
+        try {
+          const storedVolume = Number(window.localStorage.getItem(SFX_VOLUME_STORAGE_KEY));
+          if (Number.isFinite(storedVolume)) {
+            return Math.max(0, Math.min(100, Math.round(storedVolume)));
+          }
+        } catch {
+          // Storage can be unavailable in private modes; default volume still works.
+        }
+
+        return 85;
+      }
+
+      function writeSfxVolumePreference(volume) {
+        try {
+          window.localStorage.setItem(SFX_VOLUME_STORAGE_KEY, String(volume));
+        } catch {
+          // Storage can be unavailable in private modes; the in-memory setting still works.
+        }
+      }
+
+      function readMusicPreference() {
+        try {
+          return window.localStorage.getItem(MUSIC_STORAGE_KEY) !== "false";
+        } catch {
+          return true;
+        }
+      }
+
+      function writeMusicPreference(enabled) {
+        try {
+          window.localStorage.setItem(MUSIC_STORAGE_KEY, String(enabled));
+        } catch {
+          // Storage can be unavailable in private modes; the in-memory setting still works.
+        }
+      }
+
+      function readMusicVolumePreference() {
+        try {
+          const storedVolume = Number(window.localStorage.getItem(MUSIC_VOLUME_STORAGE_KEY));
+          if (Number.isFinite(storedVolume)) {
+            return Math.max(0, Math.min(100, Math.round(storedVolume)));
+          }
+        } catch {
+          // Storage can be unavailable in private modes; default volume still works.
+        }
+
+        return 70;
+      }
+
+      function writeMusicVolumePreference(volume) {
+        try {
+          window.localStorage.setItem(MUSIC_VOLUME_STORAGE_KEY, String(volume));
+        } catch {
+          // Storage can be unavailable in private modes; the in-memory setting still works.
+        }
+      }
+
+      function syncAudioToggleUi() {
+        el.audioToggle.checked = state.audioEnabled;
+        el.audioToggleState.textContent = state.audioEnabled ? "LIGADO" : "DESLIGADO";
+        el.sfxVolumeSlider.value = String(state.sfxVolume);
+        el.sfxVolumeValue.textContent = `${state.sfxVolume}%`;
+        el.musicToggle.checked = state.musicEnabled;
+        el.musicToggleState.textContent = state.musicEnabled ? "LIGADO" : "DESLIGADO";
+        el.musicVolumeSlider.value = String(state.musicVolume);
+        el.musicVolumeValue.textContent = `${state.musicVolume}%`;
+      }
+
+      function setAudioEnabled(enabled) {
+        state.audioEnabled = enabled;
+        writeAudioPreference(enabled);
+        syncAudioToggleUi();
+      }
+
+      function sfxGainValue() {
+        return (state.sfxVolume / 100) * 1.16;
+      }
+
+      function setSfxVolume(volume) {
+        state.sfxVolume = Math.max(0, Math.min(100, Math.round(Number(volume) || 0)));
+        writeSfxVolumePreference(state.sfxVolume);
+        syncAudioToggleUi();
+
+        if (audioState.context && audioState.sfxGain) {
+          audioState.sfxGain.gain.setTargetAtTime(sfxGainValue(), audioState.context.currentTime, 0.03);
+        }
+      }
+
+      function setMusicEnabled(enabled) {
+        state.musicEnabled = enabled;
+        writeMusicPreference(enabled);
+        syncAudioToggleUi();
+
+        if (enabled) {
+          syncMusicForPhase();
+          return;
+        }
+
+        stopMusic();
+      }
+
+      function musicGainValue() {
+        return (state.musicVolume / 100) * 0.3;
+      }
+
+      function setMusicVolume(volume) {
+        state.musicVolume = Math.max(0, Math.min(100, Math.round(Number(volume) || 0)));
+        writeMusicVolumePreference(state.musicVolume);
+        syncAudioToggleUi();
+
+        if (audioState.context && audioState.musicGain) {
+          audioState.musicGain.gain.setTargetAtTime(musicGainValue(), audioState.context.currentTime, 0.05);
+        }
+      }
+
+      function getAudioContext() {
+        if (audioState.context) {
+          return audioState.context;
+        }
+
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) {
+          return null;
+        }
+
+        audioState.context = new AudioContextClass();
+        audioState.masterGain = audioState.context.createGain();
+        audioState.sfxGain = audioState.context.createGain();
+        audioState.musicGain = audioState.context.createGain();
+        audioState.masterGain.gain.value = 1;
+        audioState.sfxGain.gain.value = sfxGainValue();
+        audioState.musicGain.gain.value = musicGainValue();
+        audioState.sfxGain.connect(audioState.masterGain);
+        audioState.musicGain.connect(audioState.masterGain);
+        audioState.masterGain.connect(audioState.context.destination);
+        return audioState.context;
+      }
+
+      function getNoiseBuffer(context) {
+        if (audioState.noiseBuffer) {
+          return audioState.noiseBuffer;
+        }
+
+        const length = context.sampleRate;
+        const buffer = context.createBuffer(1, length, context.sampleRate);
+        const channel = buffer.getChannelData(0);
+
+        for (let index = 0; index < length; index += 1) {
+          channel[index] = Math.random() * 2 - 1;
+        }
+
+        audioState.noiseBuffer = buffer;
+        return buffer;
+      }
+
+      function resumeAudioContext(context) {
+        if (context?.state === "suspended") {
+          context.resume().catch(() => {});
+        }
+      }
+
+      function audioBusTarget(bus) {
+        return bus === "music" ? audioState.musicGain : audioState.sfxGain;
+      }
+
+      function playTone({ frequency, endFrequency, delay = 0, duration = 0.08, type = "sine", gain = 0.12, bus = "sfx" }) {
+        const context = getAudioContext();
+        const target = audioBusTarget(bus);
+        if (!context || !target) {
+          return;
+        }
+
+        resumeAudioContext(context);
+
+        const start = context.currentTime + delay;
+        const stop = start + duration;
+        const oscillator = context.createOscillator();
+        const envelope = context.createGain();
+
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, start);
+        if (endFrequency) {
+          oscillator.frequency.exponentialRampToValueAtTime(Math.max(1, endFrequency), stop);
+        }
+
+        envelope.gain.setValueAtTime(0.0001, start);
+        envelope.gain.exponentialRampToValueAtTime(gain, start + Math.min(0.018, duration * 0.35));
+        envelope.gain.exponentialRampToValueAtTime(0.0001, stop);
+
+        oscillator.connect(envelope);
+        envelope.connect(target);
+        oscillator.start(start);
+        oscillator.stop(stop + 0.02);
+      }
+
+      function playNoise({
+        delay = 0,
+        duration = 0.08,
+        gain = 0.08,
+        filterType = "bandpass",
+        frequency = 900,
+        q = 1.5,
+        bus = "sfx",
+      }) {
+        const context = getAudioContext();
+        const target = audioBusTarget(bus);
+        if (!context || !target) {
+          return;
+        }
+
+        resumeAudioContext(context);
+
+        const start = context.currentTime + delay;
+        const stop = start + duration;
+        const source = context.createBufferSource();
+        const filter = context.createBiquadFilter();
+        const envelope = context.createGain();
+
+        source.buffer = getNoiseBuffer(context);
+        filter.type = filterType;
+        filter.frequency.setValueAtTime(frequency, start);
+        filter.Q.setValueAtTime(q, start);
+
+        envelope.gain.setValueAtTime(0.0001, start);
+        envelope.gain.exponentialRampToValueAtTime(gain, start + Math.min(0.012, duration * 0.3));
+        envelope.gain.exponentialRampToValueAtTime(0.0001, stop);
+
+        source.connect(filter);
+        filter.connect(envelope);
+        envelope.connect(target);
+        source.start(start);
+        source.stop(stop + 0.02);
+      }
+
+      function playSound(soundName) {
+        audioState.userActivated = true;
+
+        if (!state.audioEnabled) {
+          return;
+        }
+
+        const sounds = {
+          ui: () => {
+            playTone({ frequency: 680, endFrequency: 920, duration: 0.045, type: "triangle", gain: 0.07 });
+          },
+          select: () => {
+            playTone({ frequency: 360, endFrequency: 620, duration: 0.07, type: "square", gain: 0.075 });
+            playTone({ frequency: 720, duration: 0.04, type: "triangle", gain: 0.055, delay: 0.045 });
+          },
+          reveal: () => {
+            playTone({ frequency: 520, duration: 0.055, type: "triangle", gain: 0.065 });
+            playTone({ frequency: 780, duration: 0.065, type: "triangle", gain: 0.075, delay: 0.075 });
+            playNoise({ duration: 0.08, gain: 0.025, filterType: "highpass", frequency: 1800, q: 0.8, delay: 0.025 });
+          },
+          hit: () => {
+            playTone({ frequency: 150, endFrequency: 74, duration: 0.16, type: "sawtooth", gain: 0.16 });
+            playTone({ frequency: 78, duration: 0.11, type: "square", gain: 0.08, delay: 0.018 });
+            playNoise({ duration: 0.09, gain: 0.13, filterType: "lowpass", frequency: 850, q: 0.9 });
+            playNoise({ duration: 0.045, gain: 0.08, filterType: "highpass", frequency: 2400, q: 1.1, delay: 0.012 });
+          },
+          block: () => {
+            playTone({ frequency: 170, duration: 0.12, type: "square", gain: 0.11 });
+            playTone({ frequency: 248, duration: 0.08, type: "triangle", gain: 0.08 });
+            playNoise({ duration: 0.075, gain: 0.1, filterType: "bandpass", frequency: 1600, q: 7 });
+            playNoise({ duration: 0.035, gain: 0.055, filterType: "highpass", frequency: 3600, q: 2, delay: 0.035 });
+          },
+          evade: () => {
+            playTone({ frequency: 620, endFrequency: 980, duration: 0.12, type: "sine", gain: 0.08 });
+            playNoise({ duration: 0.105, gain: 0.035, filterType: "highpass", frequency: 2200, q: 0.7 });
+          },
+          trade: () => {
+            playTone({ frequency: 130, endFrequency: 66, duration: 0.16, type: "sawtooth", gain: 0.15 });
+            playTone({ frequency: 185, endFrequency: 92, duration: 0.14, type: "square", gain: 0.1, delay: 0.025 });
+            playNoise({ duration: 0.12, gain: 0.15, filterType: "lowpass", frequency: 720, q: 0.8 });
+            playNoise({ duration: 0.075, gain: 0.1, filterType: "bandpass", frequency: 1900, q: 3.5, delay: 0.03 });
+          },
+          draw: () => {
+            playTone({ frequency: 250, endFrequency: 220, duration: 0.1, type: "triangle", gain: 0.055 });
+          },
+          knockdown: () => {
+            playTone({ frequency: 180, endFrequency: 58, duration: 0.28, type: "sawtooth", gain: 0.14 });
+            playTone({ frequency: 92, duration: 0.16, type: "square", gain: 0.08, delay: 0.08 });
+            playNoise({ duration: 0.22, gain: 0.13, filterType: "lowpass", frequency: 520, q: 0.65, delay: 0.045 });
+          },
+          win: () => {
+            [523, 659, 784, 1046].forEach((frequency, index) => {
+              playTone({ frequency, duration: 0.11, type: "triangle", gain: 0.085, delay: index * 0.095 });
+            });
+          },
+          lose: () => {
+            [392, 311, 247, 196].forEach((frequency, index) => {
+              playTone({ frequency, duration: 0.14, type: "sawtooth", gain: 0.075, delay: index * 0.11 });
+            });
+            playNoise({ duration: 0.2, gain: 0.04, filterType: "lowpass", frequency: 450, q: 0.7, delay: 0.22 });
+          },
+          tie: () => {
+            playTone({ frequency: 330, duration: 0.12, type: "triangle", gain: 0.075 });
+            playTone({ frequency: 330, duration: 0.12, type: "triangle", gain: 0.075, delay: 0.18 });
+          },
+        };
+
+        sounds[soundName]?.();
+      }
+
+      function startMusic(trackName) {
+        if (!state.musicEnabled) {
+          stopMusic();
+          return;
+        }
+
+        if (!audioState.userActivated && !audioState.context) {
+          return;
+        }
+
+        getAudioContext();
+        if (!audioState.context || !audioState.musicGain) {
+          return;
+        }
+
+        resumeAudioContext(audioState.context);
+
+        if (trackName === "menu" || trackName === "battle") {
+          startAudioTrack(trackName);
+          return;
+        }
+
+        stopMusic();
+      }
+
+      function musicPath(trackName) {
+        return trackName === "menu" ? MENU_MUSIC_PATH : BATTLE_MUSIC_PATH;
+      }
+
+      function getMusicElement(trackName) {
+        if (audioState.musicElements[trackName]) {
+          return audioState.musicElements[trackName];
+        }
+
+        const music = new Audio(musicPath(trackName));
+        music.loop = true;
+        music.preload = "auto";
+        music.volume = 1;
+        audioState.musicElements[trackName] = music;
+        return music;
+      }
+
+      function connectMusicSource(trackName) {
+        if (!audioState.context || !audioState.musicGain || audioState.musicSources[trackName]) {
+          return;
+        }
+
+        audioState.musicSources[trackName] = audioState.context.createMediaElementSource(getMusicElement(trackName));
+        audioState.musicSources[trackName].connect(audioState.musicGain);
+      }
+
+      function startAudioTrack(trackName) {
+        const music = getMusicElement(trackName);
+
+        if (audioState.musicTimerId) {
+          window.clearInterval(audioState.musicTimerId);
+          audioState.musicTimerId = null;
+        }
+
+        if (audioState.musicTrack === trackName && !music.paused) {
+          return;
+        }
+
+        Object.entries(audioState.musicElements).forEach(([name, element]) => {
+          if (name !== trackName) {
+            element.pause();
+            element.currentTime = 0;
+          }
+        });
+
+        connectMusicSource(trackName);
+        audioState.musicTrack = trackName;
+        audioState.musicStep = 0;
+        audioState.musicGain.gain.cancelScheduledValues(audioState.context.currentTime);
+        audioState.musicGain.gain.setTargetAtTime(musicGainValue(), audioState.context.currentTime, 0.08);
+
+        if (music.paused) {
+          music.currentTime = 0;
+        }
+
+        music.play().catch(() => {});
+      }
+
+      function stopMusic() {
+        if (audioState.musicTimerId) {
+          window.clearInterval(audioState.musicTimerId);
+          audioState.musicTimerId = null;
+        }
+
+        audioState.musicTrack = null;
+        audioState.musicStep = 0;
+
+        Object.values(audioState.musicElements).forEach((element) => {
+          element.pause();
+          element.currentTime = 0;
+        });
+
+        if (audioState.context && audioState.musicGain) {
+          audioState.musicGain.gain.cancelScheduledValues(audioState.context.currentTime);
+          audioState.musicGain.gain.setTargetAtTime(0.0001, audioState.context.currentTime, 0.05);
+        }
+      }
+
+      function syncMusicForPhase() {
+        if (!state.musicEnabled) {
+          stopMusic();
+          return;
+        }
+
+        if (state.phase === "menu" || state.phase === "help" || state.phase === "options") {
+          startMusic("menu");
+          return;
+        }
+
+        if (state.phase === "choosing" || state.phase === "resolving") {
+          startMusic("battle");
+          return;
+        }
+
+        stopMusic();
+      }
+
+      function activateAudioFromGesture() {
+        audioState.userActivated = true;
+        getAudioContext();
+        resumeAudioContext(audioState.context);
+        syncMusicForPhase();
+      }
 
       async function loadCharacterConfig(path) {
         const response = await fetch(path);
@@ -1951,6 +2596,8 @@
           return;
         }
 
+        playSound("select");
+
         if (side === "p1") {
           state.selectedAction = action;
         } else {
@@ -2119,6 +2766,11 @@
           return;
         }
 
+        if (state.phase === "options") {
+          el.debugStatus.textContent = "Volte das opções para usar o debug.";
+          return;
+        }
+
         if (state.phase === "over") {
           el.debugStatus.textContent = "Batalha finalizada. Use REINICIAR.";
           return;
@@ -2169,9 +2821,23 @@
           return;
         }
 
+        playSound("ui");
+
         const nextValue = state[side].super === selectedValue ? selectedValue - 1 : selectedValue;
         state[side].super = Math.max(0, Math.min(3, nextValue));
         updateHud();
+      }
+
+      function playTurnResultSound(result) {
+        const resultSounds = {
+          hit: "hit",
+          blocked: "block",
+          evade: "evade",
+          trade: "trade",
+          draw: "draw",
+        };
+
+        playSound(resultSounds[result.type] || "draw");
       }
 
       function displayActionName(action) {
@@ -2499,6 +3165,7 @@
           p2: state.p2.health,
         };
         revealCpuToken();
+        playSound("reveal");
 
         consumeSuper("p1", p1Action);
         consumeSuper("p2", p2Action);
@@ -2539,6 +3206,7 @@
 
         window.setTimeout(() => {
           animateTokenClash(result);
+          playTurnResultSound(result);
 
           if (result.type === "hit" && result.winner) {
             window.setTimeout(() => animateHit(result.winner), 250);
@@ -2550,6 +3218,9 @@
             const knockedDown = result.knockedDown || [];
             flashDamagedFighters(result.damaged || []);
             playKnockdownAnimation(knockedDown);
+            if (knockedDown.length) {
+              playSound("knockdown");
+            }
             showDamagePopups(getDamageLosses(beforeHealth));
             showStatePopups(result);
             flashNotice(result.primary);
@@ -2604,17 +3275,22 @@
         updateHud();
         window.clearInterval(state.timerId);
         state.timerId = state.debugMode ? null : window.setInterval(tickTurn, 100);
+        syncMusicForPhase();
       }
 
       function showGameOver() {
         state.phase = "over";
         window.clearInterval(state.timerId);
+        stopMusic();
         updateHud();
 
         if (state.p1.health <= 0 && state.p2.health <= 0) {
           el.battleOverTitle.textContent = "EMPATE";
+          playSound("tie");
         } else {
-          el.battleOverTitle.textContent = state.p2.health <= 0 ? "VOCÊ VENCEU" : "VOCÊ PERDEU";
+          const playerWon = state.p2.health <= 0;
+          el.battleOverTitle.textContent = playerWon ? "VOCÊ VENCEU" : "VOCÊ PERDEU";
+          playSound(playerWon ? "win" : "lose");
         }
 
         el.battleOver.classList.add("show");
@@ -2640,6 +3316,8 @@
         state.phase = "menu";
         el.startScreen.classList.remove("is-hidden");
         el.helpScreen.classList.add("is-hidden");
+        el.optionsScreen.classList.add("is-hidden");
+        syncMusicForPhase();
         updateDebugPanel();
       }
 
@@ -2662,13 +3340,27 @@
         state.phase = "help";
         el.startScreen.classList.add("is-hidden");
         el.helpScreen.classList.remove("is-hidden");
+        el.optionsScreen.classList.add("is-hidden");
         setHelpTab("basic");
+        syncMusicForPhase();
+        updateDebugPanel();
+      }
+
+      function showOptionsScreen() {
+        window.clearInterval(state.timerId);
+        state.phase = "options";
+        el.startScreen.classList.add("is-hidden");
+        el.helpScreen.classList.add("is-hidden");
+        el.optionsScreen.classList.remove("is-hidden");
+        syncAudioToggleUi();
+        syncMusicForPhase();
         updateDebugPanel();
       }
 
       function playGame() {
         el.startScreen.classList.add("is-hidden");
         el.helpScreen.classList.add("is-hidden");
+        el.optionsScreen.classList.add("is-hidden");
         resetBattle();
       }
 
@@ -2716,15 +3408,63 @@
         });
       });
 
-      el.debugToggle.addEventListener("change", handleDebugToggle);
-      el.resetButton.addEventListener("click", resetBattle);
-      el.playButton.addEventListener("click", playGame);
-      el.helpButton.addEventListener("click", showHelpScreen);
-      el.helpTabs.forEach((tab) => {
-        tab.addEventListener("click", () => setHelpTab(tab.dataset.helpTab));
+      el.debugToggle.addEventListener("change", () => {
+        playSound("ui");
+        handleDebugToggle();
       });
-      el.backFromHelpButton.addEventListener("click", showStartScreen);
+      el.resetButton.addEventListener("click", () => {
+        playSound("ui");
+        resetBattle();
+      });
+      el.playButton.addEventListener("click", () => {
+        playSound("ui");
+        playGame();
+      });
+      el.helpButton.addEventListener("click", () => {
+        playSound("ui");
+        showHelpScreen();
+      });
+      el.optionsButton.addEventListener("click", () => {
+        playSound("ui");
+        showOptionsScreen();
+      });
+      el.helpTabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          playSound("ui");
+          setHelpTab(tab.dataset.helpTab);
+        });
+      });
+      el.backFromHelpButton.addEventListener("click", () => {
+        playSound("ui");
+        showStartScreen();
+      });
+      el.backFromOptionsButton.addEventListener("click", () => {
+        playSound("ui");
+        showStartScreen();
+      });
+      el.audioToggle.addEventListener("change", () => {
+        setAudioEnabled(el.audioToggle.checked);
+        playSound("ui");
+      });
+      el.sfxVolumeSlider.addEventListener("input", () => {
+        setSfxVolume(el.sfxVolumeSlider.value);
+      });
+      el.sfxVolumeSlider.addEventListener("change", () => {
+        playSound("ui");
+      });
+      el.musicToggle.addEventListener("change", () => {
+        playSound("ui");
+        setMusicEnabled(el.musicToggle.checked);
+      });
+      el.musicVolumeSlider.addEventListener("input", () => {
+        setMusicVolume(el.musicVolumeSlider.value);
+      });
+      el.musicVolumeSlider.addEventListener("change", () => {
+        playSound("ui");
+      });
+      document.addEventListener("pointerdown", activateAudioFromGesture, { once: true });
 
+      syncAudioToggleUi();
       showStartScreen();
     </script>
   </body>
