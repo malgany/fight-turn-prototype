@@ -22,7 +22,7 @@
       }
 
       :root {
-        --action-panel-backplate: url("../../assets/ui/action-panel/backplate.webp");
+        --action-panel-backplate: url("../../assets/ui/action-panel/backplate.webp?v=20260603");
         --arena-background: url("../../assets/backgrounds/city-street-arena.webp");
         --title-screen-art: url("../../assets/backgrounds/title-screen-fighters.png");
         --panel: #101823;
@@ -119,6 +119,50 @@
         color: #fff8d6;
         font-size: 12px;
         line-height: 1;
+      }
+
+      .debug-super-control {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border: 1px solid #314159;
+        background: rgba(15, 24, 36, 0.72);
+      }
+
+      .debug-super-label {
+        color: #dce8f7;
+        font-size: 9px;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .debug-super-bars {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 5px;
+      }
+
+      .debug-super-bar {
+        height: 15px;
+        border: 1px solid #526078;
+        transform: skewX(-15deg);
+        background: rgba(22, 34, 53, 0.95);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+        cursor: pointer;
+      }
+
+      .debug-super-bar.is-filled {
+        border-color: #63d7ff;
+        background: var(--blue);
+        box-shadow: 0 0 10px rgba(47, 157, 255, 0.42), inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+      }
+
+      .debug-super-bar:disabled {
+        cursor: not-allowed;
+        opacity: 0.34;
+        filter: grayscale(1);
       }
 
       .debug-actions {
@@ -276,15 +320,38 @@
         overflow: hidden;
       }
 
+      .health-damage,
       .health-fill {
+        position: absolute;
+        top: 2px;
+        bottom: 2px;
+        left: 2px;
         width: 100%;
-        height: 100%;
-        background: linear-gradient(#ff5555, var(--red));
-        transition: width 360ms ease;
       }
 
+      .health-damage {
+        z-index: 1;
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 18%),
+          linear-gradient(#fff06a, #ff9f18 48%, #df2d16);
+        box-shadow: inset 0 0 9px rgba(255, 255, 255, 0.62), 0 0 12px rgba(255, 153, 23, 0.45);
+        transition: width 860ms cubic-bezier(0.2, 0.78, 0.2, 1);
+      }
+
+      .health-fill {
+        z-index: 2;
+        background: linear-gradient(#ff5555, var(--red));
+        transition: width 220ms ease-out;
+      }
+
+      .right .health-damage,
       .right .health-fill {
-        margin-left: auto;
+        right: 2px;
+        left: auto;
+      }
+
+      .health.is-damaged .health-damage {
+        animation: health-damage-flash 420ms ease-out;
       }
 
       .health-value {
@@ -292,6 +359,7 @@
         inset: 0;
         display: grid;
         place-items: center;
+        z-index: 3;
         font-family: "Anime Ace BB", Arial, sans-serif;
         font-size: clamp(8px, 2.5cqw, 13px);
         font-weight: 900;
@@ -502,7 +570,7 @@
       .state-float {
         position: absolute;
         left: 50%;
-        top: 2%;
+        top: -23%;
         z-index: 42;
         translate: -50% 0;
         max-width: 116%;
@@ -520,7 +588,7 @@
       }
 
       .state-float.center {
-        top: 40%;
+        top: 30%;
         max-width: 84%;
         font-size: clamp(16px, 5.2cqw, 30px);
       }
@@ -565,6 +633,11 @@
       @keyframes sprite-damage-flash {
         0%, 100% { filter: none; }
         50% { filter: brightness(1.75) saturate(1.7) drop-shadow(0 0 18px rgba(255, 48, 48, 0.9)); }
+      }
+
+      @keyframes health-damage-flash {
+        0% { filter: brightness(1.9) saturate(1.4); }
+        100% { filter: none; }
       }
 
       @keyframes damage-float-up {
@@ -711,7 +784,10 @@
 
       .action.disabled {
         cursor: not-allowed;
-        filter: grayscale(1) brightness(0.58);
+      }
+
+      .action.disabled::before {
+        filter: grayscale(1) brightness(0.58) drop-shadow(0 10px 7px rgba(0, 0, 0, 0.42));
       }
 
       .action::before {
@@ -765,9 +841,25 @@
         font-size: clamp(11px, 3.4cqw, 18px);
         line-height: 1;
         white-space: nowrap;
-        color: #f2f6ff;
-        text-shadow: 0 2px 0 #000, 0 0 7px rgba(255, 255, 255, 0.18);
+        color: #d9233e;
+        -webkit-text-stroke: 0.7px #07101c;
+        paint-order: stroke fill;
+        text-shadow:
+          0 2px 0 #07101c,
+          0 -1px 0 #07101c,
+          1px 0 0 #07101c,
+          -1px 0 0 #07101c,
+          1px 1px 0 #07101c,
+          -1px 1px 0 #07101c,
+          1px -1px 0 #07101c,
+          -1px -1px 0 #07101c,
+          0 0 4px rgba(7, 16, 28, 0.88),
+          0 0 6px rgba(255, 255, 255, 0.78);
         pointer-events: none;
+      }
+
+      .action.disabled .action-label {
+        opacity: 0.82;
       }
 
       .action:nth-child(1) {
@@ -945,12 +1037,14 @@
       }
 
       .menu-button:focus-visible,
+      .help-tab:focus-visible,
       .help-back:focus-visible {
         outline: 3px solid #f2f6ff;
         outline-offset: 5px;
       }
 
       .menu-button:active,
+      .help-tab:active,
       .help-back:active {
         transform: translateY(3px);
         box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.07), 0 7px 0 rgba(0, 0, 0, 0.42);
@@ -976,11 +1070,49 @@
       }
 
       .help-title {
-        margin: 0;
-        font-size: clamp(28px, 9cqw, 50px);
+        margin: 0 auto;
+        max-width: 100%;
+        padding: 0 0.08em;
+        font-size: clamp(28px, 8.4cqw, 46px);
         line-height: 0.92;
+        text-align: center;
         color: #fff8d6;
         text-shadow: 0 3px 0 #000, 0 0 16px rgba(255, 209, 87, 0.44);
+      }
+
+      .help-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(8px, 2.4cqw, 12px);
+      }
+
+      .help-tab {
+        min-height: clamp(42px, 10cqw, 56px);
+        border: 3px solid #31425a;
+        background: rgba(12, 20, 31, 0.92);
+        color: #a9bdd5;
+        font: inherit;
+        font-size: clamp(13px, 3.8cqw, 20px);
+        line-height: 1;
+        cursor: pointer;
+        text-shadow: 0 2px 0 #000;
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.04), 0 7px 0 rgba(0, 0, 0, 0.38);
+      }
+
+      .help-tab.is-active {
+        border-color: #63d7ff;
+        background: linear-gradient(#1f4b69, #10263b);
+        color: #f2fbff;
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08), 0 7px 0 rgba(0, 0, 0, 0.38), 0 0 14px rgba(99, 215, 255, 0.26);
+      }
+
+      .help-panel {
+        display: none;
+      }
+
+      .help-panel.is-active {
+        display: grid;
+        gap: clamp(10px, 2.8cqw, 16px);
       }
 
       .help-intro,
@@ -1001,6 +1133,11 @@
       }
 
       .rule-grid {
+        display: grid;
+        gap: clamp(10px, 2.8cqw, 16px);
+      }
+
+      .quick-grid {
         display: grid;
         gap: clamp(10px, 2.8cqw, 16px);
       }
@@ -1044,6 +1181,38 @@
       .rule-text p,
       .quick-card p {
         margin: 0;
+      }
+
+      .help-list {
+        display: grid;
+        gap: 0.55rem;
+        margin: 0;
+        padding-left: 1.1rem;
+      }
+
+      .help-list li {
+        padding-left: 0.15rem;
+      }
+
+      .state-term {
+        font-weight: 900;
+        text-shadow: 0 2px 0 #000, 0 0 9px currentColor;
+      }
+
+      .state-term.plus {
+        color: #ffd157;
+      }
+
+      .state-term.neutral {
+        color: #f2f6ff;
+      }
+
+      .state-term.knockdown {
+        color: #ff5b5b;
+      }
+
+      .state-term.ultimate {
+        color: var(--blue);
       }
 
       .inline-rule {
@@ -1092,11 +1261,30 @@
       <section class="screen help-screen is-hidden" id="helpScreen" aria-label="Tutorial">
         <div class="help-scroll">
           <h2 class="help-title">Como lutar</h2>
-          <div class="help-intro">
-            NEUTRO é sem PLUS. PLUS decide duelos de velocidade parecida. Golpe garantido dura 3s e deixa o rival sem ação. DERRUBADA pausa a volta até o ninja levantar.
+          <div class="help-tabs" role="tablist" aria-label="Tópicos de ajuda">
+            <button class="help-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="helpBasicPanel" id="helpBasicTab" data-help-tab="basic">BÁSICO</button>
+            <button class="help-tab" type="button" role="tab" aria-selected="false" aria-controls="helpMovesPanel" id="helpMovesTab" data-help-tab="moves">GOLPES</button>
+            <button class="help-tab" type="button" role="tab" aria-selected="false" aria-controls="helpGuaranteedPanel" id="helpGuaranteedTab" data-help-tab="guaranteed">GARANTIDOS</button>
+            <button class="help-tab" type="button" role="tab" aria-selected="false" aria-controls="helpStatesPanel" id="helpStatesTab" data-help-tab="states">ESTADOS</button>
           </div>
 
-          <div class="rule-grid" aria-label="Regras dos comandos">
+          <div class="help-panel is-active" id="helpBasicPanel" role="tabpanel" aria-labelledby="helpBasicTab" data-help-panel="basic">
+            <div class="help-intro">
+              NEUTRO é sem PLUS. PLUS decide duelos de velocidade parecida. Golpe garantido dura 3s e deixa o rival sem ação. DERRUBADA pausa a volta até o ninja levantar.
+            </div>
+
+            <div class="quick-grid">
+              <article class="quick-card">
+                <p>Escolha uma ação por turno. Depois da revelação, velocidade, PLUS e respostas defensivas decidem quem conecta.</p>
+              </article>
+              <article class="quick-card">
+                <p>No golpe garantido, só quem ganhou a garantia escolhe ação. O rival fica sem resposta nesse turno.</p>
+              </article>
+            </div>
+          </div>
+
+          <div class="help-panel" id="helpMovesPanel" role="tabpanel" aria-labelledby="helpMovesTab" data-help-panel="moves" hidden>
+            <div class="rule-grid" aria-label="Regras dos comandos">
             <article class="rule-card">
               <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</h3>
               <div class="rule-text">
@@ -1154,8 +1342,52 @@
             </article>
           </div>
 
-          <div class="quick-card">
-            <p>Ações iguais sempre limpam o PLUS e deixam o jogo NEUTRO. DERRUBADA não muda escolha por si só: ela só segura a animação de levantar.</p>
+          </div>
+
+          <div class="help-panel" id="helpGuaranteedPanel" role="tabpanel" aria-labelledby="helpGuaranteedTab" data-help-panel="guaranteed" hidden>
+            <div class="quick-grid">
+              <article class="rule-card">
+                <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/jump.webp" alt="">PULO NO GRAB</h3>
+                <div class="rule-text">
+                  <p>Quem pulou contra GRAB ganha 3s para escolher uma ação garantida. Pode escolher qualquer opção.</p>
+                </div>
+              </article>
+
+              <article class="rule-card">
+                <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/block.webp" alt="">BLOCK NO ULTIMATE</h3>
+                <div class="rule-text">
+                  <p>Quem defendeu ULTIMATE garante qualquer golpe no próximo turno. O oponente não pode escolher ação.</p>
+                </div>
+              </article>
+
+              <article class="rule-card">
+                <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/combo.webp" alt="">COMBO ACERTOU</h3>
+                <div class="rule-text">
+                  <p>Quem acertou COMBO ganha 3s para escolher uma ação garantida. Pode escolher qualquer opção, exceto GRAB e COMBO.</p>
+                </div>
+              </article>
+
+              <article class="quick-card">
+                <p>Exceção: se COMBO acertar JUMP, vira DERRUBADA e não gera golpe garantido.</p>
+              </article>
+            </div>
+          </div>
+
+          <div class="help-panel" id="helpStatesPanel" role="tabpanel" aria-labelledby="helpStatesTab" data-help-panel="states" hidden>
+            <div class="quick-grid">
+              <article class="quick-card">
+                <p><span class="state-term plus">PLUS:</span> vantagem guardada do turno anterior. Decide quando dois ataques têm velocidade próxima.</p>
+              </article>
+              <article class="quick-card">
+                <p><span class="state-term neutral">NEUTRO:</span> sem PLUS para nenhum lado. Ações iguais limpam o PLUS e deixam o jogo neutro.</p>
+              </article>
+              <article class="quick-card">
+                <p><span class="state-term knockdown">DERRUBADA:</span> pausa a retomada até a animação de levantar terminar. Não bloqueia a escolha por regra própria.</p>
+              </article>
+              <article class="quick-card">
+                <p><span class="state-term ultimate">ULTIMATE:</span> precisa de 3 barras. Mesmo em golpe garantido, só fica disponível quando a barra está cheia.</p>
+              </article>
+            </div>
           </div>
 
           <button class="help-back" type="button" id="backFromHelpButton">VOLTAR</button>
@@ -1172,6 +1404,7 @@
           </div>
           <div class="bars">
             <div class="health">
+              <div class="health-damage" id="p1HealthDamage"></div>
               <div class="health-fill" id="p1HealthFill"></div>
               <div class="health-value" id="p1HealthText">100%</div>
             </div>
@@ -1184,6 +1417,7 @@
         <div class="fighter-hud right">
           <div class="bars">
             <div class="health">
+              <div class="health-damage" id="p2HealthDamage"></div>
               <div class="health-fill" id="p2HealthFill"></div>
               <div class="health-value" id="p2HealthText">100%</div>
             </div>
@@ -1207,15 +1441,15 @@
         aria-hidden="true"
       ></video>
 
-      <section class="resolution" aria-label="Resolucao do turno">
+      <section class="resolution" aria-label="Resolução do turno">
         <div class="notice fast" id="noticePrimary">READY</div>
       </section>
 
       <section class="fight-layer" aria-label="Arena de luta">
-        <div class="battle-token p1 is-hidden" id="p1Token" aria-label="Acao escolhida pelo jogador">
+        <div class="battle-token p1 is-hidden" id="p1Token" aria-label="Ação escolhida pelo jogador">
           <img id="p1TokenImage" src="../../assets/ui/action-panel/buttons/question.webp" alt="">
         </div>
-        <div class="battle-token p2" id="p2Token" aria-label="Acao escolhida pela CPU">
+        <div class="battle-token p2" id="p2Token" aria-label="Ação escolhida pela CPU">
           <img id="p2TokenImage" src="../../assets/ui/action-panel/buttons/question.webp" alt="">
         </div>
         <div class="fighter p1" id="p1Fighter" aria-label="Personagem jogador 1">
@@ -1230,7 +1464,7 @@
         <div class="turn-meter-fill" id="turnMeterFill"></div>
       </section>
 
-      <section class="controls" aria-label="Painel de acoes">
+      <section class="controls" aria-label="Painel de ações">
         <button class="action" type="button" aria-label="Poke" data-action="Poke">
           <span class="action-hit"></span>
           <span class="action-label">POKE</span>
@@ -1267,8 +1501,8 @@
 
       <section class="battle-over" id="battleOver" aria-label="Fim da batalha">
         <div class="battle-over-panel">
-          <div class="battle-over-title" id="battleOverTitle">YOU WIN</div>
-          <button class="reset-button" type="button" id="resetButton">RESTART</button>
+          <div class="battle-over-title" id="battleOverTitle">VOCÊ VENCEU</div>
+          <button class="reset-button" type="button" id="resetButton">REINICIAR</button>
         </div>
       </section>
     </main>
@@ -1281,8 +1515,16 @@
         <input type="checkbox" id="debugToggle" checked>
       </label>
       <div class="debug-disabled-note">Debug desligado: o jogo usa timer e CPU normal.</div>
-      <section class="debug-group" aria-label="Debug player action">
+      <section class="debug-group" aria-label="Debug da ação do jogador">
         <div class="debug-group-title">PLAYER</div>
+        <div class="debug-super-control" aria-label="Barra de super do PLAYER">
+          <span class="debug-super-label">Barra de super:</span>
+          <div class="debug-super-bars">
+            <button class="debug-super-bar" type="button" data-debug-super-side="p1" data-super-value="1" aria-label="PLAYER super 1"></button>
+            <button class="debug-super-bar" type="button" data-debug-super-side="p1" data-super-value="2" aria-label="PLAYER super 2"></button>
+            <button class="debug-super-bar" type="button" data-debug-super-side="p1" data-super-value="3" aria-label="PLAYER super 3"></button>
+          </div>
+        </div>
         <div class="debug-actions" id="debugP1Actions">
           <button class="debug-action" type="button" data-debug-side="p1" data-action="Poke">POKE</button>
           <button class="debug-action" type="button" data-debug-side="p1" data-action="Combo">COMBO</button>
@@ -1294,8 +1536,16 @@
           <button class="debug-action" type="button" data-debug-side="p1" data-action="Jump">JUMP</button>
         </div>
       </section>
-      <section class="debug-group" aria-label="Debug CPU action">
+      <section class="debug-group" aria-label="Debug da ação da CPU">
         <div class="debug-group-title">CPU</div>
+        <div class="debug-super-control" aria-label="Barra de super da CPU">
+          <span class="debug-super-label">Barra de super:</span>
+          <div class="debug-super-bars">
+            <button class="debug-super-bar" type="button" data-debug-super-side="p2" data-super-value="1" aria-label="CPU super 1"></button>
+            <button class="debug-super-bar" type="button" data-debug-super-side="p2" data-super-value="2" aria-label="CPU super 2"></button>
+            <button class="debug-super-bar" type="button" data-debug-super-side="p2" data-super-value="3" aria-label="CPU super 3"></button>
+          </div>
+        </div>
         <div class="debug-actions" id="debugP2Actions">
           <button class="debug-action" type="button" data-debug-side="p2" data-action="Poke">POKE</button>
           <button class="debug-action" type="button" data-debug-side="p2" data-action="Combo">COMBO</button>
@@ -1314,6 +1564,8 @@
       const GUARANTEED_TURN_DURATION = 3000;
       const TURN_BREAK = 2800;
       const RESULT_REVEAL_DELAY = 720;
+      const HEALTH_TRAIL_HOLD = 520;
+      const HEALTH_TRAIL_DELAY = RESULT_REVEAL_DELAY + 360 + HEALTH_TRAIL_HOLD;
       const CHARACTER_CONFIG_PATH = "../../assets/characters/ninja/ninja.json";
       const characterConfig = await loadCharacterConfig(CHARACTER_CONFIG_PATH);
       const idleAnimation = characterConfig.animations.idle;
@@ -1375,10 +1627,16 @@
         timerId: null,
         p1: { health: 100, super: 0 },
         p2: { health: 100, super: 0 },
+        healthTrail: { p1: 100, p2: 100 },
+        healthTrailTimers: { p1: null, p2: null },
       };
 
       const el = {
         actionButtons: [...document.querySelectorAll(".action")],
+        p1Health: document.querySelector("#p1HealthFill").parentElement,
+        p2Health: document.querySelector("#p2HealthFill").parentElement,
+        p1HealthDamage: document.querySelector("#p1HealthDamage"),
+        p2HealthDamage: document.querySelector("#p2HealthDamage"),
         p1HealthFill: document.querySelector("#p1HealthFill"),
         p2HealthFill: document.querySelector("#p2HealthFill"),
         p1HealthText: document.querySelector("#p1HealthText"),
@@ -1405,6 +1663,8 @@
         p2Sprite: document.querySelector("#p2Sprite"),
         startScreen: document.querySelector("#startScreen"),
         helpScreen: document.querySelector("#helpScreen"),
+        helpTabs: [...document.querySelectorAll(".help-tab")],
+        helpPanels: [...document.querySelectorAll(".help-panel")],
         playButton: document.querySelector("#playButton"),
         helpButton: document.querySelector("#helpButton"),
         backFromHelpButton: document.querySelector("#backFromHelpButton"),
@@ -1415,6 +1675,7 @@
         debugToggle: document.querySelector("#debugToggle"),
         debugStatus: document.querySelector("#debugStatus"),
         debugActionButtons: [...document.querySelectorAll(".debug-action")],
+        debugSuperButtons: [...document.querySelectorAll(".debug-super-bar")],
       };
 
       document.body.classList.toggle("debug-mode", state.debugAvailable);
@@ -1761,17 +2022,57 @@
         updateHud();
       }
 
+      function setHealthTrailWidth(side, value) {
+        const damageBar = el[`${side}HealthDamage`];
+        if (!damageBar) {
+          return;
+        }
+
+        damageBar.style.width = `${clampPercent(value)}%`;
+      }
+
+      function syncHealthTrailToCurrent() {
+        ["p1", "p2"].forEach((side) => {
+          window.clearTimeout(state.healthTrailTimers[side]);
+          state.healthTrail[side] = clampPercent(state[side].health);
+          setHealthTrailWidth(side, state.healthTrail[side]);
+        });
+      }
+
+      function showHealthDamageTrail(side, previousHealth) {
+        const healthElement = el[`${side}Health`];
+        const currentHealth = clampPercent(state[side].health);
+
+        window.clearTimeout(state.healthTrailTimers[side]);
+        state.healthTrail[side] = clampPercent(previousHealth);
+        setHealthTrailWidth(side, state.healthTrail[side]);
+
+        if (healthElement) {
+          healthElement.classList.remove("is-damaged");
+          void healthElement.offsetWidth;
+          healthElement.classList.add("is-damaged");
+        }
+
+        state.healthTrailTimers[side] = window.setTimeout(() => {
+          state.healthTrail[side] = currentHealth;
+          setHealthTrailWidth(side, currentHealth);
+        }, HEALTH_TRAIL_DELAY);
+      }
+
       function updateHud() {
         const p1Health = clampPercent(state.p1.health);
         const p2Health = clampPercent(state.p2.health);
 
         el.p1HealthFill.style.width = `${p1Health}%`;
         el.p2HealthFill.style.width = `${p2Health}%`;
+        el.p1HealthDamage.style.width = `${clampPercent(state.healthTrail.p1)}%`;
+        el.p2HealthDamage.style.width = `${clampPercent(state.healthTrail.p2)}%`;
         el.p1HealthText.textContent = `${p1Health}%`;
         el.p2HealthText.textContent = `${p2Health}%`;
 
         updateSuperMeter(el.p1SuperMeter, state.p1.super);
         updateSuperMeter(el.p2SuperMeter, state.p2.super);
+        updateDebugSuperControls();
         updateAdvantagePortraits();
 
         el.actionButtons.forEach((button) => {
@@ -1819,7 +2120,7 @@
         }
 
         if (state.phase === "over") {
-          el.debugStatus.textContent = "Batalha finalizada. Use RESTART.";
+          el.debugStatus.textContent = "Batalha finalizada. Use REINICIAR.";
           return;
         }
 
@@ -1847,6 +2148,30 @@
         [...meter.querySelectorAll(".pip")].forEach((pip, index) => {
           pip.classList.toggle("empty", index >= value);
         });
+      }
+
+      function updateDebugSuperControls() {
+        if (!state.debugAvailable) {
+          return;
+        }
+
+        el.debugSuperButtons.forEach((button) => {
+          const side = button.dataset.debugSuperSide;
+          const value = Number(button.dataset.superValue);
+          button.classList.toggle("is-filled", value <= state[side].super);
+          button.disabled = !state.debugMode;
+          button.setAttribute("aria-pressed", String(value <= state[side].super));
+        });
+      }
+
+      function setDebugSuper(side, selectedValue) {
+        if (!state.debugMode) {
+          return;
+        }
+
+        const nextValue = state[side].super === selectedValue ? selectedValue - 1 : selectedValue;
+        state[side].super = Math.max(0, Math.min(3, nextValue));
+        updateHud();
       }
 
       function displayActionName(action) {
@@ -2011,10 +2336,12 @@
           return;
         }
 
+        const previousHealth = state[targetSide].health;
         state[targetSide].health = clampPercent(state[targetSide].health - amount);
+        showHealthDamageTrail(targetSide, previousHealth);
 
         const grantsSuper = ["Combo", "Grab", "Special", "Super"].includes(sourceAction);
-        if (grantsSuper && !options.blocked) {
+        if (grantsSuper && !options.blocked && !state.debugMode) {
           state[targetSide].super = Math.min(3, state[targetSide].super + 1);
         }
       }
@@ -2028,7 +2355,7 @@
       }
 
       function consumeSuper(side, action) {
-        if (action === "Super") {
+        if (action === "Super" && !state.debugMode) {
           state[side].super = 0;
         }
       }
@@ -2051,7 +2378,7 @@
           state.advantage = null;
 
           if (p1Action === "Grab") {
-            return { type: "draw", primary: "AGARRAO QUEBRADO", secondary: "Os dois tentaram agarrar", damaged: [] };
+            return { type: "draw", primary: "AGARRÃO QUEBRADO", secondary: "Os dois tentaram agarrar", damaged: [] };
           }
 
           const damage = tradeDamage[p1Action] || 0;
@@ -2144,7 +2471,7 @@
             winner: defender,
             loser: attacker,
             primary: "PULOU",
-            secondary: `${defender.toUpperCase()} escapou do agarrao`,
+            secondary: `${defender.toUpperCase()} escapou do agarrão`,
             damaged: [],
             guaranteedTurn: guaranteeTurn(defender, selectableActions, "PULO NO GRAB"),
           };
@@ -2157,7 +2484,7 @@
         }
 
         state.advantage = null;
-        return { type: "draw", primary: "NEUTRO", secondary: `${displayActionName(attack)} nao conectou`, damaged: [] };
+        return { type: "draw", primary: "NEUTRO", secondary: `${displayActionName(attack)} não conectou`, damaged: [] };
       }
 
       function resolveTurn() {
@@ -2179,14 +2506,14 @@
         let result;
         if (!p1Action && !p2Action) {
           state.advantage = null;
-          result = { type: "draw", primary: "TEMPO ESGOTADO", secondary: "Ninguem escolheu ataque", damaged: [] };
+          result = { type: "draw", primary: "TEMPO ESGOTADO", secondary: "Ninguém escolheu ataque", damaged: [] };
         } else if (!p1Action) {
           if (attackActions.includes(p2Action)) {
             result = resolveHit("p2", "Wait", p2Action);
-            result.primary = "P1 SEM ACAO";
+            result.primary = "P1 SEM AÇÃO";
           } else {
             state.advantage = null;
-            result = { type: "draw", primary: "P1 SEM ACAO", secondary: "CPU tambem nao atacou", damaged: [] };
+            result = { type: "draw", primary: "P1 SEM AÇÃO", secondary: "CPU também não atacou", damaged: [] };
           }
         } else if (!p2Action) {
           if (attackActions.includes(p1Action)) {
@@ -2285,9 +2612,9 @@
         updateHud();
 
         if (state.p1.health <= 0 && state.p2.health <= 0) {
-          el.battleOverTitle.textContent = "DRAW";
+          el.battleOverTitle.textContent = "EMPATE";
         } else {
-          el.battleOverTitle.textContent = state.p2.health <= 0 ? "YOU WIN" : "YOU LOSE";
+          el.battleOverTitle.textContent = state.p2.health <= 0 ? "VOCÊ VENCEU" : "VOCÊ PERDEU";
         }
 
         el.battleOver.classList.add("show");
@@ -2303,6 +2630,7 @@
         state.guaranteedTurn = null;
         state.activeGuaranteedTurn = null;
         state.turnDuration = TURN_DURATION;
+        syncHealthTrailToCurrent();
         el.battleOver.classList.remove("show");
         startTurn();
       }
@@ -2315,11 +2643,26 @@
         updateDebugPanel();
       }
 
+      function setHelpTab(tabName) {
+        el.helpTabs.forEach((tab) => {
+          const isActive = tab.dataset.helpTab === tabName;
+          tab.classList.toggle("is-active", isActive);
+          tab.setAttribute("aria-selected", String(isActive));
+        });
+
+        el.helpPanels.forEach((panel) => {
+          const isActive = panel.dataset.helpPanel === tabName;
+          panel.classList.toggle("is-active", isActive);
+          panel.hidden = !isActive;
+        });
+      }
+
       function showHelpScreen() {
         window.clearInterval(state.timerId);
         state.phase = "help";
         el.startScreen.classList.add("is-hidden");
         el.helpScreen.classList.remove("is-hidden");
+        setHelpTab("basic");
         updateDebugPanel();
       }
 
@@ -2363,10 +2706,23 @@
         });
       });
 
+      el.debugSuperButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          if (!state.debugMode || button.disabled) {
+            return;
+          }
+
+          setDebugSuper(button.dataset.debugSuperSide, Number(button.dataset.superValue));
+        });
+      });
+
       el.debugToggle.addEventListener("change", handleDebugToggle);
       el.resetButton.addEventListener("click", resetBattle);
       el.playButton.addEventListener("click", playGame);
       el.helpButton.addEventListener("click", showHelpScreen);
+      el.helpTabs.forEach((tab) => {
+        tab.addEventListener("click", () => setHelpTab(tab.dataset.helpTab));
+      });
       el.backFromHelpButton.addEventListener("click", showStartScreen);
 
       showStartScreen();
