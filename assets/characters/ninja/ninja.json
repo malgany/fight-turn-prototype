@@ -1,0 +1,26 @@
+{
+  "id": "ninja",
+  "name": "Ninja",
+  "animations": {
+    "idle": {
+      "label": "Idle",
+      "framePattern": "../../assets/characters/ninja-idle/ninja-idle-{frame}.webp",
+      "frameCount": 45,
+      "framePad": 3,
+      "frameIntervalMs": 77,
+      "scale": 1,
+      "offsetXPercent": 0,
+      "offsetYPercent": 0
+    },
+    "getUp": {
+      "label": "Get Up",
+      "framePattern": "../../assets/characters/ninja-get-up/ninja-get-up-{frame}.webp",
+      "frameCount": 65,
+      "framePad": 3,
+      "frameIntervalMs": 54,
+      "scale": 1.3,
+      "offsetXPercent": 0,
+      "offsetYPercent": 15
+    }
+  }
+}

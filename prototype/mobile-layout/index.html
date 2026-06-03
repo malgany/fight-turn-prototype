@@ -326,15 +326,20 @@
       }
 
       .fighter-sprite {
+        --sprite-offset-x: 0%;
+        --sprite-offset-y: 0%;
+        --sprite-scale: 1;
         width: 100%;
         height: 100%;
         object-fit: contain;
+        transform: translate(var(--sprite-offset-x), var(--sprite-offset-y)) scale(var(--sprite-scale));
+        transform-origin: center bottom;
         user-select: none;
         pointer-events: none;
       }
 
       .fighter.p2 .fighter-sprite {
-        transform: scaleX(-1);
+        transform: translate(var(--sprite-offset-x), var(--sprite-offset-y)) scaleX(-1) scale(var(--sprite-scale));
       }
 
       .fighter.hit {
@@ -1089,22 +1094,16 @@
         </div>
       </section>
     </main>
-    <script>
+    <script type="module">
       const TURN_DURATION = 5000;
       const TURN_BREAK = 2800;
       const RESULT_REVEAL_DELAY = 720;
-      const IDLE_FRAME_COUNT = 45;
-      const IDLE_FRAME_INTERVAL = 77;
-      const GET_UP_FRAME_COUNT = 88;
-      const GET_UP_FRAME_INTERVAL = 67;
-      const idleFrames = Array.from(
-        { length: IDLE_FRAME_COUNT },
-        (_, index) => `../../assets/characters/ninja-idle/ninja-idle-${String(index + 1).padStart(3, "0")}.webp`
-      );
-      const getUpFrames = Array.from(
-        { length: GET_UP_FRAME_COUNT },
-        (_, index) => `../../assets/characters/ninja-get-up/ninja-get-up-${String(index + 1).padStart(3, "0")}.webp`
-      );
+      const CHARACTER_CONFIG_PATH = "../../assets/characters/ninja/ninja.json";
+      const characterConfig = await loadCharacterConfig(CHARACTER_CONFIG_PATH);
+      const idleAnimation = characterConfig.animations.idle;
+      const getUpAnimation = characterConfig.animations.getUp;
+      const idleFrames = buildAnimationFrames(idleAnimation);
+      const getUpFrames = buildAnimationFrames(getUpAnimation);
       const attackActions = ["Poke", "Combo", "Grab", "Special", "Super"];
       const actionNames = {
         Poke: "POKE",
@@ -1191,6 +1190,22 @@
       let idleFrameIndex = 0;
       const spriteAnimations = { p1: null, p2: null };
 
+      async function loadCharacterConfig(path) {
+        const response = await fetch(path);
+        if (!response.ok) {
+          throw new Error(`Could not load character config: ${path}`);
+        }
+
+        return response.json();
+      }
+
+      function buildAnimationFrames(animation) {
+        return Array.from({ length: animation.frameCount }, (_, index) => {
+          const frame = String(index + 1).padStart(animation.framePad || 3, "0");
+          return animation.framePattern.replace("{frame}", frame);
+        });
+      }
+
       function preloadFrames(frames) {
         frames.forEach((frame) => {
           const image = new Image();
@@ -1205,12 +1220,20 @@
         return side === "p1" ? el.p1Sprite : el.p2Sprite;
       }
 
+      function applySpriteDisplay(side, animation) {
+        const sprite = fighterSprite(side);
+        sprite.style.setProperty("--sprite-scale", animation.scale ?? 1);
+        sprite.style.setProperty("--sprite-offset-x", `${animation.offsetXPercent ?? 0}%`);
+        sprite.style.setProperty("--sprite-offset-y", `${animation.offsetYPercent ?? 0}%`);
+      }
+
       function clearSpriteAnimation(side) {
         const animation = spriteAnimations[side];
         if (animation) {
           window.clearTimeout(animation.timerId);
           spriteAnimations[side] = null;
         }
+        applySpriteDisplay(side, idleAnimation);
       }
 
       function clearSpriteAnimations() {
@@ -1218,33 +1241,34 @@
         clearSpriteAnimation("p2");
       }
 
-      function playSpriteAnimation(side, frames, frameInterval) {
+      function playSpriteAnimation(side, animationConfig, frames) {
         clearSpriteAnimation(side);
 
-        const animation = { frameIndex: 0, timerId: null };
-        spriteAnimations[side] = animation;
+        const playback = { frameIndex: 0, timerId: null };
+        spriteAnimations[side] = playback;
+        applySpriteDisplay(side, animationConfig);
 
         const advance = () => {
-          if (spriteAnimations[side] !== animation) {
+          if (spriteAnimations[side] !== playback) {
             return;
           }
 
-          fighterSprite(side).src = frames[animation.frameIndex];
-          animation.frameIndex += 1;
+          fighterSprite(side).src = frames[playback.frameIndex];
+          playback.frameIndex += 1;
 
-          if (animation.frameIndex < frames.length) {
-            animation.timerId = window.setTimeout(advance, frameInterval);
+          if (playback.frameIndex < frames.length) {
+            playback.timerId = window.setTimeout(advance, animationConfig.frameIntervalMs);
             return;
           }
 
-          spriteAnimations[side] = null;
+          clearSpriteAnimation(side);
         };
 
         advance();
       }
 
       function playKnockdownAnimation(sides) {
-        sides.forEach((side) => playSpriteAnimation(side, getUpFrames, GET_UP_FRAME_INTERVAL));
+        sides.forEach((side) => playSpriteAnimation(side, getUpAnimation, getUpFrames));
       }
 
       function updateIdleSprites() {
@@ -1257,7 +1281,9 @@
         }
       }
 
-      window.setInterval(updateIdleSprites, IDLE_FRAME_INTERVAL);
+      applySpriteDisplay("p1", idleAnimation);
+      applySpriteDisplay("p2", idleAnimation);
+      window.setInterval(updateIdleSprites, idleAnimation.frameIntervalMs);
 
       const advantageFire = {
         animationFrame: null,
@@ -1763,7 +1789,7 @@
               return;
             }
 
-            const knockdownBreak = knockedDown.length ? getUpFrames.length * GET_UP_FRAME_INTERVAL + 220 : 0;
+            const knockdownBreak = knockedDown.length ? getUpFrames.length * getUpAnimation.frameIntervalMs + 220 : 0;
             window.setTimeout(startTurn, Math.max(TURN_BREAK, knockdownBreak));
           }, 360);
         }, RESULT_REVEAL_DELAY);
