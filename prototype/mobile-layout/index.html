@@ -6,8 +6,9 @@
     <title>Fight Turn - Mobile Layout</title>
     <style>
       :root {
-        --action-panel-backplate: url("../../assets/ui/action-panel/backplate.png");
-        --arena-background: url("../../assets/backgrounds/city-street-arena.png");
+        --action-panel-backplate: url("../../assets/ui/action-panel/backplate.webp");
+        --arena-background: url("../../assets/backgrounds/city-street-arena.webp");
+        --title-screen-art: url("../../assets/backgrounds/title-screen-fighters.png");
         --panel: #101823;
         --panel-2: #192333;
         --line: #435067;
@@ -69,22 +70,22 @@
         top: 1.5%;
         height: 11%;
         display: grid;
-        grid-template-columns: 1fr 17% 1fr;
+        grid-template-columns: 1fr 12% 1fr;
         align-items: center;
-        gap: 2%;
-        padding: 0 3%;
+        gap: 1.5%;
+        padding: 0 2.6%;
         z-index: 20;
       }
 
       .fighter-hud {
         display: grid;
-        grid-template-columns: 25% 1fr;
+        grid-template-columns: 31% 1fr;
         align-items: center;
-        gap: 4%;
+        gap: 3.5%;
       }
 
       .fighter-hud.right {
-        grid-template-columns: 1fr 25%;
+        grid-template-columns: 1fr 31%;
       }
 
       .portrait {
@@ -138,12 +139,12 @@
 
       .bars {
         display: grid;
-        gap: 14%;
+        gap: 10%;
       }
 
       .health {
         position: relative;
-        height: clamp(14px, 4cqw, 28px);
+        height: clamp(18px, 5cqw, 34px);
         border: 3px solid #59657a;
         background: #121824;
         padding: 2px;
@@ -199,14 +200,16 @@
       }
 
       .timer {
+        width: 82%;
+        justify-self: center;
         aspect-ratio: 1;
         border: 3px solid #526078;
         background: #111722;
         display: grid;
         place-items: center;
-        font-size: clamp(25px, 10cqw, 58px);
+        font-size: clamp(18px, 7cqw, 40px);
         color: #fff;
-        text-shadow: 0 3px 0 #000;
+        text-shadow: 0 2px 0 #000;
       }
 
       .turn-meter {
@@ -585,49 +588,49 @@
       }
 
       .action:nth-child(1) {
-        --button-image: url("../../assets/ui/action-panel/buttons/poke.png");
+        --button-image: url("../../assets/ui/action-panel/buttons/poke.webp");
         --x: 17.8%;
         --y: 28%;
       }
 
       .action:nth-child(2) {
-        --button-image: url("../../assets/ui/action-panel/buttons/combo.png");
+        --button-image: url("../../assets/ui/action-panel/buttons/combo.webp");
         --x: 38.2%;
         --y: 28%;
       }
 
       .action:nth-child(3) {
-        --button-image: url("../../assets/ui/action-panel/buttons/grab.png");
+        --button-image: url("../../assets/ui/action-panel/buttons/grab.webp");
         --x: 58.4%;
         --y: 28%;
       }
 
       .action:nth-child(4) {
-        --button-image: url("../../assets/ui/action-panel/buttons/special.png");
+        --button-image: url("../../assets/ui/action-panel/buttons/special.webp");
         --x: 79.5%;
         --y: 28%;
       }
 
       .action:nth-child(5) {
-        --button-image: url("../../assets/ui/action-panel/buttons/super.png");
+        --button-image: url("../../assets/ui/action-panel/buttons/super.webp");
         --x: 17.8%;
         --y: 66%;
       }
 
       .action:nth-child(6) {
-        --button-image: url("../../assets/ui/action-panel/buttons/block.png");
+        --button-image: url("../../assets/ui/action-panel/buttons/block.webp");
         --x: 38.2%;
         --y: 66%;
       }
 
       .action:nth-child(7) {
-        --button-image: url("../../assets/ui/action-panel/buttons/crouch.png");
+        --button-image: url("../../assets/ui/action-panel/buttons/crouch.webp");
         --x: 58.4%;
         --y: 66%;
       }
 
       .action:nth-child(8) {
-        --button-image: url("../../assets/ui/action-panel/buttons/jump.png");
+        --button-image: url("../../assets/ui/action-panel/buttons/jump.webp");
         --x: 79.5%;
         --y: 66%;
       }
@@ -678,10 +681,304 @@
         cursor: pointer;
         text-shadow: 0 2px 0 #000;
       }
+
+      .screen {
+        position: absolute;
+        inset: 0;
+        z-index: 120;
+        display: grid;
+        min-height: 0;
+        color: #f2f6ff;
+        background: #050912;
+      }
+
+      .screen.is-hidden {
+        display: none;
+      }
+
+      .start-screen {
+        grid-template-rows: 1fr auto;
+        padding: 8% 7% 10%;
+        background:
+          linear-gradient(to bottom, rgba(2, 7, 14, 0.18), rgba(2, 7, 14, 0.2) 36%, rgba(2, 7, 14, 0.78) 71%, rgba(2, 7, 14, 0.95)),
+          var(--title-screen-art) center / cover no-repeat;
+      }
+
+      .title-stack {
+        display: grid;
+        align-content: start;
+        justify-items: center;
+        padding-top: 3%;
+        text-align: center;
+      }
+
+      .game-title {
+        margin: 0;
+        color: #fff8d6;
+        font-size: clamp(42px, 14cqw, 76px);
+        line-height: 0.88;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        text-shadow:
+          0 4px 0 #000,
+          0 0 18px rgba(255, 50, 42, 0.72),
+          0 0 28px rgba(67, 197, 200, 0.42);
+      }
+
+      .title-mark {
+        margin-top: 2%;
+        padding: 0.18em 0.48em;
+        border: 3px solid #63d7ff;
+        background: rgba(8, 20, 34, 0.82);
+        color: #63d7ff;
+        font-size: clamp(13px, 4cqw, 22px);
+        line-height: 1;
+        text-shadow: 0 2px 0 #000;
+      }
+
+      .menu-actions {
+        display: grid;
+        gap: clamp(10px, 3cqw, 18px);
+      }
+
+      .menu-button {
+        width: 100%;
+        min-height: clamp(52px, 13cqw, 78px);
+        border: 3px solid #6d7f9d;
+        background: linear-gradient(#24354f, #111b2a);
+        color: #f2f6ff;
+        font: inherit;
+        font-size: clamp(22px, 7cqw, 38px);
+        line-height: 1;
+        cursor: pointer;
+        text-shadow: 0 3px 0 #000;
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.07), 0 12px 0 rgba(0, 0, 0, 0.42);
+      }
+
+      .menu-button.primary {
+        border-color: #ffd157;
+        background: linear-gradient(#d3562e, #74241c);
+        color: #fff7d0;
+      }
+
+      .menu-button:focus-visible,
+      .help-back:focus-visible {
+        outline: 3px solid #f2f6ff;
+        outline-offset: 5px;
+      }
+
+      .menu-button:active,
+      .help-back:active {
+        transform: translateY(3px);
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.07), 0 7px 0 rgba(0, 0, 0, 0.42);
+      }
+
+      .help-screen {
+        grid-template-rows: minmax(0, 1fr);
+        padding: 5% 5% 6%;
+        background:
+          linear-gradient(to bottom, rgba(5, 10, 18, 0.94), rgba(12, 24, 38, 0.9)),
+          var(--arena-background) center / cover no-repeat;
+      }
+
+      .help-scroll {
+        display: grid;
+        gap: clamp(12px, 3cqw, 18px);
+        align-content: start;
+        min-height: 0;
+        max-height: 100%;
+        overflow-y: auto;
+        padding-right: 1%;
+        scrollbar-color: #63d7ff rgba(7, 13, 22, 0.8);
+      }
+
+      .help-title {
+        margin: 0;
+        font-size: clamp(28px, 9cqw, 50px);
+        line-height: 0.92;
+        color: #fff8d6;
+        text-shadow: 0 3px 0 #000, 0 0 16px rgba(255, 209, 87, 0.44);
+      }
+
+      .help-intro,
+      .rule-card,
+      .quick-card {
+        border: 3px solid #41516a;
+        background: rgba(12, 20, 31, 0.9);
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.04);
+      }
+
+      .help-intro {
+        padding: 0.85rem;
+        font-family: Arial, sans-serif;
+        font-size: clamp(13px, 3.2cqw, 17px);
+        font-weight: 900;
+        line-height: 1.28;
+        color: #dce8f7;
+      }
+
+      .rule-grid {
+        display: grid;
+        gap: clamp(10px, 2.8cqw, 16px);
+      }
+
+      .rule-card,
+      .quick-card {
+        display: grid;
+        gap: 0.45rem;
+        padding: 0.75rem;
+      }
+
+      .rule-title {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        min-width: 0;
+        margin: 0;
+        font-size: clamp(18px, 5.2cqw, 30px);
+        line-height: 1;
+        color: #ffffff;
+        text-shadow: 0 2px 0 #000;
+      }
+
+      .rule-icon {
+        width: clamp(28px, 8cqw, 44px);
+        aspect-ratio: 1;
+        flex: 0 0 auto;
+        object-fit: contain;
+        filter: drop-shadow(0 5px 3px rgba(0, 0, 0, 0.5));
+      }
+
+      .rule-text,
+      .quick-card {
+        font-family: Arial, sans-serif;
+        font-size: clamp(12px, 3.15cqw, 16px);
+        font-weight: 900;
+        line-height: 1.28;
+        color: #dce8f7;
+      }
+
+      .rule-text p,
+      .quick-card p {
+        margin: 0;
+      }
+
+      .inline-rule {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.18rem;
+        color: #fff8d6;
+        white-space: nowrap;
+      }
+
+      .inline-rule img {
+        width: 1.4em;
+        height: 1.4em;
+        object-fit: contain;
+        vertical-align: middle;
+      }
+
+      .help-back {
+        min-height: clamp(48px, 12cqw, 66px);
+        border: 3px solid #ffd157;
+        background: linear-gradient(#d3562e, #74241c);
+        color: #fff7d0;
+        font: inherit;
+        font-size: clamp(18px, 5.8cqw, 32px);
+        line-height: 1;
+        cursor: pointer;
+        text-shadow: 0 3px 0 #000;
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.07), 0 10px 0 rgba(0, 0, 0, 0.42);
+      }
     </style>
   </head>
   <body>
     <main class="phone" aria-label="Fight Turn mobile battle layout prototype">
+      <section class="screen start-screen" id="startScreen" aria-label="Tela inicial">
+        <div class="title-stack">
+          <h1 class="game-title">Fight Turner</h1>
+          <div class="title-mark">TURN BASED FIGHT</div>
+        </div>
+
+        <nav class="menu-actions" aria-label="Menu principal">
+          <button class="menu-button primary" type="button" id="playButton">JOGAR</button>
+          <button class="menu-button" type="button" id="helpButton">AJUDA</button>
+        </nav>
+      </section>
+
+      <section class="screen help-screen is-hidden" id="helpScreen" aria-label="Tutorial">
+        <div class="help-scroll">
+          <h2 class="help-title">Como lutar</h2>
+          <div class="help-intro">
+            Escolha uma acao antes do tempo acabar. Os dois lados revelam juntos, o golpe mais rapido vence os duelos diretos e a vantagem decide empates apertados.
+          </div>
+
+          <div class="rule-grid" aria-label="Regras dos comandos">
+            <article class="rule-card">
+              <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</h3>
+              <div class="rule-text">
+                <p>Golpe mais rapido. Pressiona quem tenta <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</span> ou <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</span>. Contra ataque direto, costuma bater antes de quase tudo, mas causa pouco dano.</p>
+              </div>
+            </article>
+
+            <article class="rule-card">
+              <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/combo.webp" alt="">COMBO</h3>
+              <div class="rule-text">
+                <p>Mais forte que <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</span> e bom para punir acoes lentas. Perde para <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</span> se nao houver vantagem e pode ser evitado por <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</span>.</p>
+              </div>
+            </article>
+
+            <article class="rule-card">
+              <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/grab.webp" alt="">GRAB</h3>
+              <div class="rule-text">
+                <p>Quebra <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/block.webp" alt="">BLOCK</span> e causa dano alto. Nao pega quem usa <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</span> ou <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</span>, entao use quando o rival estiver defendendo demais.</p>
+              </div>
+            </article>
+
+            <article class="rule-card">
+              <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/special.webp" alt="">SPECIAL</h3>
+              <div class="rule-text">
+                <p>Lento, pesado e bom contra movimento. Acerta <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</span>, mas sofre contra ataques mais rapidos e ainda toma bloqueio.</p>
+              </div>
+            </article>
+
+            <article class="rule-card">
+              <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/super.webp" alt="">SUPER</h3>
+              <div class="rule-text">
+                <p>Golpe de maior dano e custa 3 barras. Derruba quem tenta <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</span>, mas e o ataque mais lento: <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/block.webp" alt="">BLOCK</span> reduz o dano e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</span> escapa.</p>
+              </div>
+            </article>
+
+            <article class="rule-card">
+              <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/block.webp" alt="">BLOCK</h3>
+              <div class="rule-text">
+                <p>Segura <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/combo.webp" alt="">COMBO</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/special.webp" alt="">SPECIAL</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/super.webp" alt="">SUPER</span>, tomando pouco dano. Perde para <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/grab.webp" alt="">GRAB</span>.</p>
+              </div>
+            </article>
+
+            <article class="rule-card">
+              <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</h3>
+              <div class="rule-text">
+                <p>Evita <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/combo.webp" alt="">COMBO</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/grab.webp" alt="">GRAB</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/super.webp" alt="">SUPER</span>. Nao use contra <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</span> ou <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/special.webp" alt="">SPECIAL</span>.</p>
+              </div>
+            </article>
+
+            <article class="rule-card">
+              <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</h3>
+              <div class="rule-text">
+                <p>Escapa de <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/grab.webp" alt="">GRAB</span>, mas e arriscado: <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/combo.webp" alt="">COMBO</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/special.webp" alt="">SPECIAL</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/super.webp" alt="">SUPER</span> podem te pegar no ar.</p>
+              </div>
+            </article>
+          </div>
+
+          <div class="quick-card">
+            <p>Leitura rapida: ataque rapido vence ataque lento. Acoes iguais podem virar trade. Se alguem tiver vantagem, ela decide duelos com velocidade parecida.</p>
+          </div>
+
+          <button class="help-back" type="button" id="backFromHelpButton">VOLTAR</button>
+        </div>
+      </section>
+
       <div class="arena-background" aria-hidden="true"></div>
 
       <section class="hud" aria-label="HUD superior">
@@ -733,10 +1030,10 @@
 
       <section class="fight-layer" aria-label="Arena de luta">
         <div class="battle-token p1 is-hidden" id="p1Token" aria-label="Acao escolhida pelo jogador">
-          <img id="p1TokenImage" src="../../assets/ui/action-panel/buttons/question.png" alt="">
+          <img id="p1TokenImage" src="../../assets/ui/action-panel/buttons/question.webp" alt="">
         </div>
         <div class="battle-token p2" id="p2Token" aria-label="Acao escolhida pela CPU">
-          <img id="p2TokenImage" src="../../assets/ui/action-panel/buttons/question.png" alt="">
+          <img id="p2TokenImage" src="../../assets/ui/action-panel/buttons/question.webp" alt="">
         </div>
         <div class="fighter p1" id="p1Fighter" aria-label="Personagem jogador 1">
           <img class="fighter-sprite" id="p1Sprite" src="../../assets/characters/ninja-idle/ninja-idle-001.webp" alt="">
@@ -815,16 +1112,16 @@
         Wait: "WAIT",
       };
       const actionImages = {
-        Poke: "../../assets/ui/action-panel/buttons/poke.png",
-        Combo: "../../assets/ui/action-panel/buttons/combo.png",
-        Grab: "../../assets/ui/action-panel/buttons/grab.png",
-        Special: "../../assets/ui/action-panel/buttons/special.png",
-        Super: "../../assets/ui/action-panel/buttons/super.png",
-        Block: "../../assets/ui/action-panel/buttons/block.png",
-        Crouch: "../../assets/ui/action-panel/buttons/crouch.png",
-        Jump: "../../assets/ui/action-panel/buttons/jump.png",
-        Question: "../../assets/ui/action-panel/buttons/question.png",
-        Wait: "../../assets/ui/action-panel/buttons/question.png",
+        Poke: "../../assets/ui/action-panel/buttons/poke.webp",
+        Combo: "../../assets/ui/action-panel/buttons/combo.webp",
+        Grab: "../../assets/ui/action-panel/buttons/grab.webp",
+        Special: "../../assets/ui/action-panel/buttons/special.webp",
+        Super: "../../assets/ui/action-panel/buttons/super.webp",
+        Block: "../../assets/ui/action-panel/buttons/block.webp",
+        Crouch: "../../assets/ui/action-panel/buttons/crouch.webp",
+        Jump: "../../assets/ui/action-panel/buttons/jump.webp",
+        Question: "../../assets/ui/action-panel/buttons/question.webp",
+        Wait: "../../assets/ui/action-panel/buttons/question.webp",
       };
       const actionData = {
         Poke: { speed: 1, damage: 4 },
@@ -875,6 +1172,11 @@
         p2Fighter: document.querySelector("#p2Fighter"),
         p1Sprite: document.querySelector("#p1Sprite"),
         p2Sprite: document.querySelector("#p2Sprite"),
+        startScreen: document.querySelector("#startScreen"),
+        helpScreen: document.querySelector("#helpScreen"),
+        playButton: document.querySelector("#playButton"),
+        helpButton: document.querySelector("#helpButton"),
+        backFromHelpButton: document.querySelector("#backFromHelpButton"),
         battleOver: document.querySelector("#battleOver"),
         battleOverTitle: document.querySelector("#battleOverTitle"),
         resetButton: document.querySelector("#resetButton"),
@@ -1439,6 +1741,26 @@
         startTurn();
       }
 
+      function showStartScreen() {
+        window.clearInterval(state.timerId);
+        state.phase = "menu";
+        el.startScreen.classList.remove("is-hidden");
+        el.helpScreen.classList.add("is-hidden");
+      }
+
+      function showHelpScreen() {
+        window.clearInterval(state.timerId);
+        state.phase = "help";
+        el.startScreen.classList.add("is-hidden");
+        el.helpScreen.classList.remove("is-hidden");
+      }
+
+      function playGame() {
+        el.startScreen.classList.add("is-hidden");
+        el.helpScreen.classList.add("is-hidden");
+        resetBattle();
+      }
+
       el.actionButtons.forEach((button) => {
         const release = () => button.classList.remove("is-held");
 
@@ -1466,8 +1788,11 @@
       });
 
       el.resetButton.addEventListener("click", resetBattle);
+      el.playButton.addEventListener("click", playGame);
+      el.helpButton.addEventListener("click", showHelpScreen);
+      el.backFromHelpButton.addEventListener("click", showStartScreen);
 
-      resetBattle();
+      showStartScreen();
     </script>
   </body>
 </html>

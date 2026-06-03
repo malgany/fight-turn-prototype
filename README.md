@@ -40,6 +40,12 @@ Outros caminhos possiveis:
 - `prototype/mobile-layout/`: estudo navegavel da tela de batalha mobile.
 - `tools/serve-prototype.mjs`: servidor local simples para abrir o prototipo.
 
+## Formato de assets
+
+- Use WebP para imagens ativas no prototipo web: sprites, sequencias de frames, cenario, paineis e botoes, incluindo assets com transparencia.
+- Mantenha PNG apenas como fonte, referencia ou backup em pastas `old/` quando for necessario preservar o asset original.
+- Antes de adicionar uma animacao por frames, confira o peso total da pasta. O idle atual do ninja usa 45 frames WebP em `assets/characters/ninja-idle/`.
+
 ## Prototipo atual
 
 - O jogador controla o personagem da esquerda.
