@@ -17,6 +17,8 @@ const contentTypes = new Map([
   [".mp4", "video/mp4"],
   [".svg", "image/svg+xml"],
   [".webp", "image/webp"],
+  [".ttf", "font/ttf"],
+  [".otf", "font/otf"],
 ]);
 
 function resolveRequestPath(url) {

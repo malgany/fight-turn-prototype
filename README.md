@@ -8,9 +8,9 @@ O projeto atual valida composicao visual e um loop jogavel simples: HUD superior
 
 - Dois jogadores escolhem acoes ao mesmo tempo.
 - Depois da confirmacao, as acoes sao reveladas e resolvidas automaticamente.
-- Estados principais: Neutro, Vantagem, Punido e Derrubado.
-- Acoes: Poke, Combo, Agarrao, Especial, Super, Bloqueio, Abaixar e Pulo.
-- O resultado depende de velocidade, vantagem, defesa/movimento, dano, barra de Super e regras especiais como trade e derrubada.
+- Estados principais: Neutro, PLUS, Punido, Derrubado e Golpe Garantido.
+- Acoes: Poke, Combo, Agarrao, Especial, ULTIMATE, Bloqueio, Abaixar e Pulo.
+- O resultado depende de velocidade, PLUS, defesa/movimento, dano, barra de ULTIMATE e regras especiais como trade, derrubada e golpe garantido.
 
 ## Decisao tecnica
 
@@ -52,8 +52,9 @@ Outros caminhos possiveis:
 - O personagem da direita escolhe acoes automaticamente.
 - Cada turno dura 10 segundos.
 - Ao final do tempo, as acoes escolhidas sao resolvidas e o dano reduz a vida de 100%.
-- Super exige 3 segmentos de barra.
+- ULTIMATE exige 3 segmentos de barra.
 - Ao terminar a luta, aparece um botao para reiniciar.
+- Em `localhost`, `127.0.0.1`, `0.0.0.0` ou `::1`, o prototipo ativa um painel de debug local fora da area do jogo. Nesse modo nao ha timer; o turno resolve quando PLAYER e CPU tiverem acoes escolhidas. Em hosts online, como GitHub Pages, o debug fica desativado por padrao.
 
 ## Como rodar o prototipo atual
 

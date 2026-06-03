@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Fight Turn - Mobile Layout</title>
     <style>
+      @font-face {
+        font-family: "Anime Ace BB";
+        src: url("../../assets/fonts/animeace2_reg.ttf") format("truetype");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: "Anime Ace BB";
+        src: url("../../assets/fonts/animeace2_bld.ttf") format("truetype");
+        font-weight: 900;
+        font-style: normal;
+        font-display: swap;
+      }
+
       :root {
         --action-panel-backplate: url("../../assets/ui/action-panel/backplate.webp");
         --arena-background: url("../../assets/backgrounds/city-street-arena.webp");
@@ -34,7 +50,116 @@
         place-items: center;
         background: #0a0d12;
         color: var(--text);
-        font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+        font-family: "Anime Ace BB", Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+      }
+
+      .debug-panel {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 120;
+        width: min(300px, calc(100vw - 32px));
+        display: none;
+        gap: 12px;
+        padding: 12px;
+        border: 2px solid #4d5d76;
+        background: rgba(7, 12, 20, 0.92);
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+      }
+
+      body.debug-mode .debug-panel {
+        display: grid;
+      }
+
+      .debug-title {
+        margin: 0;
+        color: #63d7ff;
+        font-size: 15px;
+        line-height: 1;
+      }
+
+      .debug-status {
+        min-height: 2.2em;
+        padding: 8px;
+        border: 1px solid #314159;
+        background: rgba(15, 24, 36, 0.92);
+        color: #dce8f7;
+        font-family: "Anime Ace BB", Arial, sans-serif;
+        font-size: 10px;
+        line-height: 1.25;
+      }
+
+      .debug-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px;
+        border: 1px solid #314159;
+        background: rgba(15, 24, 36, 0.72);
+        color: #fff8d6;
+        font-size: 11px;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .debug-toggle input {
+        width: 42px;
+        height: 22px;
+        accent-color: #63d7ff;
+        cursor: pointer;
+      }
+
+      .debug-group {
+        display: grid;
+        gap: 7px;
+      }
+
+      .debug-group-title {
+        color: #fff8d6;
+        font-size: 12px;
+        line-height: 1;
+      }
+
+      .debug-actions {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+      }
+
+      .debug-action {
+        min-height: 32px;
+        border: 1px solid #526078;
+        background: #172235;
+        color: #f2f6ff;
+        font: inherit;
+        font-size: 9px;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .debug-action:hover:not(:disabled),
+      .debug-action.selected {
+        border-color: #63d7ff;
+        background: #164766;
+        color: #ffffff;
+      }
+
+      .debug-action:disabled {
+        cursor: not-allowed;
+        opacity: 0.34;
+        filter: grayscale(1);
+      }
+
+      .debug-disabled-note {
+        display: none;
+        color: #93a4bc;
+        font-size: 9px;
+        line-height: 1.2;
+      }
+
+      body.debug-mode.debug-controls-off .debug-disabled-note {
+        display: block;
       }
 
       .phone {
@@ -167,7 +292,7 @@
         inset: 0;
         display: grid;
         place-items: center;
-        font-family: Arial, sans-serif;
+        font-family: "Anime Ace BB", Arial, sans-serif;
         font-size: clamp(8px, 2.5cqw, 13px);
         font-weight: 900;
         color: #fff;
@@ -365,13 +490,59 @@
         z-index: 6;
         translate: -50% 0;
         color: #ff3434;
-        font-family: Arial, sans-serif;
+        font-family: "Anime Ace BB", Arial, sans-serif;
         font-size: clamp(18px, 6.5cqw, 34px);
         font-weight: 1000;
         line-height: 1;
         text-shadow: 0 2px 0 #000, 0 0 10px rgba(255, 32, 32, 0.95);
         pointer-events: none;
         animation: damage-float-up 1700ms ease-out both;
+      }
+
+      .state-float {
+        position: absolute;
+        left: 50%;
+        top: 2%;
+        z-index: 42;
+        translate: -50% 0;
+        max-width: 116%;
+        padding: 0.28em 0.5em;
+        border: 2px solid currentColor;
+        background: rgba(8, 15, 25, 0.9);
+        font-size: clamp(12px, 3.4cqw, 19px);
+        font-weight: 900;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        text-shadow: 0 2px 0 #000;
+        pointer-events: none;
+        animation: state-float-up 1900ms ease-out both;
+      }
+
+      .state-float.center {
+        top: 40%;
+        max-width: 84%;
+        font-size: clamp(16px, 5.2cqw, 30px);
+      }
+
+      .state-float.plus {
+        color: #ffd157;
+        box-shadow: 0 0 14px rgba(255, 160, 34, 0.58), inset 0 0 12px rgba(255, 209, 87, 0.16);
+      }
+
+      .state-float.guaranteed {
+        color: #63d7ff;
+        box-shadow: 0 0 14px rgba(99, 215, 255, 0.58), inset 0 0 12px rgba(99, 215, 255, 0.14);
+      }
+
+      .state-float.knockdown {
+        color: #ff5b5b;
+        box-shadow: 0 0 14px rgba(255, 52, 52, 0.58), inset 0 0 12px rgba(255, 52, 52, 0.14);
+      }
+
+      .state-float.neutral {
+        color: #f2f6ff;
+        box-shadow: 0 0 14px rgba(242, 246, 255, 0.42), inset 0 0 12px rgba(242, 246, 255, 0.1);
       }
 
       @keyframes hit-shake {
@@ -402,6 +573,13 @@
         48% { opacity: 1; transform: translateY(-72%) scale(1); }
         78% { opacity: 0.55; transform: translateY(-132%) scale(0.98); }
         100% { opacity: 0; transform: translateY(-185%) scale(0.94); }
+      }
+
+      @keyframes state-float-up {
+        0% { opacity: 0; transform: translateY(16px) scale(0.88); }
+        18% { opacity: 1; transform: translateY(0) scale(1); }
+        74% { opacity: 1; }
+        100% { opacity: 0; transform: translateY(-42px) scale(1.03); }
       }
 
       @keyframes token-reveal {
@@ -455,7 +633,7 @@
       .resolution {
         top: 15.5%;
         z-index: 30;
-        display: grid;
+        display: none;
         justify-items: center;
         opacity: 0;
         transform: translateY(-6px);
@@ -815,7 +993,7 @@
 
       .help-intro {
         padding: 0.85rem;
-        font-family: Arial, sans-serif;
+        font-family: "Anime Ace BB", Arial, sans-serif;
         font-size: clamp(13px, 3.2cqw, 17px);
         font-weight: 900;
         line-height: 1.28;
@@ -856,8 +1034,8 @@
 
       .rule-text,
       .quick-card {
-        font-family: Arial, sans-serif;
-        font-size: clamp(12px, 3.15cqw, 16px);
+        font-family: "Anime Ace BB", Arial, sans-serif;
+        font-size: clamp(11px, 2.9cqw, 15px);
         font-weight: 900;
         line-height: 1.28;
         color: #dce8f7;
@@ -915,69 +1093,69 @@
         <div class="help-scroll">
           <h2 class="help-title">Como lutar</h2>
           <div class="help-intro">
-            Escolha uma ação antes do tempo acabar. Os dois lados revelam juntos, o golpe mais rápido vence os duelos diretos e a vantagem decide empates apertados.
+            NEUTRO é sem PLUS. PLUS decide duelos de velocidade parecida. Golpe garantido dura 3s e deixa o rival sem ação. DERRUBADA pausa a volta até o ninja levantar.
           </div>
 
           <div class="rule-grid" aria-label="Regras dos comandos">
             <article class="rule-card">
               <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</h3>
               <div class="rule-text">
-                <p>Golpe mais rápido. Pressiona quem tenta <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</span> ou <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</span>. Contra ataque direto, costuma bater antes de quase tudo, mas causa pouco dano.</p>
+                <p>Mais rápido e de dano baixo. Bate em <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</span>. Contra ataques diretos, costuma agir antes. No <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/block.webp" alt="">BLOCK</span>, causa 0%.</p>
               </div>
             </article>
 
             <article class="rule-card">
               <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/combo.webp" alt="">COMBO</h3>
               <div class="rule-text">
-                <p>Mais forte que <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</span> e bom para punir ações lentas. Derruba quando pega o rival no ar. Perde para <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</span> se não houver vantagem e pode ser evitado por <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</span>.</p>
+                <p>Bom contra ações lentas. Ao acertar, garante 3s para escolher qualquer opção exceto GRAB e COMBO. Se acertar <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</span>, vira DERRUBADA e não gera garantia. Perde para <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</span> sem PLUS; <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</span> esquiva.</p>
               </div>
             </article>
 
             <article class="rule-card">
               <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/grab.webp" alt="">GRAB</h3>
               <div class="rule-text">
-                <p>Quebra <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/block.webp" alt="">BLOCK</span>, causa dano alto e derruba ao acertar. Não pega quem usa <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</span> ou <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</span>.</p>
+                <p>Quebra <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/block.webp" alt="">BLOCK</span>, causa dano alto e derruba. Não pega <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</span> nem <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</span>. Se o rival pula seu GRAB, ele ganha ação garantida de 3s.</p>
               </div>
             </article>
 
             <article class="rule-card">
               <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/special.webp" alt="">SPECIAL</h3>
               <div class="rule-text">
-                <p>Lento, pesado e bom contra movimento. Acerta <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</span>, derruba este ninja ao acertar, mas sofre contra ataques mais rápidos e ainda toma bloqueio.</p>
+                <p>Lento e pesado. Acerta <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</span>, derrubando ao acertar. Sofre contra ataques mais rápidos e pode ser bloqueado.</p>
               </div>
             </article>
 
             <article class="rule-card">
-              <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/super.webp" alt="">SUPER</h3>
+              <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/super.webp" alt="">ULTIMATE</h3>
               <div class="rule-text">
-                <p>Golpe de maior dano e custa 3 barras. Derruba sempre que acerta, mas é o ataque mais lento: <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/block.webp" alt="">BLOCK</span> reduz o dano e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</span> escapa.</p>
+                <p>Custa 3 barras, causa maior dano e derruba se acertar. É o ataque mais lento: <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</span> escapa. <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/block.webp" alt="">BLOCK</span> reduz dano, pune e garante um golpe de ataque.</p>
               </div>
             </article>
 
             <article class="rule-card">
               <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/block.webp" alt="">BLOCK</h3>
               <div class="rule-text">
-                <p>Segura <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/combo.webp" alt="">COMBO</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/special.webp" alt="">SPECIAL</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/super.webp" alt="">SUPER</span>, tomando pouco dano. Perde para <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/grab.webp" alt="">GRAB</span>.</p>
+                <p>Segura <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/combo.webp" alt="">COMBO</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/special.webp" alt="">SPECIAL</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/super.webp" alt="">ULTIMATE</span>, ganhando PLUS. POKE no BLOCK causa 0%. BLOCK no ULTIMATE garante golpe. Perde para <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/grab.webp" alt="">GRAB</span>.</p>
               </div>
             </article>
 
             <article class="rule-card">
               <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/crouch.webp" alt="">CROUCH</h3>
               <div class="rule-text">
-                <p>Evita <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/combo.webp" alt="">COMBO</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/grab.webp" alt="">GRAB</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/super.webp" alt="">SUPER</span>. Não use contra <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</span> ou <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/special.webp" alt="">SPECIAL</span>.</p>
+                <p>Esquiva <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/combo.webp" alt="">COMBO</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/grab.webp" alt="">GRAB</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/super.webp" alt="">ULTIMATE</span>, ganhando PLUS. Perde para <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/special.webp" alt="">SPECIAL</span>.</p>
               </div>
             </article>
 
             <article class="rule-card">
               <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</h3>
               <div class="rule-text">
-                <p>Escapa de <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/grab.webp" alt="">GRAB</span>, mas é arriscado: <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/combo.webp" alt="">COMBO</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/special.webp" alt="">SPECIAL</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/super.webp" alt="">SUPER</span> podem te pegar no ar.</p>
+                <p>Escapa de <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/grab.webp" alt="">GRAB</span> e garante 3s para escolher qualquer opção. É arriscado: <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/combo.webp" alt="">COMBO</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/special.webp" alt="">SPECIAL</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/super.webp" alt="">ULTIMATE</span> pegam no ar.</p>
               </div>
             </article>
           </div>
 
           <div class="quick-card">
-            <p>Leitura rápida: ataque rápido vence ataque lento. Ações iguais podem virar trade. Se alguém tiver vantagem, ela decide duelos com velocidade parecida.</p>
+            <p>Ações iguais sempre limpam o PLUS e deixam o jogo NEUTRO. DERRUBADA não muda escolha por si só: ela só segura a animação de levantar.</p>
           </div>
 
           <button class="help-back" type="button" id="backFromHelpButton">VOLTAR</button>
@@ -1069,9 +1247,9 @@
           <span class="action-hit"></span>
           <span class="action-label">SPECIAL</span>
         </button>
-        <button class="action" type="button" aria-label="Super" data-action="Super">
+        <button class="action" type="button" aria-label="Ultimate" data-action="Super">
           <span class="action-hit"></span>
-          <span class="action-label">SUPER</span>
+          <span class="action-label">ULTIMATE</span>
         </button>
         <button class="action" type="button" aria-label="Block" data-action="Block">
           <span class="action-hit"></span>
@@ -1094,8 +1272,46 @@
         </div>
       </section>
     </main>
+
+    <aside class="debug-panel" id="debugPanel" aria-label="Debug local">
+      <h2 class="debug-title">DEBUG LOCAL</h2>
+      <div class="debug-status" id="debugStatus">Escolha PLAYER e CPU para resolver.</div>
+      <label class="debug-toggle">
+        <span>DEBUG ATIVO</span>
+        <input type="checkbox" id="debugToggle" checked>
+      </label>
+      <div class="debug-disabled-note">Debug desligado: o jogo usa timer e CPU normal.</div>
+      <section class="debug-group" aria-label="Debug player action">
+        <div class="debug-group-title">PLAYER</div>
+        <div class="debug-actions" id="debugP1Actions">
+          <button class="debug-action" type="button" data-debug-side="p1" data-action="Poke">POKE</button>
+          <button class="debug-action" type="button" data-debug-side="p1" data-action="Combo">COMBO</button>
+          <button class="debug-action" type="button" data-debug-side="p1" data-action="Grab">GRAB</button>
+          <button class="debug-action" type="button" data-debug-side="p1" data-action="Special">SPECIAL</button>
+          <button class="debug-action" type="button" data-debug-side="p1" data-action="Super">ULTIMATE</button>
+          <button class="debug-action" type="button" data-debug-side="p1" data-action="Block">BLOCK</button>
+          <button class="debug-action" type="button" data-debug-side="p1" data-action="Crouch">CROUCH</button>
+          <button class="debug-action" type="button" data-debug-side="p1" data-action="Jump">JUMP</button>
+        </div>
+      </section>
+      <section class="debug-group" aria-label="Debug CPU action">
+        <div class="debug-group-title">CPU</div>
+        <div class="debug-actions" id="debugP2Actions">
+          <button class="debug-action" type="button" data-debug-side="p2" data-action="Poke">POKE</button>
+          <button class="debug-action" type="button" data-debug-side="p2" data-action="Combo">COMBO</button>
+          <button class="debug-action" type="button" data-debug-side="p2" data-action="Grab">GRAB</button>
+          <button class="debug-action" type="button" data-debug-side="p2" data-action="Special">SPECIAL</button>
+          <button class="debug-action" type="button" data-debug-side="p2" data-action="Super">ULTIMATE</button>
+          <button class="debug-action" type="button" data-debug-side="p2" data-action="Block">BLOCK</button>
+          <button class="debug-action" type="button" data-debug-side="p2" data-action="Crouch">CROUCH</button>
+          <button class="debug-action" type="button" data-debug-side="p2" data-action="Jump">JUMP</button>
+        </div>
+      </section>
+    </aside>
+
     <script type="module">
       const TURN_DURATION = 5000;
+      const GUARANTEED_TURN_DURATION = 3000;
       const TURN_BREAK = 2800;
       const RESULT_REVEAL_DELAY = 720;
       const CHARACTER_CONFIG_PATH = "../../assets/characters/ninja/ninja.json";
@@ -1104,13 +1320,17 @@
       const getUpAnimation = characterConfig.animations.getUp;
       const idleFrames = buildAnimationFrames(idleAnimation);
       const getUpFrames = buildAnimationFrames(getUpAnimation);
+      const LOCAL_DEBUG_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"]);
+      const debugAvailable = LOCAL_DEBUG_HOSTS.has(window.location.hostname);
       const attackActions = ["Poke", "Combo", "Grab", "Special", "Super"];
+      const selectableActions = ["Poke", "Combo", "Grab", "Special", "Super", "Block", "Crouch", "Jump"];
+      const comboGuaranteedActions = selectableActions.filter((action) => !["Grab", "Combo"].includes(action));
       const actionNames = {
         Poke: "POKE",
         Combo: "COMBO",
         Grab: "GRAB",
         Special: "SPECIAL",
-        Super: "SUPER",
+        Super: "ULTIMATE",
         Block: "BLOCK",
         Crouch: "CROUCH",
         Jump: "JUMP",
@@ -1138,14 +1358,19 @@
         Crouch: { type: "movement" },
         Jump: { type: "movement" },
       };
-      const blockChip = { Poke: 1, Combo: 2, Special: 2, Super: 3 };
+      const blockChip = { Poke: 0, Combo: 2, Special: 2, Super: 3 };
       const tradeDamage = { Poke: 3, Combo: 4, Grab: 0, Special: 5, Super: 8 };
 
       const state = {
         phase: "choosing",
+        debugAvailable,
+        debugMode: debugAvailable,
         selectedAction: null,
         aiAction: null,
         advantage: null,
+        guaranteedTurn: null,
+        activeGuaranteedTurn: null,
+        turnDuration: TURN_DURATION,
         turnStartedAt: 0,
         timerId: null,
         p1: { health: 100, super: 0 },
@@ -1173,6 +1398,7 @@
         p2TokenImage: document.querySelector("#p2TokenImage"),
         resolution: document.querySelector(".resolution"),
         noticePrimary: document.querySelector("#noticePrimary"),
+        fightLayer: document.querySelector(".fight-layer"),
         p1Fighter: document.querySelector("#p1Fighter"),
         p2Fighter: document.querySelector("#p2Fighter"),
         p1Sprite: document.querySelector("#p1Sprite"),
@@ -1185,7 +1411,14 @@
         battleOver: document.querySelector("#battleOver"),
         battleOverTitle: document.querySelector("#battleOverTitle"),
         resetButton: document.querySelector("#resetButton"),
+        debugPanel: document.querySelector("#debugPanel"),
+        debugToggle: document.querySelector("#debugToggle"),
+        debugStatus: document.querySelector("#debugStatus"),
+        debugActionButtons: [...document.querySelectorAll(".debug-action")],
       };
+
+      document.body.classList.toggle("debug-mode", state.debugAvailable);
+      document.body.classList.toggle("debug-controls-off", state.debugAvailable && !state.debugMode);
 
       let idleFrameIndex = 0;
       const spriteAnimations = { p1: null, p2: null };
@@ -1427,19 +1660,105 @@
       }
 
       function canUseAction(side, action) {
-        if (action !== "Super") {
-          return true;
+        if (state.activeGuaranteedTurn) {
+          const isGuaranteedSide = state.activeGuaranteedTurn.side === side;
+          const isAllowedAction = state.activeGuaranteedTurn.allowedActions.includes(action);
+
+          if (!isGuaranteedSide || !isAllowedAction) {
+            return false;
+          }
         }
 
-        return state[side].super >= 3;
+        if (action === "Super") {
+          return state[side].super >= 3;
+        }
+
+        return true;
       }
 
-      function pickAiAction() {
-        const actions = ["Poke", "Combo", "Grab", "Special", "Block", "Crouch", "Jump"];
-        if (state.p2.super >= 3) {
-          actions.push("Super");
+      function pickAiAction(allowedActions = selectableActions) {
+        const actions = allowedActions.filter((action) => canUseAction("p2", action));
+        if (!actions.length) {
+          return null;
         }
+
         return actions[Math.floor(Math.random() * actions.length)];
+      }
+
+      function selectActionForSide(side, action) {
+        if (state.phase !== "choosing" || !canUseAction(side, action)) {
+          return;
+        }
+
+        if (side === "p1") {
+          state.selectedAction = action;
+        } else {
+          state.aiAction = action;
+        }
+
+        setTokenDisplay(false);
+        updateHud();
+        tryResolveDebugTurn();
+      }
+
+      function tryResolveDebugTurn() {
+        if (!state.debugMode || state.phase !== "choosing") {
+          return;
+        }
+
+        const guaranteedSide = state.activeGuaranteedTurn?.side;
+        const hasRequiredActions = guaranteedSide === "p1"
+          ? Boolean(state.selectedAction)
+          : guaranteedSide === "p2"
+            ? Boolean(state.aiAction)
+            : Boolean(state.selectedAction && state.aiAction);
+
+        if (hasRequiredActions) {
+          window.setTimeout(resolveTurn, 0);
+        }
+      }
+
+      function syncDebugModeUi() {
+        if (!state.debugAvailable) {
+          return;
+        }
+
+        document.body.classList.toggle("debug-controls-off", !state.debugMode);
+        el.debugToggle.checked = state.debugMode;
+      }
+
+      function handleDebugToggle() {
+        if (!state.debugAvailable) {
+          return;
+        }
+
+        state.debugMode = el.debugToggle.checked;
+        syncDebugModeUi();
+
+        if (state.phase === "choosing") {
+          window.clearInterval(state.timerId);
+
+          if (state.debugMode) {
+            state.aiAction = null;
+            state.turnStartedAt = Date.now();
+            el.turnMeterFill.style.width = "0%";
+            el.roundClock.textContent = "0";
+            setTokenDisplay(false);
+          } else {
+            if (!state.aiAction && state.activeGuaranteedTurn?.side !== "p1") {
+              state.aiAction = state.activeGuaranteedTurn?.side === "p2"
+                ? pickAiAction(state.activeGuaranteedTurn.allowedActions)
+                : pickAiAction();
+            }
+            state.turnStartedAt = Date.now();
+            el.turnMeterFill.style.width = "100%";
+            el.roundClock.textContent = String(Math.ceil(state.turnDuration / 1000));
+            state.timerId = window.setInterval(tickTurn, 100);
+            setTokenDisplay(false);
+          }
+        }
+
+        updateHud();
       }
 
       function updateHud() {
@@ -1462,6 +1781,66 @@
           button.classList.toggle("disabled", isDisabled);
           button.disabled = isDisabled;
         });
+
+        updateDebugPanel();
+      }
+
+      function updateDebugPanel() {
+        if (!state.debugAvailable) {
+          return;
+        }
+
+        syncDebugModeUi();
+
+        el.debugActionButtons.forEach((button) => {
+          const side = button.dataset.debugSide;
+          const action = button.dataset.action;
+          const selectedAction = side === "p1" ? state.selectedAction : state.aiAction;
+          const isSelected = selectedAction === action;
+          const isDisabled = !state.debugMode || state.phase !== "choosing" || !canUseAction(side, action);
+
+          button.classList.toggle("selected", isSelected);
+          button.disabled = isDisabled;
+        });
+
+        if (!state.debugMode) {
+          el.debugStatus.textContent = "Debug desligado: jogo normal com timer.";
+          return;
+        }
+
+        if (state.phase === "menu") {
+          el.debugStatus.textContent = "Clique JOGAR para iniciar o debug.";
+          return;
+        }
+
+        if (state.phase === "help") {
+          el.debugStatus.textContent = "Volte da ajuda para usar o debug.";
+          return;
+        }
+
+        if (state.phase === "over") {
+          el.debugStatus.textContent = "Batalha finalizada. Use RESTART.";
+          return;
+        }
+
+        if (state.phase !== "choosing") {
+          el.debugStatus.textContent = "Resolvendo turno...";
+          return;
+        }
+
+        if (state.activeGuaranteedTurn?.side === "p1") {
+          el.debugStatus.textContent = "GOLPE GARANTIDO P1: escolha PLAYER.";
+          return;
+        }
+
+        if (state.activeGuaranteedTurn?.side === "p2") {
+          el.debugStatus.textContent = "GOLPE GARANTIDO CPU: escolha CPU.";
+          return;
+        }
+
+        const p1 = state.selectedAction ? displayActionName(state.selectedAction) : "PLAYER ?";
+        const p2 = state.aiAction ? displayActionName(state.aiAction) : "CPU ?";
+        el.debugStatus.textContent = `${p1} vs ${p2}`;
       }
 
       function updateSuperMeter(meter, value) {
@@ -1485,15 +1864,23 @@
       }
 
       function setTokenDisplay(revealCpu = false) {
+        const p2CanAct = !state.activeGuaranteedTurn || state.activeGuaranteedTurn.side === "p2";
+        const showCpuAction = revealCpu || state.debugMode;
         clearTokenAnimationClasses();
         el.p1TokenImage.src = actionImage(state.selectedAction || "Question");
-        el.p2TokenImage.src = revealCpu ? actionImage(state.aiAction || "Question") : actionImages.Question;
+        el.p2TokenImage.src = showCpuAction ? actionImage(state.aiAction || "Question") : actionImages.Question;
         el.p1Token.classList.toggle("is-hidden", !state.selectedAction);
-        el.p2Token.classList.remove("is-hidden");
-        el.p2Token.classList.toggle("is-action", revealCpu && Boolean(state.aiAction));
+        el.p2Token.classList.toggle("is-hidden", !p2CanAct);
+        el.p2Token.classList.toggle("is-action", p2CanAct && showCpuAction && Boolean(state.aiAction));
       }
 
       function revealCpuToken() {
+        if (!state.aiAction) {
+          el.p2Token.classList.add("is-hidden");
+          el.p2Token.classList.remove("revealing", "is-action");
+          return;
+        }
+
         el.p2Token.classList.remove("revealing");
         el.p2Token.classList.remove("is-action");
         void el.p2Token.offsetWidth;
@@ -1535,13 +1922,8 @@
         });
       }
 
-      function flashNotice(primary, duration = 1800) {
-        el.noticePrimary.textContent = primary;
-        el.resolution.classList.add("show");
-        window.clearTimeout(flashNotice.timeout);
-        flashNotice.timeout = window.setTimeout(() => {
-          el.resolution.classList.remove("show");
-        }, duration);
+      function flashNotice() {
+        el.resolution.classList.remove("show");
       }
 
       function getDamageLosses(beforeHealth) {
@@ -1567,6 +1949,44 @@
         fighter.append(popup);
         popup.addEventListener("animationend", () => popup.remove(), { once: true });
         window.setTimeout(() => popup.remove(), 1900);
+      }
+
+      function showStatePopups(result) {
+        const knockedDown = new Set(result.knockedDown || []);
+
+        knockedDown.forEach((side) => {
+          createStatePopup(side, "DERRUBADO", "knockdown");
+        });
+
+        if (result.guaranteedTurn?.side) {
+          createStatePopup(result.guaranteedTurn.side, "GOLPE GARANTIDO", "guaranteed");
+          return;
+        }
+
+        if (result.winner && state.advantage === result.winner) {
+          createStatePopup(result.winner, "PLUS", "plus");
+          return;
+        }
+
+        if (!result.winner && state.advantage === null) {
+          createStatePopup("center", "NEUTRO", "neutral");
+        }
+      }
+
+      function createStatePopup(side, label, kind) {
+        const popup = document.createElement("span");
+        popup.className = `state-float ${kind}${side === "center" ? " center" : ""}`;
+        popup.textContent = label;
+
+        const parent = side === "center"
+          ? el.fightLayer
+          : side === "p1"
+            ? el.p1Fighter
+            : el.p2Fighter;
+
+        parent.append(popup);
+        popup.addEventListener("animationend", () => popup.remove(), { once: true });
+        window.setTimeout(() => popup.remove(), 2100);
       }
 
       function animateHit(winner) {
@@ -1613,8 +2033,23 @@
         }
       }
 
+      function guaranteeTurn(side, allowedActions, reason) {
+        return {
+          side,
+          allowedActions,
+          reason,
+          durationMs: GUARANTEED_TURN_DURATION,
+        };
+      }
+
+      function queueGuaranteedTurn(result) {
+        state.guaranteedTurn = result.guaranteedTurn || null;
+      }
+
       function resolveAttackVsAttack(p1Action, p2Action) {
         if (p1Action === p2Action) {
+          state.advantage = null;
+
           if (p1Action === "Grab") {
             return { type: "draw", primary: "AGARRAO QUEBRADO", secondary: "Os dois tentaram agarrar", damaged: [] };
           }
@@ -1647,16 +2082,20 @@
         const action = winner === "p1" ? p1Action : p2Action;
         const targetAction = winner === "p1" ? p2Action : p1Action;
         const knockedDown = causesKnockdown(action, targetAction) ? [loser] : [];
+        const guaranteedTurn = action === "Combo" && targetAction !== "Jump"
+          ? guaranteeTurn(winner, comboGuaranteedActions, "COMBO ACERTOU")
+          : null;
         applyDamage(loser, actionData[action].damage, action);
         state.advantage = winner;
         return {
           type: "hit",
           winner,
           loser,
-          primary: advantageWin ? "VANTAGEM DECIDIU" : `${displayActionName(action)} ACERTOU`,
+          primary: advantageWin ? "PLUS DECIDIU" : `${displayActionName(action)} ACERTOU`,
           secondary: `${winner.toUpperCase()} venceu o turno`,
           damaged: [loser],
           knockedDown,
+          guaranteedTurn,
         };
       }
 
@@ -1677,9 +2116,12 @@
             type: "blocked",
             winner: defender,
             loser: attacker,
-            primary: attack === "Super" ? "SUPER PUNIDO" : "BLOQUEOU",
+            primary: attack === "Super" ? "ULTIMATE PUNIDO" : "BLOQUEOU",
             secondary: `${defender.toUpperCase()} segurou ${displayActionName(attack)}`,
             damaged: blockChip[attack] > 0 ? [defender] : [],
+            guaranteedTurn: attack === "Super"
+              ? guaranteeTurn(defender, attackActions, "BLOCK NO ULTIMATE")
+              : null,
           };
         }
 
@@ -1704,6 +2146,7 @@
             primary: "PULOU",
             secondary: `${defender.toUpperCase()} escapou do agarrao`,
             damaged: [],
+            guaranteedTurn: guaranteeTurn(defender, selectableActions, "PULO NO GRAB"),
           };
         }
 
@@ -1781,6 +2224,7 @@
             flashDamagedFighters(result.damaged || []);
             playKnockdownAnimation(knockedDown);
             showDamagePopups(getDamageLosses(beforeHealth));
+            showStatePopups(result);
             flashNotice(result.primary);
             updateHud();
 
@@ -1789,6 +2233,7 @@
               return;
             }
 
+            queueGuaranteedTurn(result);
             const knockdownBreak = knockedDown.length ? getUpFrames.length * getUpAnimation.frameIntervalMs + 220 : 0;
             window.setTimeout(startTurn, Math.max(TURN_BREAK, knockdownBreak));
           }, 360);
@@ -1797,8 +2242,8 @@
 
       function tickTurn() {
         const elapsed = Date.now() - state.turnStartedAt;
-        const remaining = Math.max(0, TURN_DURATION - elapsed);
-        const ratio = remaining / TURN_DURATION;
+        const remaining = Math.max(0, state.turnDuration - elapsed);
+        const ratio = remaining / state.turnDuration;
         el.turnMeterFill.style.width = `${ratio * 100}%`;
         el.roundClock.textContent = String(Math.ceil(remaining / 1000));
 
@@ -1809,18 +2254,29 @@
 
       function startTurn() {
         clearSpriteAnimations();
+        state.activeGuaranteedTurn = state.guaranteedTurn;
+        state.guaranteedTurn = null;
+        state.turnDuration = state.activeGuaranteedTurn?.durationMs || TURN_DURATION;
         state.phase = "choosing";
         state.selectedAction = null;
-        state.aiAction = pickAiAction();
+        if (state.debugMode) {
+          state.aiAction = null;
+        } else if (state.activeGuaranteedTurn?.side === "p1") {
+          state.aiAction = null;
+        } else if (state.activeGuaranteedTurn?.side === "p2") {
+          state.aiAction = pickAiAction(state.activeGuaranteedTurn.allowedActions);
+        } else {
+          state.aiAction = pickAiAction();
+        }
         state.turnStartedAt = Date.now();
         setTokenDisplay(false);
-        el.noticePrimary.textContent = "READY";
-        el.turnMeterFill.style.width = "100%";
-        el.roundClock.textContent = "5";
+        el.noticePrimary.textContent = state.activeGuaranteedTurn ? "GOLPE GARANTIDO" : state.debugMode ? "DEBUG" : "READY";
+        el.turnMeterFill.style.width = state.debugMode ? "0%" : "100%";
+        el.roundClock.textContent = state.debugMode ? "0" : String(Math.ceil(state.turnDuration / 1000));
         el.resolution.classList.remove("show");
         updateHud();
         window.clearInterval(state.timerId);
-        state.timerId = window.setInterval(tickTurn, 100);
+        state.timerId = state.debugMode ? null : window.setInterval(tickTurn, 100);
       }
 
       function showGameOver() {
@@ -1844,6 +2300,9 @@
         state.p1.super = 0;
         state.p2.super = 0;
         state.advantage = null;
+        state.guaranteedTurn = null;
+        state.activeGuaranteedTurn = null;
+        state.turnDuration = TURN_DURATION;
         el.battleOver.classList.remove("show");
         startTurn();
       }
@@ -1853,6 +2312,7 @@
         state.phase = "menu";
         el.startScreen.classList.remove("is-hidden");
         el.helpScreen.classList.add("is-hidden");
+        updateDebugPanel();
       }
 
       function showHelpScreen() {
@@ -1860,6 +2320,7 @@
         state.phase = "help";
         el.startScreen.classList.add("is-hidden");
         el.helpScreen.classList.remove("is-hidden");
+        updateDebugPanel();
       }
 
       function playGame() {
@@ -1884,9 +2345,7 @@
             return;
           }
 
-          state.selectedAction = button.dataset.action;
-          setTokenDisplay(false);
-          updateHud();
+          selectActionForSide("p1", button.dataset.action);
         });
 
         button.addEventListener("pointerup", release);
@@ -1894,6 +2353,17 @@
         button.addEventListener("pointerleave", release);
       });
 
+      el.debugActionButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          if (!state.debugMode || button.disabled) {
+            return;
+          }
+
+          selectActionForSide(button.dataset.debugSide, button.dataset.action);
+        });
+      });
+
+      el.debugToggle.addEventListener("change", handleDebugToggle);
       el.resetButton.addEventListener("click", resetBattle);
       el.playButton.addEventListener("click", playGame);
       el.helpButton.addEventListener("click", showHelpScreen);
