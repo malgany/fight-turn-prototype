@@ -662,13 +662,12 @@
 
       .ultimate-cinematic-panel {
         position: absolute;
-        top: 42%;
-        left: 1.5%;
-        width: 74%;
-        height: 62%;
-        display: flex;
-        align-items: center;
-        transform: translate(-120%, -50%);
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        overflow: hidden;
+        transform: translateX(-112%);
         transform-origin: center;
         filter: drop-shadow(0 12px 10px rgba(0, 0, 0, 0.55));
       }
@@ -678,27 +677,30 @@
       }
 
       .ultimate-cinematic.p2 .ultimate-cinematic-panel {
-        right: 1.5%;
-        left: auto;
-        transform: translate(120%, -50%) scaleX(-1);
+        transform: translateX(112%) scaleX(-1);
         animation: ultimate-panel-in-right 680ms cubic-bezier(0.2, 0.88, 0.18, 1) forwards;
       }
 
       .ultimate-label-red {
-        position: relative;
+        position: absolute;
+        inset: 0;
         z-index: 1;
-        width: 52%;
-        height: auto;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top center;
         opacity: 0;
         animation: ultimate-label-pop 420ms ease-out 120ms forwards;
       }
 
       .ultimate-frame {
-        position: relative;
+        position: absolute;
+        inset: 0;
         z-index: 2;
-        width: 66%;
-        height: auto;
-        margin-left: -27%;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top center;
         opacity: 0;
         animation: ultimate-frame-pop 420ms ease-out 180ms forwards;
       }
@@ -809,11 +811,11 @@
         left: 50%;
         bottom: -18%;
         z-index: 4;
-        height: 158%;
+        height: 95%;
         width: auto;
         max-width: none;
         opacity: 0;
-        transform: translateX(-50%) scale(0.94);
+        transform: translateX(-50%) scaleX(-1) scale(0.94);
         transform-origin: center bottom;
         filter: drop-shadow(0 0 14px rgba(82, 228, 255, 0.76));
         user-select: none;
@@ -822,16 +824,34 @@
       }
 
       .fighter.p1 .block-shield-effect {
-        transform: translateX(-50%) scaleX(-1) scale(0.94);
+        transform: translateX(-50%) scale(0.94);
       }
 
       .block-shield-effect.is-visible {
-        opacity: 1;
-        transform: translateX(-50%) scale(1);
+        opacity: 0.6;
+        transform: translateX(-50%) scaleX(-1) scale(1);
       }
 
       .fighter.p1 .block-shield-effect.is-visible {
-        transform: translateX(-50%) scaleX(-1) scale(1);
+        transform: translateX(-50%) scale(1);
+      }
+
+      .combo-hit-effect {
+        position: absolute;
+        left: 50%;
+        top: 48%;
+        z-index: 6;
+        width: 118%;
+        height: auto;
+        opacity: 0;
+        translate: -50% -50%;
+        filter: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.48));
+        user-select: none;
+        pointer-events: none;
+      }
+
+      .combo-hit-effect.is-visible {
+        opacity: 1;
       }
 
       .fighter.hit {
@@ -1176,15 +1196,15 @@
       }
 
       @keyframes ultimate-panel-in-left {
-        0% { transform: translate(-120%, -50%); opacity: 0; }
-        72% { transform: translate(3%, -50%); opacity: 1; }
-        100% { transform: translate(0, -50%); opacity: 1; }
+        0% { transform: translateX(-112%); opacity: 0; }
+        72% { transform: translateX(3%); opacity: 1; }
+        100% { transform: translateX(0); opacity: 1; }
       }
 
       @keyframes ultimate-panel-in-right {
-        0% { transform: translate(120%, -50%) scaleX(-1); opacity: 0; }
-        72% { transform: translate(-3%, -50%) scaleX(-1); opacity: 1; }
-        100% { transform: translate(0, -50%) scaleX(-1); opacity: 1; }
+        0% { transform: translateX(112%) scaleX(-1); opacity: 0; }
+        72% { transform: translateX(-3%) scaleX(-1); opacity: 1; }
+        100% { transform: translateX(0) scaleX(-1); opacity: 1; }
       }
 
       @keyframes ultimate-label-pop {
@@ -1525,9 +1545,20 @@
       }
 
       .menu-button.primary {
-        border-color: #ffd157;
-        background: linear-gradient(#d3562e, #74241c);
+        width: min(100%, 430px);
+        justify-self: center;
+        aspect-ratio: 1994 / 535;
+        min-height: 0;
+        padding: 0 14%;
+        border: 0;
+        background: url("../../assets/ui/menu/play-button-panel.png") center / 100% 100% no-repeat;
         color: #fff7d0;
+        font-size: clamp(24px, 7cqw, 40px);
+        text-shadow:
+          0 3px 0 #000,
+          0 0 12px rgba(0, 0, 0, 0.7),
+          0 0 18px rgba(255, 236, 150, 0.6);
+        box-shadow: none;
       }
 
       .menu-button:disabled {
@@ -2212,14 +2243,16 @@
         <div class="fighter p1" id="p1Fighter" aria-label="Personagem jogador 1">
           <img class="fighter-sprite" id="p1Sprite" src="../../assets/characters/ninja-idle/ninja-idle-001.webp" alt="">
           <img class="block-shield-effect" id="p1BlockShield" src="../../assets/effects/block-shield/block-shield.webp" alt="" draggable="false">
+          <img class="combo-hit-effect" id="p1ComboHitEffect" src="../../assets/effects/combo-hit/combo-hit-001.webp" alt="" draggable="false">
         </div>
         <div class="fighter p2" id="p2Fighter" aria-label="Personagem jogador 2">
           <img class="fighter-sprite" id="p2Sprite" src="../../assets/characters/ninja-idle/ninja-idle-001.webp" alt="">
           <img class="block-shield-effect" id="p2BlockShield" src="../../assets/effects/block-shield/block-shield.webp" alt="" draggable="false">
+          <img class="combo-hit-effect" id="p2ComboHitEffect" src="../../assets/effects/combo-hit/combo-hit-001.webp" alt="" draggable="false">
         </div>
         <div class="ultimate-cinematic" id="ultimateCinematic" aria-hidden="true">
           <div class="ultimate-cinematic-panel" id="ultimateCinematicPanel">
-            <img class="ultimate-label-red" id="ultimateLabelRed" src="../../assets/ui/ultimate/label-red.png" alt="">
+            <img class="ultimate-label-red" id="ultimateLabelRed" src="../../assets/ui/ultimate/label-red.png?v=20260604-fullstage" alt="">
             <img class="ultimate-frame" id="ultimateFrame" src="../../assets/characters/ninja-ultimate/ninja-ultimate-001.webp" alt="">
           </div>
         </div>
@@ -2508,6 +2541,13 @@
       const crouchFrames = buildAnimationFrames(crouchAnimation);
       const jumpFrames = buildAnimationFrames(jumpAnimation);
       const ultimateFrames = buildAnimationFrames(ultimateAnimation);
+      const comboHitEffect = {
+        framePattern: "../../assets/effects/combo-hit/combo-hit-{frame}.webp",
+        frameCount: 53,
+        framePad: 3,
+        frameIntervalMs: 33,
+      };
+      const comboHitFrames = buildAnimationFrames(comboHitEffect);
       const LOCAL_DEBUG_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"]);
       const debugAvailable = LOCAL_DEBUG_HOSTS.has(window.location.hostname);
       const mobileFullscreenRequired = isMobileFullscreenRequired();
@@ -2638,6 +2678,8 @@
         p2Sprite: document.querySelector("#p2Sprite"),
         p1BlockShield: document.querySelector("#p1BlockShield"),
         p2BlockShield: document.querySelector("#p2BlockShield"),
+        p1ComboHitEffect: document.querySelector("#p1ComboHitEffect"),
+        p2ComboHitEffect: document.querySelector("#p2ComboHitEffect"),
         ultimateCinematic: document.querySelector("#ultimateCinematic"),
         ultimateCinematicPanel: document.querySelector("#ultimateCinematicPanel"),
         ultimateFrame: document.querySelector("#ultimateFrame"),
@@ -2697,6 +2739,7 @@
       let idleFrameIndex = 0;
       const spriteAnimations = { p1: null, p2: null };
       const ultimateCinematicState = { timers: [] };
+      const comboHitEffectTimers = { p1: null, p2: null };
       let debugLocationDrag = null;
       const audioState = {
         context: null,
@@ -3303,6 +3346,7 @@
       preloadFrames(crouchFrames);
       preloadFrames(jumpFrames);
       preloadFrames(ultimateFrames);
+      preloadFrames(comboHitFrames);
 
       function fighterSprite(side) {
         return side === "p1" ? el.p1Sprite : el.p2Sprite;
@@ -3418,6 +3462,57 @@
         });
       }
 
+      function comboHitEffectElement(side) {
+        return side === "p1" ? el.p1ComboHitEffect : el.p2ComboHitEffect;
+      }
+
+      function clearComboHitEffect(side) {
+        const timerId = comboHitEffectTimers[side];
+        if (timerId) {
+          window.clearTimeout(timerId);
+          comboHitEffectTimers[side] = null;
+        }
+
+        const effect = comboHitEffectElement(side);
+        effect.classList.remove("is-visible");
+        if (comboHitFrames.length) {
+          effect.src = comboHitFrames[0];
+        }
+      }
+
+      function clearComboHitEffects() {
+        clearComboHitEffect("p1");
+        clearComboHitEffect("p2");
+      }
+
+      function playComboHitEffect(side) {
+        if (!comboHitFrames.length) {
+          return;
+        }
+
+        clearComboHitEffect(side);
+        const effect = comboHitEffectElement(side);
+        let frameIndex = 0;
+        effect.classList.add("is-visible");
+
+        const advance = () => {
+          effect.src = comboHitFrames[frameIndex];
+          frameIndex += 1;
+
+          if (frameIndex < comboHitFrames.length) {
+            comboHitEffectTimers[side] = window.setTimeout(advance, comboHitEffect.frameIntervalMs);
+            return;
+          }
+
+          comboHitEffectTimers[side] = window.setTimeout(() => {
+            effect.classList.remove("is-visible");
+            comboHitEffectTimers[side] = null;
+          }, comboHitEffect.frameIntervalMs);
+        };
+
+        advance();
+      }
+
       function scheduleUltimateCinematic(callback, delay) {
         const timerId = window.setTimeout(callback, delay);
         ultimateCinematicState.timers.push(timerId);
@@ -3472,11 +3567,11 @@
         const jumpingSides = [];
         const blockingSides = [];
 
-        if (p1Action === "Block") {
+        if (p1Action === "Block" && p2Action !== "Grab") {
           blockingSides.push("p1");
         }
 
-        if (p2Action === "Block") {
+        if (p2Action === "Block" && p1Action !== "Grab") {
           blockingSides.push("p2");
         }
 
@@ -3488,11 +3583,11 @@
           crouchingSides.push("p2");
         }
 
-        if (p1Action === "Jump") {
+        if (p1Action === "Jump" && !["Poke", "Combo", "Special"].includes(p2Action)) {
           jumpingSides.push("p1");
         }
 
-        if (p2Action === "Jump") {
+        if (p2Action === "Jump" && !["Poke", "Combo", "Special"].includes(p1Action)) {
           jumpingSides.push("p2");
         }
 
@@ -4704,13 +4799,32 @@
           };
         }
 
+        if (kind === "plus") {
+          const baseRect = getBaseFighterRect(side);
+          return {
+            left: baseRect.left - layerRect.left + baseRect.width / 2,
+            top: baseRect.top - layerRect.top + baseRect.height * 0.15,
+          };
+        }
+
         const fighter = side === "p1" ? el.p1Fighter : el.p2Fighter;
         const fighterRect = fighter.getBoundingClientRect();
-        const topOffset = kind === "plus" ? fighterRect.height * 0.15 : -fighterRect.height * 0.23;
         return {
           left: fighterRect.left - layerRect.left + fighterRect.width / 2,
-          top: fighterRect.top - layerRect.top + topOffset,
+          top: fighterRect.top - layerRect.top - fighterRect.height * 0.23,
         };
+      }
+
+      function getBaseFighterRect(side) {
+        const fightRect = el.fightLayer.getBoundingClientRect();
+        const width = fightRect.width * 0.43;
+        const height = width * (496 / 744);
+        const left = side === "p1"
+          ? fightRect.left + fightRect.width * 0.05
+          : fightRect.right - fightRect.width * 0.05 - width;
+        const top = fightRect.bottom - fightRect.height * 0.12 - height;
+
+        return { left, top, width, height };
       }
 
       function animateHit(winner) {
@@ -4966,6 +5080,9 @@
 
           if (result.type === "hit" && result.winner && !isUltimateHit) {
             window.setTimeout(() => animateHit(result.winner), 250);
+            if (resultWinnerAction(result, p1Action, p2Action) === "Combo") {
+              window.setTimeout(() => playComboHitEffect(result.loser), 250);
+            }
           } else if (result.type === "trade") {
             window.setTimeout(() => flashDamagedFighters(result.damaged || []), 250);
           }
@@ -5023,6 +5140,7 @@
       function startTurn() {
         clearSpriteAnimations();
         clearBlockShieldEffects();
+        clearComboHitEffects();
         clearUltimateCinematic();
         window.clearInterval(state.timerId);
         state.activeGuaranteedTurn = state.guaranteedTurn;
@@ -5083,6 +5201,7 @@
       function resetBattle() {
         clearSpriteAnimations();
         clearBlockShieldEffects();
+        clearComboHitEffects();
         clearUltimateCinematic();
         state.p1.health = 100;
         state.p2.health = 100;
@@ -5103,6 +5222,7 @@
       function exitBattleToMenu() {
         clearSpriteAnimations();
         clearBlockShieldEffects();
+        clearComboHitEffects();
         clearUltimateCinematic();
         window.clearInterval(state.timerId);
         state.timerId = null;
