@@ -58,7 +58,9 @@
         top: 16px;
         right: 16px;
         z-index: 120;
-        width: min(300px, calc(100vw - 32px));
+        width: min(430px, calc(100vw - 32px));
+        max-height: calc(100vh - 32px);
+        overflow: auto;
         display: none;
         gap: 12px;
         padding: 12px;
@@ -206,6 +208,201 @@
         display: block;
       }
 
+      body.debug-mode.debug-controls-off .debug-location-toggle,
+      body.debug-mode.debug-controls-off .debug-copy-button,
+      body.debug-mode.debug-controls-off .debug-location-button,
+      body.debug-mode.debug-controls-off .debug-coordinate-field,
+      body.debug-mode.debug-controls-off .debug-jump-frame-control {
+        opacity: 0.42;
+      }
+
+      body.debug-mode.debug-controls-off .debug-location-toggle input {
+        cursor: not-allowed;
+      }
+
+      .debug-visual-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .debug-copy-button {
+        width: 32px;
+        height: 32px;
+        display: grid;
+        place-items: center;
+        border: 1px solid #526078;
+        background: #172235;
+        color: #f2f6ff;
+        cursor: pointer;
+      }
+
+      .debug-copy-button:hover:not(:disabled) {
+        border-color: #63d7ff;
+        background: #164766;
+      }
+
+      .debug-copy-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.34;
+        filter: grayscale(1);
+      }
+
+      .debug-copy-button svg {
+        width: 17px;
+        height: 17px;
+        stroke: currentColor;
+      }
+
+      .debug-location-controls {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .debug-location-column {
+        display: grid;
+        gap: 5px;
+      }
+
+      .debug-location-column-title {
+        color: #93a4bc;
+        font-size: 8px;
+        line-height: 1;
+        text-align: center;
+      }
+
+      .debug-location-row {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr);
+        gap: 4px;
+        align-items: center;
+      }
+
+      .debug-location-button {
+        min-height: 28px;
+        border: 1px solid #526078;
+        background: #172235;
+        color: #f2f6ff;
+        font: inherit;
+        font-size: 9px;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .debug-location-button.selected {
+        border-color: #63d7ff;
+        background: #164766;
+        color: #ffffff;
+      }
+
+      .debug-location-button.right.selected {
+        border-color: #ffd157;
+        background: #665118;
+      }
+
+      .debug-location-button.center.selected {
+        border-color: #f2f6ff;
+        background: #374152;
+      }
+
+      .debug-location-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.34;
+        filter: grayscale(1);
+      }
+
+      .debug-coordinate-field {
+        position: relative;
+        display: block;
+        min-width: 0;
+      }
+
+      .debug-coordinate-field span {
+        position: absolute;
+        left: 4px;
+        top: 50%;
+        translate: 0 -50%;
+        z-index: 1;
+        color: #93a4bc;
+        font-size: 7px;
+        line-height: 1;
+        pointer-events: none;
+      }
+
+      .debug-location-coordinate {
+        width: 100%;
+        min-width: 0;
+        height: 28px;
+        border: 1px solid #526078;
+        background: #0f1824;
+        color: #f2f6ff;
+        font: inherit;
+        font-size: 8px;
+        line-height: 1;
+        padding: 0 3px 0 13px;
+      }
+
+      .debug-location-coordinate:focus {
+        outline: 1px solid #63d7ff;
+        outline-offset: 1px;
+      }
+
+      .debug-location-coordinate:disabled {
+        cursor: not-allowed;
+        opacity: 0.34;
+        filter: grayscale(1);
+      }
+
+      .debug-jump-frame-control {
+        display: grid;
+        gap: 6px;
+        padding: 8px;
+        border: 1px solid #2f3c50;
+        background: rgba(15, 24, 36, 0.72);
+      }
+
+      .debug-jump-frame-heading {
+        color: #93a4bc;
+        font-size: 8px;
+        line-height: 1;
+      }
+
+      .debug-jump-frame-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px 8px;
+      }
+
+      .debug-frame-slider {
+        display: grid;
+        grid-template-columns: 38px minmax(0, 1fr) 34px;
+        gap: 5px;
+        align-items: center;
+        min-width: 0;
+        color: #f2f6ff;
+        font-size: 7px;
+        line-height: 1;
+      }
+
+      .debug-frame-slider input {
+        width: 100%;
+        min-width: 0;
+        accent-color: #63d7ff;
+      }
+
+      .debug-frame-slider input:disabled {
+        cursor: not-allowed;
+        opacity: 0.34;
+        filter: grayscale(1);
+      }
+
+      .debug-frame-slider-value {
+        color: #93a4bc;
+        text-align: right;
+      }
+
       .phone {
         position: relative;
         container-type: inline-size;
@@ -219,6 +416,8 @@
 
       .arena-background,
       .fight-layer,
+      .guaranteed-countdown-layer,
+      .state-popup-layer,
       .hud,
       .resolution,
       .controls {
@@ -243,7 +442,7 @@
         align-items: center;
         gap: 1.5%;
         padding: 0 2.6%;
-        z-index: 20;
+        z-index: 90;
       }
 
       .fighter-hud {
@@ -449,6 +648,65 @@
         right: 5%;
       }
 
+      .ultimate-cinematic {
+        position: absolute;
+        inset: 0;
+        z-index: 62;
+        display: none;
+        pointer-events: none;
+      }
+
+      .ultimate-cinematic.is-active {
+        display: block;
+      }
+
+      .ultimate-cinematic-panel {
+        position: absolute;
+        top: 42%;
+        left: 1.5%;
+        width: 74%;
+        height: 62%;
+        display: flex;
+        align-items: center;
+        transform: translate(-120%, -50%);
+        transform-origin: center;
+        filter: drop-shadow(0 12px 10px rgba(0, 0, 0, 0.55));
+      }
+
+      .ultimate-cinematic.p1 .ultimate-cinematic-panel {
+        animation: ultimate-panel-in-left 680ms cubic-bezier(0.2, 0.88, 0.18, 1) forwards;
+      }
+
+      .ultimate-cinematic.p2 .ultimate-cinematic-panel {
+        right: 1.5%;
+        left: auto;
+        transform: translate(120%, -50%) scaleX(-1);
+        animation: ultimate-panel-in-right 680ms cubic-bezier(0.2, 0.88, 0.18, 1) forwards;
+      }
+
+      .ultimate-label-red {
+        position: relative;
+        z-index: 1;
+        width: 52%;
+        height: auto;
+        opacity: 0;
+        animation: ultimate-label-pop 420ms ease-out 120ms forwards;
+      }
+
+      .ultimate-frame {
+        position: relative;
+        z-index: 2;
+        width: 66%;
+        height: auto;
+        margin-left: -27%;
+        opacity: 0;
+        animation: ultimate-frame-pop 420ms ease-out 180ms forwards;
+      }
+
+      .ultimate-cinematic.is-playing .ultimate-frame {
+        filter: drop-shadow(0 0 14px rgba(255, 40, 40, 0.72));
+      }
+
       .battle-token {
         position: absolute;
         top: 23%;
@@ -522,9 +780,20 @@
         --sprite-offset-x: 0%;
         --sprite-offset-y: 0%;
         --sprite-scale: 1;
+        --sprite-hue: 0deg;
+        --sprite-saturation: 100%;
+        --sprite-brightness: 100%;
+        --sprite-contrast: 100%;
+        --sprite-opacity: 1;
         width: 100%;
         height: 100%;
         object-fit: contain;
+        opacity: var(--sprite-opacity);
+        filter:
+          hue-rotate(var(--sprite-hue))
+          saturate(var(--sprite-saturation))
+          brightness(var(--sprite-brightness))
+          contrast(var(--sprite-contrast));
         transform: translate(var(--sprite-offset-x), var(--sprite-offset-y)) scale(var(--sprite-scale));
         transform-origin: center bottom;
         user-select: none;
@@ -533,6 +802,36 @@
 
       .fighter.p2 .fighter-sprite {
         transform: translate(var(--sprite-offset-x), var(--sprite-offset-y)) scaleX(-1) scale(var(--sprite-scale));
+      }
+
+      .block-shield-effect {
+        position: absolute;
+        left: 50%;
+        bottom: -18%;
+        z-index: 4;
+        height: 158%;
+        width: auto;
+        max-width: none;
+        opacity: 0;
+        transform: translateX(-50%) scale(0.94);
+        transform-origin: center bottom;
+        filter: drop-shadow(0 0 14px rgba(82, 228, 255, 0.76));
+        user-select: none;
+        pointer-events: none;
+        transition: opacity 120ms ease, transform 180ms ease;
+      }
+
+      .fighter.p1 .block-shield-effect {
+        transform: translateX(-50%) scaleX(-1) scale(0.94);
+      }
+
+      .block-shield-effect.is-visible {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+      }
+
+      .fighter.p1 .block-shield-effect.is-visible {
+        transform: translateX(-50%) scaleX(-1) scale(1);
       }
 
       .fighter.hit {
@@ -551,6 +850,112 @@
         animation: attack-right 360ms ease;
       }
 
+      .debug-location-map {
+        position: absolute;
+        inset: 0 0 38%;
+        z-index: 74;
+        display: none;
+        pointer-events: none;
+      }
+
+      body.debug-mode.debug-locations-on .debug-location-map {
+        display: block;
+      }
+
+      .debug-location {
+        position: absolute;
+        z-index: 2;
+        left: var(--left);
+        top: var(--top);
+        width: var(--width);
+        height: var(--height);
+        border: 2px solid currentColor;
+        background: color-mix(in srgb, currentColor 18%, transparent);
+        color: #f2f6ff;
+        box-shadow: 0 0 14px color-mix(in srgb, currentColor 42%, transparent), inset 0 0 18px rgba(255, 255, 255, 0.06);
+        cursor: move;
+        pointer-events: auto;
+        touch-action: none;
+        user-select: none;
+      }
+
+      .debug-location::before {
+        content: attr(data-location);
+        position: absolute;
+        z-index: 2;
+        top: 0;
+        left: 0;
+        min-width: 2.2em;
+        padding: 0.24em 0.34em 0.18em;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        background: rgba(4, 8, 14, 0.82);
+        color: #ffffff;
+        font-family: "Anime Ace BB", Arial, sans-serif;
+        font-size: clamp(8px, 2.2cqw, 12px);
+        font-weight: 900;
+        line-height: 1;
+        text-align: center;
+        text-shadow: 0 2px 0 #000;
+      }
+
+      .debug-location.left {
+        color: #63d7ff;
+      }
+
+      .debug-location.right {
+        color: #ffd157;
+      }
+
+      .debug-location.center {
+        color: #f2f6ff;
+      }
+
+      .debug-location[data-location="L4"],
+      .debug-location[data-location="R4"] {
+        z-index: 0;
+      }
+
+      .debug-location[data-location="L2"],
+      .debug-location[data-location="R2"] {
+        z-index: 1;
+      }
+
+      .debug-location.is-hidden {
+        display: none;
+      }
+
+      .debug-location.is-dragging {
+        z-index: 8;
+        filter: brightness(1.32);
+      }
+
+      .debug-jump-frame-preview {
+        position: absolute;
+        top: -2px;
+        bottom: auto;
+        z-index: 0;
+        height: calc(100% + 4px);
+        width: auto;
+        max-width: none;
+        opacity: var(--debug-jump-opacity, 0.86);
+        pointer-events: none;
+        filter:
+          hue-rotate(var(--debug-jump-hue, 0deg))
+          saturate(var(--debug-jump-saturation, 100%))
+          brightness(var(--debug-jump-brightness, 100%))
+          contrast(var(--debug-jump-contrast, 100%));
+      }
+
+      .debug-location[data-location="L5"] .debug-jump-frame-preview {
+        right: -2px;
+      }
+
+      .debug-location[data-location="R5"] .debug-jump-frame-preview {
+        left: -2px;
+        transform: scaleX(-1);
+      }
+
       .damage-float {
         position: absolute;
         left: 50%;
@@ -562,9 +967,70 @@
         font-size: clamp(18px, 6.5cqw, 34px);
         font-weight: 1000;
         line-height: 1;
+        white-space: nowrap;
         text-shadow: 0 2px 0 #000, 0 0 10px rgba(255, 32, 32, 0.95);
         pointer-events: none;
         animation: damage-float-up 1700ms ease-out both;
+      }
+
+      .damage-float.total {
+        top: 5%;
+        color: #ffe36b;
+        font-size: clamp(16px, 5.2cqw, 29px);
+        text-shadow: 0 2px 0 #000, 0 0 12px rgba(255, 208, 39, 0.95);
+      }
+
+      .guaranteed-countdown {
+        position: absolute;
+        top: 130px;
+        z-index: 1;
+        translate: -50% 0;
+        min-width: 1.8em;
+        aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+        border: 3px solid #ffe36b;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.88), rgba(255, 226, 89, 0.44) 28%, rgba(153, 77, 0, 0.9) 72%),
+          #ca7d12;
+        color: #fff7b8;
+        font-family: "Anime Ace BB", Arial, sans-serif;
+        font-size: clamp(24px, 8cqw, 46px);
+        font-weight: 1000;
+        line-height: 1;
+        text-shadow: 0 3px 0 #000, 0 0 14px rgba(255, 237, 110, 0.96);
+        box-shadow: 0 0 19px rgba(255, 199, 44, 0.78), inset 0 0 12px rgba(255, 255, 255, 0.25);
+        opacity: 0;
+        scale: 0.72;
+        pointer-events: none;
+        transition: opacity 140ms ease, scale 140ms ease;
+      }
+
+      .guaranteed-countdown-layer {
+        inset: 0;
+        z-index: 75;
+        pointer-events: none;
+      }
+
+      .state-popup-layer {
+        inset: 0;
+        z-index: 76;
+        pointer-events: none;
+      }
+
+      .guaranteed-countdown.p1 {
+        left: 26.5%;
+      }
+
+      .guaranteed-countdown.p2 {
+        left: 73.5%;
+      }
+
+      .guaranteed-countdown.is-visible {
+        opacity: 1;
+        scale: 1;
+        animation: guaranteed-count-pulse 460ms ease both;
       }
 
       .state-float {
@@ -648,6 +1114,12 @@
         100% { opacity: 0; transform: translateY(-185%) scale(0.94); }
       }
 
+      @keyframes guaranteed-count-pulse {
+        0% { transform: translateY(8%) scale(0.7); filter: brightness(1.45); }
+        48% { transform: translateY(0) scale(1.13); filter: brightness(1.1); }
+        100% { transform: translateY(0) scale(1); filter: none; }
+      }
+
       @keyframes state-float-up {
         0% { opacity: 0; transform: translateY(16px) scale(0.88); }
         18% { opacity: 1; transform: translateY(0) scale(1); }
@@ -701,6 +1173,28 @@
         26% { opacity: 1; transform: translateX(18%) scale(0.96); }
         54% { opacity: 1; transform: translate(-112%, -6%) scale(1.08); }
         72% { opacity: 1; transform: translateX(16%) scale(0.94); }
+      }
+
+      @keyframes ultimate-panel-in-left {
+        0% { transform: translate(-120%, -50%); opacity: 0; }
+        72% { transform: translate(3%, -50%); opacity: 1; }
+        100% { transform: translate(0, -50%); opacity: 1; }
+      }
+
+      @keyframes ultimate-panel-in-right {
+        0% { transform: translate(120%, -50%) scaleX(-1); opacity: 0; }
+        72% { transform: translate(-3%, -50%) scaleX(-1); opacity: 1; }
+        100% { transform: translate(0, -50%) scaleX(-1); opacity: 1; }
+      }
+
+      @keyframes ultimate-label-pop {
+        0% { opacity: 0; transform: translateX(-18%) scale(0.96); }
+        100% { opacity: 1; transform: translateX(0) scale(1); }
+      }
+
+      @keyframes ultimate-frame-pop {
+        0% { opacity: 0; transform: translateX(-10%) scale(0.97); }
+        100% { opacity: 1; transform: translateX(0) scale(1); }
       }
 
       .resolution {
@@ -921,7 +1415,7 @@
       .battle-over {
         position: absolute;
         inset: 0;
-        z-index: 80;
+        z-index: 100;
         display: none;
         place-items: center;
         background: rgba(4, 8, 14, 0.74);
@@ -946,15 +1440,26 @@
         text-shadow: 0 3px 0 #000;
       }
 
-      .reset-button {
-        border: 3px solid #63d7ff;
-        background: linear-gradient(#1d5d88, #12324d);
-        color: #f2f6ff;
+      .battle-over-button {
+        min-width: 10.2em;
+        border: 3px solid;
         font: inherit;
         font-size: clamp(15px, 4cqw, 22px);
         padding: 0.45em 0.9em;
         cursor: pointer;
         text-shadow: 0 2px 0 #000;
+      }
+
+      .reset-button {
+        border-color: #63d7ff;
+        background: linear-gradient(#1d5d88, #12324d);
+        color: #f2f6ff;
+      }
+
+      .exit-battle-button {
+        border-color: #ff6b6b;
+        background: linear-gradient(#c62b2b, #741919);
+        color: #ffffff;
       }
 
       .screen {
@@ -1023,6 +1528,12 @@
         border-color: #ffd157;
         background: linear-gradient(#d3562e, #74241c);
         color: #fff7d0;
+      }
+
+      .menu-button:disabled {
+        cursor: wait;
+        opacity: 0.64;
+        filter: grayscale(0.34);
       }
 
       .mobile-exit-button {
@@ -1415,6 +1926,35 @@
         border-left: clamp(36px, 10vw, 56px) solid #ffffff;
         filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.38));
       }
+
+      .iris-transition {
+        position: absolute;
+        inset: 0;
+        z-index: 360;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+
+      .iris-transition.is-visible {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      .iris-transition-hole {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: var(--iris-diameter, 0px);
+        height: var(--iris-diameter, 0px);
+        border-radius: 50%;
+        box-shadow: 0 0 0 220vmax #000;
+        translate: -50% -50%;
+        transition:
+          width var(--iris-transition-duration, 860ms) cubic-bezier(0.72, 0, 0.22, 1),
+          height var(--iris-transition-duration, 860ms) cubic-bezier(0.72, 0, 0.22, 1);
+      }
     </style>
   </head>
   <body>
@@ -1444,7 +1984,7 @@
 
           <div class="help-panel is-active" id="helpBasicPanel" role="tabpanel" aria-labelledby="helpBasicTab" data-help-panel="basic">
             <div class="help-intro">
-              NEUTRO é sem PLUS. PLUS decide duelos de velocidade parecida. Golpe garantido dura 3s e deixa o rival sem ação. DERRUBADA pausa a volta até o ninja levantar.
+              NEUTRO é sem PLUS. PLUS decide duelos de velocidade parecida. Golpe garantido dura 3s e deixa o rival sem ação. DERRUBADA dá PLUS a quem derrubou.
             </div>
 
             <div class="quick-grid">
@@ -1530,7 +2070,7 @@
               <article class="rule-card">
                 <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/block.webp" alt="">BLOCK NO ULTIMATE</h3>
                 <div class="rule-text">
-                  <p>Quem defendeu ULTIMATE garante qualquer golpe no próximo turno. O oponente não pode escolher ação.</p>
+                  <p>Quem defendeu ULTIMATE garante qualquer golpe na continuação do mesmo turno. O oponente não pode escolher ação.</p>
                 </div>
               </article>
 
@@ -1553,10 +2093,10 @@
                 <p><span class="state-term plus">PLUS:</span> vantagem guardada do turno anterior. Decide quando dois ataques têm velocidade próxima.</p>
               </article>
               <article class="quick-card">
-                <p><span class="state-term neutral">NEUTRO:</span> sem PLUS para nenhum lado. Ações iguais limpam o PLUS e deixam o jogo neutro.</p>
+                <p><span class="state-term neutral">NEUTRO:</span> sem PLUS para nenhum lado. Ações iguais dão trade; com PLUS, vence quem está na vantagem.</p>
               </article>
               <article class="quick-card">
-                <p><span class="state-term knockdown">DERRUBADA:</span> pausa a retomada até a animação de levantar terminar. Não bloqueia a escolha por regra própria.</p>
+                <p><span class="state-term knockdown">DERRUBADA:</span> pausa a retomada até a animação de levantar terminar. Quem derruba fica com PLUS.</p>
               </article>
               <article class="quick-card">
                 <p><span class="state-term ultimate">ULTIMATE:</span> precisa de 3 barras. Mesmo em golpe garantido, só fica disponível quando a barra está cheia.</p>
@@ -1671,9 +2211,43 @@
         </div>
         <div class="fighter p1" id="p1Fighter" aria-label="Personagem jogador 1">
           <img class="fighter-sprite" id="p1Sprite" src="../../assets/characters/ninja-idle/ninja-idle-001.webp" alt="">
+          <img class="block-shield-effect" id="p1BlockShield" src="../../assets/effects/block-shield/block-shield.webp" alt="" draggable="false">
         </div>
         <div class="fighter p2" id="p2Fighter" aria-label="Personagem jogador 2">
           <img class="fighter-sprite" id="p2Sprite" src="../../assets/characters/ninja-idle/ninja-idle-001.webp" alt="">
+          <img class="block-shield-effect" id="p2BlockShield" src="../../assets/effects/block-shield/block-shield.webp" alt="" draggable="false">
+        </div>
+        <div class="ultimate-cinematic" id="ultimateCinematic" aria-hidden="true">
+          <div class="ultimate-cinematic-panel" id="ultimateCinematicPanel">
+            <img class="ultimate-label-red" id="ultimateLabelRed" src="../../assets/ui/ultimate/label-red.png" alt="">
+            <img class="ultimate-frame" id="ultimateFrame" src="../../assets/characters/ninja-ultimate/ninja-ultimate-001.webp" alt="">
+          </div>
+        </div>
+      </section>
+
+      <section class="guaranteed-countdown-layer" aria-hidden="true">
+        <span class="guaranteed-countdown p1" id="p1GuaranteedCountdown"></span>
+        <span class="guaranteed-countdown p2" id="p2GuaranteedCountdown"></span>
+      </section>
+
+      <section class="state-popup-layer" id="statePopupLayer" aria-hidden="true"></section>
+
+      <section class="debug-location-map" id="debugLocationMap" aria-hidden="true">
+        <div class="debug-location left" data-location="L1"></div>
+        <div class="debug-location left" data-location="L2"></div>
+        <div class="debug-location left" data-location="L3"></div>
+        <div class="debug-location left" data-location="L4"></div>
+        <div class="debug-location left" data-location="L5">
+          <img class="debug-jump-frame-preview" src="../../assets/characters/ninja-jump/ninja-jump-001.webp" alt="" draggable="false">
+        </div>
+        <div class="debug-location center" data-location="C1"></div>
+        <div class="debug-location center" data-location="C2"></div>
+        <div class="debug-location right" data-location="R1"></div>
+        <div class="debug-location right" data-location="R2"></div>
+        <div class="debug-location right" data-location="R3"></div>
+        <div class="debug-location right" data-location="R4"></div>
+        <div class="debug-location right" data-location="R5">
+          <img class="debug-jump-frame-preview" src="../../assets/characters/ninja-jump/ninja-jump-001.webp" alt="" draggable="false">
         </div>
       </section>
 
@@ -1719,9 +2293,14 @@
       <section class="battle-over" id="battleOver" aria-label="Fim da batalha">
         <div class="battle-over-panel">
           <div class="battle-over-title" id="battleOverTitle">VOCÊ VENCEU</div>
-          <button class="reset-button" type="button" id="resetButton">REINICIAR</button>
+          <button class="battle-over-button reset-button" type="button" id="resetButton">REINICIAR</button>
+          <button class="battle-over-button exit-battle-button" type="button" id="exitBattleButton">SAIR</button>
         </div>
       </section>
+
+      <div class="iris-transition" id="irisTransition" aria-hidden="true">
+        <div class="iris-transition-hole" id="irisTransitionHole"></div>
+      </div>
     </main>
 
     <div class="fullscreen-gate" id="fullscreenGate" aria-label="Entrar em tela cheia">
@@ -1738,6 +2317,122 @@
         <input type="checkbox" id="debugToggle" checked>
       </label>
       <div class="debug-disabled-note">Debug desligado: o jogo usa timer e CPU normal.</div>
+      <section class="debug-group" aria-label="Debug visual">
+        <div class="debug-visual-heading">
+          <div class="debug-group-title">VISUAL</div>
+          <button class="debug-copy-button" type="button" id="copyDebugLocationsButton" aria-label="Copiar locais visíveis" title="Copiar locais visíveis">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+        </div>
+        <label class="debug-toggle debug-location-toggle">
+          <span>LOCAIS</span>
+          <input type="checkbox" id="debugLocationsToggle">
+        </label>
+        <div class="debug-location-controls" id="debugLocationControls" aria-label="Locais do overlay visual">
+          <div class="debug-location-column" aria-label="Locais esquerda">
+            <div class="debug-location-column-title">ESQ</div>
+            <div class="debug-location-row" data-debug-location-row="L1">
+              <button class="debug-location-button left" type="button" data-debug-location-toggle="L1" aria-pressed="true">L1</button>
+              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L1" data-debug-location-axis="x"></label>
+              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L1" data-debug-location-axis="y"></label>
+            </div>
+            <div class="debug-location-row" data-debug-location-row="L2">
+              <button class="debug-location-button left" type="button" data-debug-location-toggle="L2" aria-pressed="true">L2</button>
+              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L2" data-debug-location-axis="x"></label>
+              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L2" data-debug-location-axis="y"></label>
+            </div>
+            <div class="debug-location-row" data-debug-location-row="L3">
+              <button class="debug-location-button left" type="button" data-debug-location-toggle="L3" aria-pressed="true">L3</button>
+              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L3" data-debug-location-axis="x"></label>
+              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L3" data-debug-location-axis="y"></label>
+            </div>
+            <div class="debug-location-row" data-debug-location-row="L4">
+              <button class="debug-location-button left" type="button" data-debug-location-toggle="L4" aria-pressed="true">L4</button>
+              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L4" data-debug-location-axis="x"></label>
+              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L4" data-debug-location-axis="y"></label>
+            </div>
+            <div class="debug-location-row" data-debug-location-row="L5">
+              <button class="debug-location-button left" type="button" data-debug-location-toggle="L5" aria-pressed="true">L5</button>
+              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L5" data-debug-location-axis="x"></label>
+              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L5" data-debug-location-axis="y"></label>
+            </div>
+          </div>
+          <div class="debug-location-column" aria-label="Locais centro">
+            <div class="debug-location-column-title">CEN</div>
+            <div class="debug-location-row" data-debug-location-row="C1">
+              <button class="debug-location-button center" type="button" data-debug-location-toggle="C1" aria-pressed="true">C1</button>
+              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="C1" data-debug-location-axis="x"></label>
+              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="C1" data-debug-location-axis="y"></label>
+            </div>
+            <div class="debug-location-row" data-debug-location-row="C2">
+              <button class="debug-location-button center" type="button" data-debug-location-toggle="C2" aria-pressed="true">C2</button>
+              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="C2" data-debug-location-axis="x"></label>
+              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="C2" data-debug-location-axis="y"></label>
+            </div>
+          </div>
+          <div class="debug-location-column" aria-label="Locais direita">
+            <div class="debug-location-column-title">DIR</div>
+            <div class="debug-location-row" data-debug-location-row="R1">
+              <button class="debug-location-button right" type="button" data-debug-location-toggle="R1" aria-pressed="true">R1</button>
+              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R1" data-debug-location-axis="x"></label>
+              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R1" data-debug-location-axis="y"></label>
+            </div>
+            <div class="debug-location-row" data-debug-location-row="R2">
+              <button class="debug-location-button right" type="button" data-debug-location-toggle="R2" aria-pressed="true">R2</button>
+              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R2" data-debug-location-axis="x"></label>
+              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R2" data-debug-location-axis="y"></label>
+            </div>
+            <div class="debug-location-row" data-debug-location-row="R3">
+              <button class="debug-location-button right" type="button" data-debug-location-toggle="R3" aria-pressed="true">R3</button>
+              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R3" data-debug-location-axis="x"></label>
+              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R3" data-debug-location-axis="y"></label>
+            </div>
+            <div class="debug-location-row" data-debug-location-row="R4">
+              <button class="debug-location-button right" type="button" data-debug-location-toggle="R4" aria-pressed="true">R4</button>
+              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R4" data-debug-location-axis="x"></label>
+              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R4" data-debug-location-axis="y"></label>
+            </div>
+            <div class="debug-location-row" data-debug-location-row="R5">
+              <button class="debug-location-button right" type="button" data-debug-location-toggle="R5" aria-pressed="true">R5</button>
+              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R5" data-debug-location-axis="x"></label>
+              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R5" data-debug-location-axis="y"></label>
+            </div>
+          </div>
+        </div>
+        <div class="debug-jump-frame-control" aria-label="Ajustes do frame Jump L5 e R5">
+          <div class="debug-jump-frame-heading">FRAME JUMP L5/R5</div>
+          <div class="debug-jump-frame-grid">
+            <label class="debug-frame-slider">
+              <span>MATIZ</span>
+              <input type="range" min="0" max="100" value="50" data-debug-jump-filter="hue" id="debugJumpHueSlider">
+              <span class="debug-frame-slider-value" id="debugJumpHueValue">0deg</span>
+            </label>
+            <label class="debug-frame-slider">
+              <span>SAT</span>
+              <input type="range" min="0" max="100" value="50" data-debug-jump-filter="saturation" id="debugJumpSaturationSlider">
+              <span class="debug-frame-slider-value" id="debugJumpSaturationValue">100%</span>
+            </label>
+            <label class="debug-frame-slider">
+              <span>BRILHO</span>
+              <input type="range" min="0" max="100" value="50" data-debug-jump-filter="brightness" id="debugJumpBrightnessSlider">
+              <span class="debug-frame-slider-value" id="debugJumpBrightnessValue">100%</span>
+            </label>
+            <label class="debug-frame-slider">
+              <span>CONT</span>
+              <input type="range" min="0" max="100" value="50" data-debug-jump-filter="contrast" id="debugJumpContrastSlider">
+              <span class="debug-frame-slider-value" id="debugJumpContrastValue">100%</span>
+            </label>
+            <label class="debug-frame-slider">
+              <span>OPAC</span>
+              <input type="range" min="0" max="100" value="86" data-debug-jump-filter="opacity" id="debugJumpOpacitySlider">
+              <span class="debug-frame-slider-value" id="debugJumpOpacityValue">86%</span>
+            </label>
+          </div>
+        </div>
+      </section>
       <section class="debug-group" aria-label="Debug da ação do jogador">
         <div class="debug-group-title">PLAYER</div>
         <div class="debug-super-control" aria-label="Barra de super do PLAYER">
@@ -1787,20 +2482,32 @@
       const GUARANTEED_TURN_DURATION = 3000;
       const TURN_BREAK = 2800;
       const RESULT_REVEAL_DELAY = 720;
-      const HEALTH_TRAIL_HOLD = 520;
-      const HEALTH_TRAIL_DELAY = RESULT_REVEAL_DELAY + 360 + HEALTH_TRAIL_HOLD;
-      const CHARACTER_CONFIG_PATH = "../../assets/characters/ninja/ninja.json";
+      const HEALTH_TRAIL_DELAY = 3000;
+      const GET_UP_FIRST_FRAME_HOLD = 1000;
+      const CHARACTER_CONFIG_PATH = "../../assets/characters/ninja/ninja.json?v=20260604-ultimate";
+      const ULTIMATE_CINEMATIC_INTRO_MS = 680;
+      const ULTIMATE_CINEMATIC_HOLD_MS = 1000;
+      const ULTIMATE_CINEMATIC_EXIT_MS = 180;
       const MENU_MUSIC_PATH = "../../assets/audio/i-fall-i-rise-fire-in-m.mp3";
       const BATTLE_MUSIC_PATH = "../../assets/audio/combo-clash-arena.mp3";
       const AUDIO_STORAGE_KEY = "fightTurn.audioEnabled";
       const SFX_VOLUME_STORAGE_KEY = "fightTurn.sfxVolume";
       const MUSIC_STORAGE_KEY = "fightTurn.musicEnabled";
       const MUSIC_VOLUME_STORAGE_KEY = "fightTurn.musicVolume";
+      const DEBUG_VISUAL_STORAGE_KEY = "fightTurn.debugVisual";
+      const DEBUG_VISUAL_STORAGE_VERSION = 6;
+      const IRIS_TRANSITION_DURATION = 860;
       const characterConfig = await loadCharacterConfig(CHARACTER_CONFIG_PATH);
       const idleAnimation = characterConfig.animations.idle;
       const getUpAnimation = characterConfig.animations.getUp;
+      const crouchAnimation = characterConfig.animations.crouch;
+      const jumpAnimation = characterConfig.animations.jump;
+      const ultimateAnimation = characterConfig.animations.ultimate;
       const idleFrames = buildAnimationFrames(idleAnimation);
       const getUpFrames = buildAnimationFrames(getUpAnimation);
+      const crouchFrames = buildAnimationFrames(crouchAnimation);
+      const jumpFrames = buildAnimationFrames(jumpAnimation);
+      const ultimateFrames = buildAnimationFrames(ultimateAnimation);
       const LOCAL_DEBUG_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"]);
       const debugAvailable = LOCAL_DEBUG_HOSTS.has(window.location.hostname);
       const mobileFullscreenRequired = isMobileFullscreenRequired();
@@ -1842,13 +2549,39 @@
       };
       const blockChip = { Poke: 0, Combo: 2, Special: 2, Super: 3 };
       const tradeDamage = { Poke: 3, Combo: 4, Grab: 0, Special: 5, Super: 8 };
+      const debugLocationDefaults = [
+        { id: "L1", side: "left", xPercent: 17.5, yPercent: 37, widthPercent: 18, heightPercent: 16 },
+        { id: "L2", side: "left", xPercent: 10, yPercent: 29, widthPercent: 34, heightPercent: 13 },
+        { id: "L3", side: "left", xPercent: 12, yPercent: 51, widthPercent: 29, heightPercent: 14 },
+        { id: "L4", side: "left", xPercent: 5, yPercent: 44, widthPercent: 43, heightPercent: 46 },
+        { id: "L5", side: "left", xPercent: -12.51, yPercent: 24, widthPercent: 79.69, heightPercent: 71.6 },
+        { id: "C1", side: "center", xPercent: 20, yPercent: 20, widthPercent: 60, heightPercent: 14 },
+        { id: "C2", side: "center", xPercent: 28, yPercent: 43, widthPercent: 44, heightPercent: 15 },
+        { id: "R1", side: "right", xPercent: 64.5, yPercent: 37, widthPercent: 18, heightPercent: 16 },
+        { id: "R2", side: "right", xPercent: 56, yPercent: 29, widthPercent: 34, heightPercent: 13 },
+        { id: "R3", side: "right", xPercent: 59, yPercent: 51, widthPercent: 29, heightPercent: 14 },
+        { id: "R4", side: "right", xPercent: 52, yPercent: 44, widthPercent: 43, heightPercent: 46 },
+        { id: "R5", side: "right", xPercent: 33.04, yPercent: 24.18, widthPercent: 79.69, heightPercent: 71.6 },
+      ];
+      const debugJumpFrameFilterDefaults = {
+        hue: 48,
+        saturation: 40,
+        brightness: 58,
+        contrast: 44,
+        opacity: 100,
+      };
+      const storedDebugVisualSettings = readDebugVisualSettings();
 
       const state = {
         phase: "choosing",
         debugAvailable,
-        debugMode: debugAvailable,
+        debugMode: debugAvailable && (storedDebugVisualSettings?.debugMode ?? true),
+        debugLocationsVisible: storedDebugVisualSettings?.locationsVisible ?? false,
+        debugLocations: createDebugLocationState(storedDebugVisualSettings?.locations),
+        debugJumpFrameFilters: createDebugJumpFrameFilterState(storedDebugVisualSettings?.jumpFrameFilters),
         mobileFullscreenRequired,
         gameSessionActive: !mobileFullscreenRequired,
+        startTransitionActive: false,
         selectedAction: null,
         aiAction: null,
         advantage: null,
@@ -1856,11 +2589,13 @@
         activeGuaranteedTurn: null,
         turnDuration: TURN_DURATION,
         turnStartedAt: 0,
+        guaranteedStartedAt: 0,
         timerId: null,
         p1: { health: 100, super: 0 },
         p2: { health: 100, super: 0 },
         healthTrail: { p1: 100, p2: 100 },
         healthTrailTimers: { p1: null, p2: null },
+        sequenceDamage: { p1: 0, p2: 0 },
         audioEnabled: readAudioPreference(),
         sfxVolume: readSfxVolumePreference(),
         musicEnabled: readMusicPreference(),
@@ -1868,6 +2603,7 @@
       };
 
       const el = {
+        phone: document.querySelector(".phone"),
         actionButtons: [...document.querySelectorAll(".action")],
         p1Health: document.querySelector("#p1HealthFill").parentElement,
         p2Health: document.querySelector("#p2HealthFill").parentElement,
@@ -1895,8 +2631,16 @@
         fightLayer: document.querySelector(".fight-layer"),
         p1Fighter: document.querySelector("#p1Fighter"),
         p2Fighter: document.querySelector("#p2Fighter"),
+        p1GuaranteedCountdown: document.querySelector("#p1GuaranteedCountdown"),
+        p2GuaranteedCountdown: document.querySelector("#p2GuaranteedCountdown"),
+        statePopupLayer: document.querySelector("#statePopupLayer"),
         p1Sprite: document.querySelector("#p1Sprite"),
         p2Sprite: document.querySelector("#p2Sprite"),
+        p1BlockShield: document.querySelector("#p1BlockShield"),
+        p2BlockShield: document.querySelector("#p2BlockShield"),
+        ultimateCinematic: document.querySelector("#ultimateCinematic"),
+        ultimateCinematicPanel: document.querySelector("#ultimateCinematicPanel"),
+        ultimateFrame: document.querySelector("#ultimateFrame"),
         startScreen: document.querySelector("#startScreen"),
         helpScreen: document.querySelector("#helpScreen"),
         optionsScreen: document.querySelector("#optionsScreen"),
@@ -1921,19 +2665,39 @@
         battleOver: document.querySelector("#battleOver"),
         battleOverTitle: document.querySelector("#battleOverTitle"),
         resetButton: document.querySelector("#resetButton"),
+        exitBattleButton: document.querySelector("#exitBattleButton"),
+        irisTransition: document.querySelector("#irisTransition"),
+        irisTransitionHole: document.querySelector("#irisTransitionHole"),
         debugPanel: document.querySelector("#debugPanel"),
         debugToggle: document.querySelector("#debugToggle"),
+        debugLocationsToggle: document.querySelector("#debugLocationsToggle"),
+        debugLocationMap: document.querySelector("#debugLocationMap"),
+        debugLocationNodes: [...document.querySelectorAll(".debug-location")],
+        debugLocationButtons: [...document.querySelectorAll(".debug-location-button")],
+        debugLocationInputs: [...document.querySelectorAll(".debug-location-coordinate")],
+        debugJumpFrameSliders: [...document.querySelectorAll("[data-debug-jump-filter]")],
+        debugJumpFrameValues: {
+          hue: document.querySelector("#debugJumpHueValue"),
+          saturation: document.querySelector("#debugJumpSaturationValue"),
+          brightness: document.querySelector("#debugJumpBrightnessValue"),
+          contrast: document.querySelector("#debugJumpContrastValue"),
+          opacity: document.querySelector("#debugJumpOpacityValue"),
+        },
+        copyDebugLocationsButton: document.querySelector("#copyDebugLocationsButton"),
         debugStatus: document.querySelector("#debugStatus"),
         debugActionButtons: [...document.querySelectorAll(".debug-action")],
         debugSuperButtons: [...document.querySelectorAll(".debug-super-bar")],
       };
 
       document.body.classList.toggle("debug-mode", state.debugAvailable);
-      document.body.classList.toggle("debug-controls-off", state.debugAvailable && !state.debugMode);
+      syncDebugModeUi();
+      syncDebugLocationsUi();
       syncFullscreenGateUi();
 
       let idleFrameIndex = 0;
       const spriteAnimations = { p1: null, p2: null };
+      const ultimateCinematicState = { timers: [] };
+      let debugLocationDrag = null;
       const audioState = {
         context: null,
         masterGain: null,
@@ -2512,7 +3276,7 @@
       }
 
       async function loadCharacterConfig(path) {
-        const response = await fetch(path);
+        const response = await fetch(path, { cache: "no-store" });
         if (!response.ok) {
           throw new Error(`Could not load character config: ${path}`);
         }
@@ -2536,6 +3300,9 @@
 
       preloadFrames(idleFrames);
       preloadFrames(getUpFrames);
+      preloadFrames(crouchFrames);
+      preloadFrames(jumpFrames);
+      preloadFrames(ultimateFrames);
 
       function fighterSprite(side) {
         return side === "p1" ? el.p1Sprite : el.p2Sprite;
@@ -2543,9 +3310,16 @@
 
       function applySpriteDisplay(side, animation) {
         const sprite = fighterSprite(side);
-        sprite.style.setProperty("--sprite-scale", animation.scale ?? 1);
-        sprite.style.setProperty("--sprite-offset-x", `${animation.offsetXPercent ?? 0}%`);
-        sprite.style.setProperty("--sprite-offset-y", `${animation.offsetYPercent ?? 0}%`);
+        const sideDisplay = animation.sideOffsets?.[side] ?? {};
+        const colorFilter = animation.colorFilter ?? {};
+        sprite.style.setProperty("--sprite-scale", sideDisplay.scale ?? animation.scale ?? 1);
+        sprite.style.setProperty("--sprite-offset-x", `${sideDisplay.offsetXPercent ?? animation.offsetXPercent ?? 0}%`);
+        sprite.style.setProperty("--sprite-offset-y", `${sideDisplay.offsetYPercent ?? animation.offsetYPercent ?? 0}%`);
+        sprite.style.setProperty("--sprite-hue", `${colorFilter.hueDeg ?? 0}deg`);
+        sprite.style.setProperty("--sprite-saturation", `${colorFilter.saturationPercent ?? 100}%`);
+        sprite.style.setProperty("--sprite-brightness", `${colorFilter.brightnessPercent ?? 100}%`);
+        sprite.style.setProperty("--sprite-contrast", `${colorFilter.contrastPercent ?? 100}%`);
+        sprite.style.setProperty("--sprite-opacity", String((colorFilter.opacityPercent ?? 100) / 100));
       }
 
       function clearSpriteAnimation(side) {
@@ -2562,7 +3336,7 @@
         clearSpriteAnimation("p2");
       }
 
-      function playSpriteAnimation(side, animationConfig, frames) {
+      function playSpriteAnimation(side, animationConfig, frames, { firstFrameHoldMs = 0, holdLastFrame = false } = {}) {
         clearSpriteAnimation(side);
 
         const playback = { frameIndex: 0, timerId: null };
@@ -2582,14 +3356,163 @@
             return;
           }
 
-          clearSpriteAnimation(side);
+          if (holdLastFrame) {
+            playback.timerId = null;
+            return;
+          }
+
+          playback.timerId = window.setTimeout(() => {
+            if (spriteAnimations[side] === playback) {
+              clearSpriteAnimation(side);
+            }
+          }, animationConfig.frameIntervalMs);
         };
+
+        if (firstFrameHoldMs > 0 && frames.length > 0) {
+          fighterSprite(side).src = frames[0];
+          playback.frameIndex = 1;
+          playback.timerId = window.setTimeout(advance, firstFrameHoldMs);
+          return;
+        }
 
         advance();
       }
 
+      function animationPlaybackDuration(frames, animationConfig, { firstFrameHoldMs = 0 } = {}) {
+        if (!frames.length) {
+          return 0;
+        }
+
+        return firstFrameHoldMs + frames.length * animationConfig.frameIntervalMs;
+      }
+
       function playKnockdownAnimation(sides) {
-        sides.forEach((side) => playSpriteAnimation(side, getUpAnimation, getUpFrames));
+        sides.forEach((side) => playSpriteAnimation(side, getUpAnimation, getUpFrames, {
+          firstFrameHoldMs: GET_UP_FIRST_FRAME_HOLD,
+        }));
+      }
+
+      function playCrouchAnimation(sides) {
+        sides.forEach((side) => playSpriteAnimation(side, crouchAnimation, crouchFrames, { holdLastFrame: true }));
+      }
+
+      function playJumpAnimation(sides) {
+        sides.forEach((side) => playSpriteAnimation(side, jumpAnimation, jumpFrames));
+      }
+
+      function blockShieldElement(side) {
+        return side === "p1" ? el.p1BlockShield : el.p2BlockShield;
+      }
+
+      function clearBlockShieldEffects() {
+        el.p1BlockShield.classList.remove("is-visible");
+        el.p2BlockShield.classList.remove("is-visible");
+      }
+
+      function showBlockShieldEffects(sides) {
+        sides.forEach((side) => {
+          const shield = blockShieldElement(side);
+          shield.classList.remove("is-visible");
+          void shield.offsetWidth;
+          shield.classList.add("is-visible");
+        });
+      }
+
+      function scheduleUltimateCinematic(callback, delay) {
+        const timerId = window.setTimeout(callback, delay);
+        ultimateCinematicState.timers.push(timerId);
+        return timerId;
+      }
+
+      function clearUltimateCinematic() {
+        ultimateCinematicState.timers.forEach((timerId) => window.clearTimeout(timerId));
+        ultimateCinematicState.timers = [];
+        el.ultimateCinematic.classList.remove("is-active", "is-playing", "p1", "p2");
+        if (ultimateFrames.length) {
+          el.ultimateFrame.src = ultimateFrames[0];
+        }
+      }
+
+      function playUltimateCinematic(side) {
+        if (!ultimateFrames.length) {
+          return 0;
+        }
+
+        clearUltimateCinematic();
+        el.ultimateFrame.src = ultimateFrames[0];
+        el.ultimateCinematic.classList.add("is-active", side);
+
+        const playbackStartMs = ULTIMATE_CINEMATIC_INTRO_MS + ULTIMATE_CINEMATIC_HOLD_MS;
+        const playbackDurationMs = ultimateFrames.length * ultimateAnimation.frameIntervalMs;
+        const totalDurationMs = playbackStartMs + playbackDurationMs + ULTIMATE_CINEMATIC_EXIT_MS;
+
+        scheduleUltimateCinematic(() => {
+          let frameIndex = 1;
+          el.ultimateCinematic.classList.add("is-playing");
+
+          const advance = () => {
+            if (frameIndex >= ultimateFrames.length) {
+              return;
+            }
+
+            el.ultimateFrame.src = ultimateFrames[frameIndex];
+            frameIndex += 1;
+            scheduleUltimateCinematic(advance, ultimateAnimation.frameIntervalMs);
+          };
+
+          advance();
+        }, playbackStartMs);
+
+        scheduleUltimateCinematic(clearUltimateCinematic, totalDurationMs);
+        return totalDurationMs;
+      }
+
+      function playResponseAnimations(p1Action, p2Action) {
+        const crouchingSides = [];
+        const jumpingSides = [];
+        const blockingSides = [];
+
+        if (p1Action === "Block") {
+          blockingSides.push("p1");
+        }
+
+        if (p2Action === "Block") {
+          blockingSides.push("p2");
+        }
+
+        if (p1Action === "Crouch") {
+          crouchingSides.push("p1");
+        }
+
+        if (p2Action === "Crouch") {
+          crouchingSides.push("p2");
+        }
+
+        if (p1Action === "Jump") {
+          jumpingSides.push("p1");
+        }
+
+        if (p2Action === "Jump") {
+          jumpingSides.push("p2");
+        }
+
+        playCrouchAnimation(crouchingSides);
+        playJumpAnimation(jumpingSides);
+        showBlockShieldEffects(blockingSides);
+      }
+
+      function responseAnimationBreak(p1Action, p2Action) {
+        let duration = 0;
+
+        if (p1Action === "Crouch" || p2Action === "Crouch") {
+          duration = Math.max(duration, animationPlaybackDuration(crouchFrames, crouchAnimation));
+        }
+
+        if (p1Action === "Jump" || p2Action === "Jump") {
+          duration = Math.max(duration, animationPlaybackDuration(jumpFrames, jumpAnimation));
+        }
+
+        return duration + 120;
       }
 
       function updateIdleSprites() {
@@ -2814,7 +3737,11 @@
         }
 
         document.body.classList.toggle("debug-controls-off", !state.debugMode);
+        document.body.classList.toggle("debug-locations-on", state.debugMode && state.debugLocationsVisible);
         el.debugToggle.checked = state.debugMode;
+        el.debugLocationsToggle.checked = state.debugLocationsVisible;
+        el.debugLocationsToggle.disabled = !state.debugMode;
+        syncDebugLocationsUi();
       }
 
       function handleDebugToggle() {
@@ -2823,6 +3750,7 @@
         }
 
         state.debugMode = el.debugToggle.checked;
+        writeDebugVisualSettings();
         syncDebugModeUi();
 
         if (state.phase === "choosing") {
@@ -2830,9 +3758,15 @@
 
           if (state.debugMode) {
             state.aiAction = null;
-            state.turnStartedAt = Date.now();
-            el.turnMeterFill.style.width = "0%";
-            el.roundClock.textContent = "0";
+            resetChoosingTimerStart();
+            if (state.activeGuaranteedTurn) {
+              setGuaranteedClockDisplay(GUARANTEED_TURN_DURATION);
+              el.noticePrimary.textContent = "GOLPE GARANTIDO";
+            } else {
+              setMainClockToZero();
+              clearGuaranteedCountdown();
+              el.noticePrimary.textContent = "DEBUG";
+            }
             setTokenDisplay(false);
           } else {
             if (!state.aiAction && state.activeGuaranteedTurn?.side !== "p1") {
@@ -2840,15 +3774,586 @@
                 ? pickAiAction(state.activeGuaranteedTurn.allowedActions)
                 : pickAiAction();
             }
-            state.turnStartedAt = Date.now();
-            el.turnMeterFill.style.width = "100%";
-            el.roundClock.textContent = String(Math.ceil(state.turnDuration / 1000));
-            state.timerId = window.setInterval(tickTurn, 100);
+            resetChoosingTimerStart();
+            if (state.activeGuaranteedTurn) {
+              setGuaranteedClockDisplay(GUARANTEED_TURN_DURATION);
+              el.noticePrimary.textContent = "GOLPE GARANTIDO";
+              state.timerId = window.setInterval(tickGuaranteedTurn, 100);
+            } else {
+              clearGuaranteedCountdown();
+              el.turnMeterFill.style.width = "100%";
+              el.roundClock.textContent = String(Math.ceil(TURN_DURATION / 1000));
+              el.noticePrimary.textContent = "READY";
+              state.timerId = window.setInterval(tickTurn, 100);
+            }
             setTokenDisplay(false);
           }
         }
 
         updateHud();
+      }
+
+      function handleDebugLocationsToggle() {
+        if (!state.debugAvailable) {
+          return;
+        }
+
+        state.debugLocationsVisible = el.debugLocationsToggle.checked;
+        writeDebugVisualSettings();
+        syncDebugModeUi();
+      }
+
+      function readDebugVisualSettings() {
+        try {
+          const rawSettings = window.localStorage.getItem(DEBUG_VISUAL_STORAGE_KEY);
+          if (!rawSettings) {
+            return null;
+          }
+
+          const parsedSettings = JSON.parse(rawSettings);
+          if (!parsedSettings || typeof parsedSettings !== "object") {
+            return null;
+          }
+
+          if (parsedSettings.version !== DEBUG_VISUAL_STORAGE_VERSION && parsedSettings.locations) {
+            parsedSettings.locations = { ...parsedSettings.locations };
+            delete parsedSettings.locations.L5;
+            delete parsedSettings.locations.R5;
+            delete parsedSettings.jumpFrameFilters;
+          }
+
+          return parsedSettings;
+        } catch {
+          return null;
+        }
+      }
+
+      function createDebugLocationState(savedLocations = null) {
+        return Object.fromEntries(debugLocationDefaults.map((location) => [
+          location.id,
+          createDebugLocationEntry(location, savedLocations?.[location.id]),
+        ]));
+      }
+
+      function createDebugLocationEntry(location, savedLocation = null) {
+        const nextLocation = { ...location, visible: true };
+        if (!savedLocation || typeof savedLocation !== "object") {
+          return nextLocation;
+        }
+
+        ["xPercent", "yPercent", "widthPercent", "heightPercent"].forEach((key) => {
+          if (Number.isFinite(savedLocation[key])) {
+            nextLocation[key] = clampDebugLocationPercent(location.id, key, savedLocation[key]);
+          }
+        });
+
+        if (typeof savedLocation.visible === "boolean") {
+          nextLocation.visible = savedLocation.visible;
+        }
+
+        return nextLocation;
+      }
+
+      function createDebugJumpFrameFilterState(savedFilters = null) {
+        const nextFilters = { ...debugJumpFrameFilterDefaults };
+        if (!savedFilters || typeof savedFilters !== "object") {
+          return nextFilters;
+        }
+
+        Object.keys(nextFilters).forEach((key) => {
+          if (Number.isFinite(savedFilters[key])) {
+            nextFilters[key] = Math.round(clampNumber(savedFilters[key], 0, 100));
+          }
+        });
+
+        return nextFilters;
+      }
+
+      function clampDebugLocationPercent(id, key, value) {
+        const isJumpLocation = id === "L5" || id === "R5";
+        if (!isJumpLocation) {
+          return clampNumber(value, 0, 100);
+        }
+
+        if (key === "xPercent") {
+          return clampNumber(value, -100, 200);
+        }
+
+        if (key === "widthPercent" || key === "heightPercent") {
+          return clampNumber(value, 1, 200);
+        }
+
+        return clampNumber(value, -30, 130);
+      }
+
+      function writeDebugVisualSettings() {
+        if (!state.debugAvailable) {
+          return;
+        }
+
+        try {
+          const locations = Object.fromEntries(debugLocationDefaults.map(({ id }) => {
+            const location = state.debugLocations[id];
+            return [id, {
+              xPercent: Number(location.xPercent.toFixed(3)),
+              yPercent: Number(location.yPercent.toFixed(3)),
+              widthPercent: Number(location.widthPercent.toFixed(3)),
+              heightPercent: Number(location.heightPercent.toFixed(3)),
+              visible: location.visible,
+            }];
+          }));
+
+          window.localStorage.setItem(DEBUG_VISUAL_STORAGE_KEY, JSON.stringify({
+            version: DEBUG_VISUAL_STORAGE_VERSION,
+            debugMode: state.debugMode,
+            locationsVisible: state.debugLocationsVisible,
+            locations,
+            jumpFrameFilters: { ...state.debugJumpFrameFilters },
+          }));
+        } catch {
+          // Storage can be unavailable; the current debug session still keeps its in-memory settings.
+        }
+      }
+
+      function debugLocationNode(id) {
+        return el.debugLocationNodes.find((node) => node.dataset.location === id);
+      }
+
+      function debugLocationButton(id) {
+        return el.debugLocationButtons.find((button) => button.dataset.debugLocationToggle === id);
+      }
+
+      function debugLocationMapRect() {
+        const mapRect = el.debugLocationMap.getBoundingClientRect();
+        if (mapRect.width > 0 && mapRect.height > 0) {
+          return mapRect;
+        }
+
+        const phoneRect = el.phone.getBoundingClientRect();
+        return {
+          left: phoneRect.left,
+          top: phoneRect.top,
+          width: phoneRect.width,
+          height: phoneRect.height * 0.62,
+        };
+      }
+
+      function debugLocationPixelRect(location, mapRect = debugLocationMapRect()) {
+        return {
+          x: Math.round((location.xPercent / 100) * mapRect.width),
+          y: Math.round((location.yPercent / 100) * mapRect.height),
+          width: Math.round((location.widthPercent / 100) * mapRect.width),
+          height: Math.round((location.heightPercent / 100) * mapRect.height),
+        };
+      }
+
+      function syncDebugLocationsUi() {
+        if (!state.debugAvailable) {
+          return;
+        }
+
+        const mapRect = debugLocationMapRect();
+        el.copyDebugLocationsButton.disabled = !state.debugMode;
+
+        debugLocationDefaults.forEach(({ id }) => {
+          const location = state.debugLocations[id];
+          const node = debugLocationNode(id);
+          const button = debugLocationButton(id);
+
+          if (node) {
+            node.style.setProperty("--left", `${location.xPercent}%`);
+            node.style.setProperty("--top", `${location.yPercent}%`);
+            node.style.setProperty("--width", `${location.widthPercent}%`);
+            node.style.setProperty("--height", `${location.heightPercent}%`);
+            node.classList.toggle("is-hidden", !location.visible);
+          }
+
+          if (button) {
+            button.classList.toggle("selected", location.visible);
+            button.setAttribute("aria-pressed", String(location.visible));
+            button.disabled = !state.debugMode;
+          }
+        });
+
+        el.debugLocationInputs.forEach((input) => {
+          const location = state.debugLocations[input.dataset.debugLocationId];
+          if (!location) {
+            return;
+          }
+
+          const axis = input.dataset.debugLocationAxis;
+          const rect = debugLocationPixelRect(location, mapRect);
+          const value = axis === "x" ? rect.x : rect.y;
+          input.disabled = !state.debugMode;
+          input.min = location.id === "L5" || location.id === "R5" ? String(axis === "x" ? -rect.width : -rect.height) : "0";
+          input.setAttribute("aria-label", `${location.id} ${axis.toUpperCase()}`);
+
+          if (document.activeElement !== input) {
+            input.value = String(value);
+          }
+        });
+
+        syncDebugJumpFrameUi();
+      }
+
+      function clampNumber(value, min, max) {
+        if (!Number.isFinite(value)) {
+          return min;
+        }
+
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function debugJumpFrameFilterValues() {
+        const filters = state.debugJumpFrameFilters;
+        return {
+          hueDeg: Math.round((filters.hue - 50) * 3.6),
+          saturationPercent: filters.saturation * 2,
+          brightnessPercent: filters.brightness * 2,
+          contrastPercent: filters.contrast * 2,
+          opacityPercent: filters.opacity,
+        };
+      }
+
+      function syncDebugJumpFrameUi() {
+        if (!state.debugAvailable) {
+          return;
+        }
+
+        const values = debugJumpFrameFilterValues();
+        el.debugLocationMap.style.setProperty("--debug-jump-hue", `${values.hueDeg}deg`);
+        el.debugLocationMap.style.setProperty("--debug-jump-saturation", `${values.saturationPercent}%`);
+        el.debugLocationMap.style.setProperty("--debug-jump-brightness", `${values.brightnessPercent}%`);
+        el.debugLocationMap.style.setProperty("--debug-jump-contrast", `${values.contrastPercent}%`);
+        el.debugLocationMap.style.setProperty("--debug-jump-opacity", String(values.opacityPercent / 100));
+
+        el.debugJumpFrameSliders.forEach((input) => {
+          const filter = input.dataset.debugJumpFilter;
+          input.disabled = !state.debugMode;
+          if (document.activeElement !== input) {
+            input.value = String(state.debugJumpFrameFilters[filter]);
+          }
+        });
+
+        el.debugJumpFrameValues.hue.textContent = `${values.hueDeg}deg`;
+        el.debugJumpFrameValues.saturation.textContent = `${values.saturationPercent}%`;
+        el.debugJumpFrameValues.brightness.textContent = `${values.brightnessPercent}%`;
+        el.debugJumpFrameValues.contrast.textContent = `${values.contrastPercent}%`;
+        el.debugJumpFrameValues.opacity.textContent = `${values.opacityPercent}%`;
+      }
+
+      function setDebugJumpFrameFilterFromInput(input) {
+        const filter = input.dataset.debugJumpFilter;
+        if (!state.debugMode || !(filter in state.debugJumpFrameFilters)) {
+          return;
+        }
+
+        state.debugJumpFrameFilters[filter] = Math.round(clampNumber(Number(input.value), 0, 100));
+        writeDebugVisualSettings();
+        syncDebugJumpFrameUi();
+      }
+
+      function setDebugLocationPixelPosition(id, x, y) {
+        const location = state.debugLocations[id];
+        if (!location) {
+          return;
+        }
+
+        const mapRect = debugLocationMapRect();
+        const width = (location.widthPercent / 100) * mapRect.width;
+        const height = (location.heightPercent / 100) * mapRect.height;
+        const canOverflow = id === "L5" || id === "R5";
+        const xMin = canOverflow ? -width : 0;
+        const yMin = canOverflow ? -height : 0;
+        const xMax = canOverflow ? mapRect.width : Math.max(0, mapRect.width - width);
+        const yMax = canOverflow ? mapRect.height : Math.max(0, mapRect.height - height);
+        const nextX = Math.round(clampNumber(x, xMin, xMax));
+        const nextY = Math.round(clampNumber(y, yMin, yMax));
+
+        if (mapRect.width > 0) {
+          location.xPercent = (nextX / mapRect.width) * 100;
+        }
+
+        if (mapRect.height > 0) {
+          location.yPercent = (nextY / mapRect.height) * 100;
+        }
+
+        writeDebugVisualSettings();
+        syncDebugLocationsUi();
+      }
+
+      function setDebugLocationCoordinateFromInput(input) {
+        const id = input.dataset.debugLocationId;
+        const axis = input.dataset.debugLocationAxis;
+        const location = state.debugLocations[id];
+        const rawValue = input.value.trim();
+
+        if (!location || rawValue === "") {
+          return;
+        }
+
+        const value = Math.round(Number(rawValue));
+        if (!Number.isFinite(value)) {
+          return;
+        }
+
+        const rect = debugLocationPixelRect(location);
+        const nextX = axis === "x" ? value : rect.x;
+        const nextY = axis === "y" ? value : rect.y;
+        input.value = String(value);
+        setDebugLocationPixelPosition(id, nextX, nextY);
+      }
+
+      function handleDebugLocationCoordinateKeydown(event) {
+        if (event.key !== "ArrowUp" && event.key !== "ArrowDown") {
+          return;
+        }
+
+        if (!state.debugMode) {
+          return;
+        }
+
+        event.preventDefault();
+        const input = event.currentTarget;
+        const id = input.dataset.debugLocationId;
+        const axis = input.dataset.debugLocationAxis;
+        const location = state.debugLocations[id];
+        if (!location) {
+          return;
+        }
+
+        const rect = debugLocationPixelRect(location);
+        const current = input.value.trim() === ""
+          ? axis === "x" ? rect.x : rect.y
+          : Number(input.value);
+        const direction = event.key === "ArrowUp" ? 1 : -1;
+        const step = event.shiftKey ? 10 : 1;
+        input.value = String(Math.round(current + direction * step));
+        setDebugLocationCoordinateFromInput(input);
+      }
+
+      function toggleDebugLocation(id) {
+        const location = state.debugLocations[id];
+        if (!state.debugMode || !location) {
+          return;
+        }
+
+        location.visible = !location.visible;
+        writeDebugVisualSettings();
+        syncDebugLocationsUi();
+      }
+
+      function startDebugLocationDrag(id, node, clientX, clientY, pointerId = null) {
+        if (!state.debugMode || !state.debugLocationsVisible) {
+          return;
+        }
+
+        const location = state.debugLocations[id];
+        if (!location) {
+          return;
+        }
+
+        const mapRect = debugLocationMapRect();
+        const rect = debugLocationPixelRect(location, mapRect);
+        debugLocationDrag = {
+          id,
+          node,
+          pointerId,
+          startClientX: clientX,
+          startClientY: clientY,
+          startX: rect.x,
+          startY: rect.y,
+        };
+
+        node.classList.add("is-dragging");
+      }
+
+      function handleDebugLocationPointerDown(event) {
+        startDebugLocationDrag(event.currentTarget.dataset.location, event.currentTarget, event.clientX, event.clientY, event.pointerId);
+        if (!debugLocationDrag) {
+          return;
+        }
+
+        event.currentTarget.setPointerCapture(event.pointerId);
+        event.preventDefault();
+      }
+
+      function handleDebugLocationPointerMove(event) {
+        if (!debugLocationDrag || event.pointerId !== debugLocationDrag.pointerId) {
+          return;
+        }
+
+        const nextX = debugLocationDrag.startX + event.clientX - debugLocationDrag.startClientX;
+        const nextY = debugLocationDrag.startY + event.clientY - debugLocationDrag.startClientY;
+        setDebugLocationPixelPosition(debugLocationDrag.id, nextX, nextY);
+      }
+
+      function handleDebugLocationPointerEnd(event) {
+        if (!debugLocationDrag || event.pointerId !== debugLocationDrag.pointerId) {
+          return;
+        }
+
+        debugLocationDrag.node.classList.remove("is-dragging");
+        if (debugLocationDrag.node.hasPointerCapture(event.pointerId)) {
+          debugLocationDrag.node.releasePointerCapture(event.pointerId);
+        }
+        debugLocationDrag = null;
+      }
+
+      function handleDebugLocationMouseDown(event) {
+        if (event.button !== 0 || debugLocationDrag) {
+          return;
+        }
+
+        startDebugLocationDrag(event.currentTarget.dataset.location, event.currentTarget, event.clientX, event.clientY);
+        if (debugLocationDrag) {
+          event.preventDefault();
+        }
+      }
+
+      function handleDebugLocationMouseMove(event) {
+        if (!debugLocationDrag || debugLocationDrag.pointerId !== null) {
+          return;
+        }
+
+        const nextX = debugLocationDrag.startX + event.clientX - debugLocationDrag.startClientX;
+        const nextY = debugLocationDrag.startY + event.clientY - debugLocationDrag.startClientY;
+        setDebugLocationPixelPosition(debugLocationDrag.id, nextX, nextY);
+      }
+
+      function handleDebugLocationMouseUp() {
+        if (!debugLocationDrag || debugLocationDrag.pointerId !== null) {
+          return;
+        }
+
+        debugLocationDrag.node.classList.remove("is-dragging");
+        debugLocationDrag = null;
+      }
+
+      function buildDebugLocationsSummary() {
+        const mapRect = debugLocationMapRect();
+        const visibleLocationIds = new Set(debugLocationDefaults
+          .map(({ id }) => state.debugLocations[id])
+          .filter((location) => location.visible)
+          .map((location) => location.id));
+        const includesJumpPair = visibleLocationIds.has("L5") || visibleLocationIds.has("R5");
+
+        if (includesJumpPair) {
+          visibleLocationIds.add("L5");
+          visibleLocationIds.add("R5");
+        }
+
+        const visibleLocations = debugLocationDefaults
+          .map(({ id }) => state.debugLocations[id])
+          .filter((location) => visibleLocationIds.has(location.id));
+        const lines = [
+          "Locais visiveis da luta",
+          `Area visual: ${Math.round(mapRect.width)}x${Math.round(mapRect.height)}px`,
+        ];
+
+        visibleLocations.forEach((location) => {
+          const rect = debugLocationPixelRect(location, mapRect);
+          lines.push(
+            `${location.id}: x=${rect.x}px, y=${rect.y}px, w=${rect.width}px, h=${rect.height}px, x%=${location.xPercent.toFixed(2)}, y%=${location.yPercent.toFixed(2)}`
+          );
+        });
+
+        if (includesJumpPair) {
+          const filters = debugJumpFrameFilterValues();
+          lines.push(
+            "Frame Jump L5/R5:",
+            `matiz=${filters.hueDeg}deg, saturacao=${filters.saturationPercent}%, brilho=${filters.brightnessPercent}%, contraste=${filters.contrastPercent}%, opacidade=${filters.opacityPercent}%`,
+            `sliders: matiz=${state.debugJumpFrameFilters.hue}, saturacao=${state.debugJumpFrameFilters.saturation}, brilho=${state.debugJumpFrameFilters.brightness}, contraste=${state.debugJumpFrameFilters.contrast}, opacidade=${state.debugJumpFrameFilters.opacity}`
+          );
+        }
+
+        return lines.join("\n");
+      }
+
+      async function copyTextToClipboard(text) {
+        if (navigator.clipboard?.writeText) {
+          try {
+            await navigator.clipboard.writeText(text);
+            return;
+          } catch {
+            // Fall back to the legacy path below when browser permissions block the async clipboard API.
+          }
+        }
+
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.setAttribute("readonly", "");
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        document.body.append(textArea);
+        textArea.select();
+        const copied = document.execCommand("copy");
+        textArea.remove();
+
+        if (!copied) {
+          throw new Error("copy failed");
+        }
+      }
+
+      async function copyDebugLocationsSummary() {
+        const summary = buildDebugLocationsSummary();
+        try {
+          await copyTextToClipboard(summary);
+          el.debugStatus.textContent = "Resumo dos locais copiado.";
+        } catch {
+          el.debugStatus.textContent = "Nao foi possivel copiar os locais.";
+        }
+      }
+
+      function resetChoosingTimerStart() {
+        const now = Date.now();
+        state.turnStartedAt = now;
+        state.guaranteedStartedAt = state.activeGuaranteedTurn ? now : 0;
+      }
+
+      function setMainClockToZero() {
+        el.turnMeterFill.style.width = "0%";
+        el.roundClock.textContent = "0";
+      }
+
+      function guaranteedCountdownElement(side) {
+        return side === "p1" ? el.p1GuaranteedCountdown : el.p2GuaranteedCountdown;
+      }
+
+      function clearGuaranteedCountdown() {
+        ["p1", "p2"].forEach((side) => {
+          const countdown = guaranteedCountdownElement(side);
+          countdown.classList.remove("is-visible");
+          countdown.textContent = "";
+        });
+      }
+
+      function setGuaranteedClockDisplay(remainingMs) {
+        setMainClockToZero();
+
+        const activeSide = state.activeGuaranteedTurn?.side;
+        if (!activeSide) {
+          clearGuaranteedCountdown();
+          return;
+        }
+
+        ["p1", "p2"].forEach((side) => {
+          const countdown = guaranteedCountdownElement(side);
+          if (side !== activeSide) {
+            countdown.classList.remove("is-visible");
+            countdown.textContent = "";
+            return;
+          }
+
+          const seconds = Math.max(1, Math.ceil(remainingMs / 1000));
+          const nextText = String(seconds);
+          if (countdown.textContent !== nextText) {
+            countdown.classList.remove("is-visible");
+            void countdown.offsetWidth;
+          }
+          countdown.textContent = nextText;
+          countdown.classList.add("is-visible");
+        });
       }
 
       function setHealthTrailWidth(side, value) {
@@ -2860,12 +4365,23 @@
         damageBar.style.width = `${clampPercent(value)}%`;
       }
 
-      function syncHealthTrailToCurrent() {
+      function clearHealthTrailTimers() {
         ["p1", "p2"].forEach((side) => {
           window.clearTimeout(state.healthTrailTimers[side]);
+          state.healthTrailTimers[side] = null;
+        });
+      }
+
+      function syncHealthTrailToCurrent() {
+        clearHealthTrailTimers();
+        ["p1", "p2"].forEach((side) => {
           state.healthTrail[side] = clampPercent(state[side].health);
           setHealthTrailWidth(side, state.healthTrail[side]);
         });
+      }
+
+      function holdHealthTrailForSequence() {
+        clearHealthTrailTimers();
       }
 
       function showHealthDamageTrail(side, previousHealth) {
@@ -2873,7 +4389,8 @@
         const currentHealth = clampPercent(state[side].health);
 
         window.clearTimeout(state.healthTrailTimers[side]);
-        state.healthTrail[side] = clampPercent(previousHealth);
+        state.healthTrailTimers[side] = null;
+        state.healthTrail[side] = Math.max(clampPercent(state.healthTrail[side]), clampPercent(previousHealth));
         setHealthTrailWidth(side, state.healthTrail[side]);
 
         if (healthElement) {
@@ -2882,10 +4399,13 @@
           healthElement.classList.add("is-damaged");
         }
 
-        state.healthTrailTimers[side] = window.setTimeout(() => {
-          state.healthTrail[side] = currentHealth;
-          setHealthTrailWidth(side, currentHealth);
-        }, HEALTH_TRAIL_DELAY);
+        if (!state.activeGuaranteedTurn) {
+          state.healthTrailTimers[side] = window.setTimeout(() => {
+            state.healthTrail[side] = currentHealth;
+            setHealthTrailWidth(side, currentHealth);
+            state.healthTrailTimers[side] = null;
+          }, HEALTH_TRAIL_DELAY);
+        }
       }
 
       function updateHud() {
@@ -3106,19 +4626,32 @@
         };
       }
 
-      function showDamagePopups(damageLosses) {
+      function addSequenceDamage(damageLosses) {
         Object.entries(damageLosses).forEach(([side, amount]) => {
           if (amount > 0) {
-            createDamagePopup(side, amount);
+            state.sequenceDamage[side] += amount;
           }
         });
       }
 
-      function createDamagePopup(side, amount) {
+      function resetSequenceDamage() {
+        state.sequenceDamage = { p1: 0, p2: 0 };
+      }
+
+      function showDamagePopups(damageLosses, options = {}) {
+        Object.entries(damageLosses).forEach(([side, amount]) => {
+          if (amount > 0) {
+            const popupAmount = options.total ? state.sequenceDamage[side] : amount;
+            createDamagePopup(side, popupAmount, options);
+          }
+        });
+      }
+
+      function createDamagePopup(side, amount, options = {}) {
         const fighter = side === "p1" ? el.p1Fighter : el.p2Fighter;
         const popup = document.createElement("span");
-        popup.className = "damage-float";
-        popup.textContent = `-${amount}%`;
+        popup.className = `damage-float${options.total ? " total" : ""}`;
+        popup.textContent = `${options.total ? "TOTAL " : ""}-${amount}%`;
         fighter.append(popup);
         popup.addEventListener("animationend", () => popup.remove(), { once: true });
         window.setTimeout(() => popup.remove(), 1900);
@@ -3151,15 +4684,33 @@
         popup.className = `state-float ${kind}${side === "center" ? " center" : ""}`;
         popup.textContent = label;
 
-        const parent = side === "center"
-          ? el.fightLayer
-          : side === "p1"
-            ? el.p1Fighter
-            : el.p2Fighter;
+        const position = getStatePopupPosition(side, kind);
+        popup.style.left = `${position.left}px`;
+        popup.style.top = `${position.top}px`;
 
-        parent.append(popup);
+        el.statePopupLayer.append(popup);
         popup.addEventListener("animationend", () => popup.remove(), { once: true });
         window.setTimeout(() => popup.remove(), 2100);
+      }
+
+      function getStatePopupPosition(side, kind = "") {
+        const layerRect = el.statePopupLayer.getBoundingClientRect();
+
+        if (side === "center") {
+          const fightRect = el.fightLayer.getBoundingClientRect();
+          return {
+            left: fightRect.left - layerRect.left + fightRect.width / 2,
+            top: fightRect.top - layerRect.top + fightRect.height * 0.3,
+          };
+        }
+
+        const fighter = side === "p1" ? el.p1Fighter : el.p2Fighter;
+        const fighterRect = fighter.getBoundingClientRect();
+        const topOffset = kind === "plus" ? fighterRect.height * 0.15 : -fighterRect.height * 0.23;
+        return {
+          left: fighterRect.left - layerRect.left + fighterRect.width / 2,
+          top: fighterRect.top - layerRect.top + topOffset,
+        };
       }
 
       function animateHit(winner) {
@@ -3219,10 +4770,17 @@
 
       function queueGuaranteedTurn(result) {
         state.guaranteedTurn = result.guaranteedTurn || null;
+        if (state.guaranteedTurn) {
+          holdHealthTrailForSequence();
+        }
       }
 
       function resolveAttackVsAttack(p1Action, p2Action) {
         if (p1Action === p2Action) {
+          if (state.advantage) {
+            return resolveHit(state.advantage, p1Action, p2Action, true);
+          }
+
           state.advantage = null;
 
           if (p1Action === "Grab") {
@@ -3335,19 +4893,31 @@
         return { type: "draw", primary: "NEUTRO", secondary: `${displayActionName(attack)} não conectou`, damaged: [] };
       }
 
+      function resultWinnerAction(result, p1Action, p2Action) {
+        if (!result.winner) {
+          return null;
+        }
+
+        return result.winner === "p1" ? p1Action : p2Action;
+      }
+
       function resolveTurn() {
+        const wasGuaranteedTurn = Boolean(state.activeGuaranteedTurn);
         state.phase = "resolving";
         window.clearInterval(state.timerId);
+        clearGuaranteedCountdown();
         updateHud();
 
         const p1Action = state.selectedAction;
         const p2Action = state.aiAction;
+        const responseBreak = responseAnimationBreak(p1Action, p2Action);
         const beforeHealth = {
           p1: state.p1.health,
           p2: state.p2.health,
         };
         revealCpuToken();
         playSound("reveal");
+        playResponseAnimations(p1Action, p2Action);
 
         consumeSuper("p1", p1Action);
         consumeSuper("p2", p2Action);
@@ -3383,14 +4953,18 @@
           result = { type: "draw", primary: "NEUTRO", secondary: `${displayActionName(p1Action)} vs ${displayActionName(p2Action)}`, damaged: [] };
         }
 
+        const winningAction = resultWinnerAction(result, p1Action, p2Action);
+        const isUltimateHit = result.type === "hit" && winningAction === "Super";
+
         el.turnMeterFill.style.width = "0%";
         el.roundClock.textContent = "0";
 
         window.setTimeout(() => {
           animateTokenClash(result);
           playTurnResultSound(result);
+          const ultimateCinematicBreak = isUltimateHit ? playUltimateCinematic(result.winner) : 0;
 
-          if (result.type === "hit" && result.winner) {
+          if (result.type === "hit" && result.winner && !isUltimateHit) {
             window.setTimeout(() => animateHit(result.winner), 250);
           } else if (result.type === "trade") {
             window.setTimeout(() => flashDamagedFighters(result.damaged || []), 250);
@@ -3398,12 +4972,14 @@
 
           window.setTimeout(() => {
             const knockedDown = result.knockedDown || [];
+            const damageLosses = getDamageLosses(beforeHealth);
+            addSequenceDamage(damageLosses);
             flashDamagedFighters(result.damaged || []);
             playKnockdownAnimation(knockedDown);
             if (knockedDown.length) {
               playSound("knockdown");
             }
-            showDamagePopups(getDamageLosses(beforeHealth));
+            showDamagePopups(damageLosses, { total: wasGuaranteedTurn });
             showStatePopups(result);
             flashNotice(result.primary);
             updateHud();
@@ -3414,9 +4990,11 @@
             }
 
             queueGuaranteedTurn(result);
-            const knockdownBreak = knockedDown.length ? getUpFrames.length * getUpAnimation.frameIntervalMs + 220 : 0;
-            window.setTimeout(startTurn, Math.max(TURN_BREAK, knockdownBreak));
-          }, 360);
+            const knockdownBreak = knockedDown.length
+              ? GET_UP_FIRST_FRAME_HOLD + getUpFrames.length * getUpAnimation.frameIntervalMs + 220
+              : 0;
+            window.setTimeout(startTurn, Math.max(TURN_BREAK, knockdownBreak, responseBreak));
+          }, Math.max(360, ultimateCinematicBreak));
         }, RESULT_REVEAL_DELAY);
       }
 
@@ -3432,13 +5010,34 @@
         }
       }
 
+      function tickGuaranteedTurn() {
+        const elapsed = Date.now() - state.guaranteedStartedAt;
+        const remaining = Math.max(0, GUARANTEED_TURN_DURATION - elapsed);
+        setGuaranteedClockDisplay(remaining);
+
+        if (remaining <= 0) {
+          resolveTurn();
+        }
+      }
+
       function startTurn() {
         clearSpriteAnimations();
+        clearBlockShieldEffects();
+        clearUltimateCinematic();
+        window.clearInterval(state.timerId);
         state.activeGuaranteedTurn = state.guaranteedTurn;
         state.guaranteedTurn = null;
-        state.turnDuration = state.activeGuaranteedTurn?.durationMs || TURN_DURATION;
+        const isGuaranteedTurn = Boolean(state.activeGuaranteedTurn);
+        state.turnDuration = TURN_DURATION;
         state.phase = "choosing";
         state.selectedAction = null;
+
+        if (!isGuaranteedTurn) {
+          clearGuaranteedCountdown();
+          resetSequenceDamage();
+          syncHealthTrailToCurrent();
+        }
+
         if (state.debugMode) {
           state.aiAction = null;
         } else if (state.activeGuaranteedTurn?.side === "p1") {
@@ -3448,15 +5047,18 @@
         } else {
           state.aiAction = pickAiAction();
         }
-        state.turnStartedAt = Date.now();
+        resetChoosingTimerStart();
         setTokenDisplay(false);
-        el.noticePrimary.textContent = state.activeGuaranteedTurn ? "GOLPE GARANTIDO" : state.debugMode ? "DEBUG" : "READY";
-        el.turnMeterFill.style.width = state.debugMode ? "0%" : "100%";
-        el.roundClock.textContent = state.debugMode ? "0" : String(Math.ceil(state.turnDuration / 1000));
+        el.noticePrimary.textContent = isGuaranteedTurn ? "GOLPE GARANTIDO" : state.debugMode ? "DEBUG" : "READY";
+        if (isGuaranteedTurn) {
+          setGuaranteedClockDisplay(GUARANTEED_TURN_DURATION);
+        } else {
+          el.turnMeterFill.style.width = state.debugMode ? "0%" : "100%";
+          el.roundClock.textContent = state.debugMode ? "0" : String(Math.ceil(TURN_DURATION / 1000));
+        }
         el.resolution.classList.remove("show");
         updateHud();
-        window.clearInterval(state.timerId);
-        state.timerId = state.debugMode ? null : window.setInterval(tickTurn, 100);
+        state.timerId = state.debugMode ? null : window.setInterval(isGuaranteedTurn ? tickGuaranteedTurn : tickTurn, 100);
         syncMusicForPhase();
       }
 
@@ -3480,6 +5082,8 @@
 
       function resetBattle() {
         clearSpriteAnimations();
+        clearBlockShieldEffects();
+        clearUltimateCinematic();
         state.p1.health = 100;
         state.p2.health = 100;
         state.p1.super = 0;
@@ -3488,13 +5092,29 @@
         state.guaranteedTurn = null;
         state.activeGuaranteedTurn = null;
         state.turnDuration = TURN_DURATION;
+        state.guaranteedStartedAt = 0;
+        resetSequenceDamage();
+        clearGuaranteedCountdown();
         syncHealthTrailToCurrent();
         el.battleOver.classList.remove("show");
         startTurn();
       }
 
+      function exitBattleToMenu() {
+        clearSpriteAnimations();
+        clearBlockShieldEffects();
+        clearUltimateCinematic();
+        window.clearInterval(state.timerId);
+        state.timerId = null;
+        clearGuaranteedCountdown();
+        resetSequenceDamage();
+        el.battleOver.classList.remove("show");
+        showStartScreen();
+      }
+
       function showStartScreen() {
         window.clearInterval(state.timerId);
+        clearUltimateCinematic();
         state.phase = "menu";
         el.startScreen.classList.remove("is-hidden");
         el.helpScreen.classList.add("is-hidden");
@@ -3539,11 +5159,116 @@
         updateDebugPanel();
       }
 
+      function wait(duration) {
+        return new Promise((resolve) => {
+          window.setTimeout(resolve, duration);
+        });
+      }
+
+      function nextFrame() {
+        return new Promise((resolve) => {
+          window.requestAnimationFrame(() => resolve());
+        });
+      }
+
+      function setMenuButtonsDisabled(disabled) {
+        [el.playButton, el.helpButton, el.optionsButton].forEach((button) => {
+          button.disabled = disabled;
+        });
+      }
+
+      function currentIrisDiameter() {
+        const rect = el.phone.getBoundingClientRect();
+        return Math.ceil(Math.hypot(rect.width, rect.height)) + 12;
+      }
+
+      function setIrisDiameter(diameter) {
+        const size = `${diameter}px`;
+        el.irisTransitionHole.style.width = size;
+        el.irisTransitionHole.style.height = size;
+      }
+
+      function setIrisTransitionDuration(duration) {
+        el.irisTransitionHole.style.setProperty("--iris-transition-duration", `${duration}ms`);
+      }
+
+      async function animateIrisClose() {
+        setIrisTransitionDuration(0);
+        setIrisDiameter(currentIrisDiameter());
+        el.irisTransition.classList.add("is-visible");
+        el.irisTransitionHole.getBoundingClientRect();
+        await nextFrame();
+        setIrisTransitionDuration(IRIS_TRANSITION_DURATION);
+        el.irisTransitionHole.getBoundingClientRect();
+        setIrisDiameter(0);
+        await wait(IRIS_TRANSITION_DURATION);
+      }
+
+      async function animateIrisOpen() {
+        setIrisTransitionDuration(0);
+        setIrisDiameter(0);
+        el.irisTransitionHole.getBoundingClientRect();
+        await nextFrame();
+        setIrisTransitionDuration(IRIS_TRANSITION_DURATION);
+        el.irisTransitionHole.getBoundingClientRect();
+        setIrisDiameter(currentIrisDiameter());
+        await wait(IRIS_TRANSITION_DURATION);
+        el.irisTransition.classList.remove("is-visible");
+      }
+
+      async function runIrisTransition(onClosed) {
+        await animateIrisClose();
+        onClosed();
+        await nextFrame();
+        await animateIrisOpen();
+      }
+
+      function fadeOutCurrentMusic(duration) {
+        if (!state.musicEnabled || !audioState.context || !audioState.musicGain || !audioState.musicTrack) {
+          return Promise.resolve();
+        }
+
+        const music = audioState.musicElements[audioState.musicTrack];
+        if (!music || music.paused) {
+          return Promise.resolve();
+        }
+
+        resumeAudioContext(audioState.context);
+
+        const now = audioState.context.currentTime;
+        const currentGain = Math.max(0.0001, audioState.musicGain.gain.value);
+        audioState.musicGain.gain.cancelScheduledValues(now);
+        audioState.musicGain.gain.setValueAtTime(currentGain, now);
+        audioState.musicGain.gain.linearRampToValueAtTime(0.0001, now + duration / 1000);
+
+        return wait(duration);
+      }
+
       function playGame() {
         el.startScreen.classList.add("is-hidden");
         el.helpScreen.classList.add("is-hidden");
         el.optionsScreen.classList.add("is-hidden");
         resetBattle();
+      }
+
+      async function startGameFromMenu() {
+        if (state.startTransitionActive || state.phase !== "menu") {
+          return;
+        }
+
+        state.startTransitionActive = true;
+        setMenuButtonsDisabled(true);
+        playSound("ui");
+
+        const musicFade = fadeOutCurrentMusic(IRIS_TRANSITION_DURATION);
+
+        try {
+          await runIrisTransition(playGame);
+          await musicFade;
+        } finally {
+          state.startTransitionActive = false;
+          setMenuButtonsDisabled(false);
+        }
       }
 
       el.actionButtons.forEach((button) => {
@@ -3594,13 +5319,59 @@
         playSound("ui");
         handleDebugToggle();
       });
+      el.debugLocationsToggle.addEventListener("change", () => {
+        playSound("ui");
+        handleDebugLocationsToggle();
+      });
+      el.debugLocationButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          playSound("ui");
+          toggleDebugLocation(button.dataset.debugLocationToggle);
+        });
+      });
+      el.debugLocationInputs.forEach((input) => {
+        input.addEventListener("input", () => {
+          setDebugLocationCoordinateFromInput(input);
+        });
+        input.addEventListener("change", () => {
+          if (input.value.trim() === "") {
+            syncDebugLocationsUi();
+            return;
+          }
+
+          setDebugLocationCoordinateFromInput(input);
+        });
+        input.addEventListener("keydown", handleDebugLocationCoordinateKeydown);
+      });
+      el.debugJumpFrameSliders.forEach((input) => {
+        input.addEventListener("input", () => {
+          setDebugJumpFrameFilterFromInput(input);
+        });
+        input.addEventListener("change", () => {
+          setDebugJumpFrameFilterFromInput(input);
+        });
+      });
+      el.debugLocationNodes.forEach((node) => {
+        node.addEventListener("pointerdown", handleDebugLocationPointerDown);
+        node.addEventListener("pointermove", handleDebugLocationPointerMove);
+        node.addEventListener("pointerup", handleDebugLocationPointerEnd);
+        node.addEventListener("pointercancel", handleDebugLocationPointerEnd);
+        node.addEventListener("mousedown", handleDebugLocationMouseDown);
+      });
+      el.copyDebugLocationsButton.addEventListener("click", () => {
+        playSound("ui");
+        copyDebugLocationsSummary();
+      });
       el.resetButton.addEventListener("click", () => {
         playSound("ui");
         resetBattle();
       });
-      el.playButton.addEventListener("click", () => {
+      el.exitBattleButton.addEventListener("click", () => {
         playSound("ui");
-        playGame();
+        exitBattleToMenu();
+      });
+      el.playButton.addEventListener("click", () => {
+        startGameFromMenu();
       });
       el.helpButton.addEventListener("click", () => {
         playSound("ui");
@@ -3653,6 +5424,9 @@
       document.addEventListener("pointerdown", activateAudioFromGesture, { once: true });
       document.addEventListener("fullscreenchange", handleFullscreenChange);
       document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+      window.addEventListener("mousemove", handleDebugLocationMouseMove);
+      window.addEventListener("mouseup", handleDebugLocationMouseUp);
+      window.addEventListener("resize", syncDebugLocationsUi);
 
       syncAudioToggleUi();
       showStartScreen();
