@@ -1,4 +1,4 @@
-# Fight Turn
+# Final Genesis
 
 Prototipo inicial de tela mobile vertical para um jogo de luta por turnos.
 

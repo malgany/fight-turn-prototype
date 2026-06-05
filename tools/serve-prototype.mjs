@@ -53,5 +53,5 @@ const server = createServer((request, response) => {
 });
 
 server.listen(port, host, () => {
-  console.log(`Fight Turn prototype running at http://${host}:${port}`);
+  console.log(`Final Genesis prototype running at http://${host}:${port}`);
 });

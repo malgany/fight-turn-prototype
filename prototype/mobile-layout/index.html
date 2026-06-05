@@ -2,8 +2,8 @@
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Fight Turn - Mobile Layout</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>Final Genesis - Mobile Layout</title>
     <style>
       @font-face {
         font-family: "Anime Ace BB";
@@ -22,13 +22,14 @@
       }
 
       :root {
-        --action-panel-backplate: url("../../assets/ui/action-panel/backplate.webp?v=20260603");
+        --action-panel-backplate: url("../../assets/ui/action-panel/backplate.webp?v=20260605-1642");
+        --health-frame: url("../../assets/ui/hud/health-frame.webp?v=20260605-health-frame");
         --arena-background: url("../../assets/backgrounds/city-street-arena.webp");
-        --title-screen-art: url("../../assets/backgrounds/title-screen-fighters.webp?v=20260605-1322");
-        --menu-button-play: url("../../assets/ui/menu/jogar.webp?v=20260605-1322");
-        --menu-button-help: url("../../assets/ui/menu/ajuda.webp?v=20260605-1322");
-        --menu-button-options: url("../../assets/ui/menu/opcoes.webp?v=20260605-1322");
-        --menu-button-exit: url("../../assets/ui/menu/sair.webp?v=20260605-1322");
+        --title-screen-art: url("../../assets/backgrounds/title-screen-fighters.webp?v=20260605-1340");
+        --menu-button-play: url("../../assets/ui/menu/jogar.webp?v=20260605-1340");
+        --menu-button-help: url("../../assets/ui/menu/ajuda.webp?v=20260605-1340");
+        --menu-button-options: url("../../assets/ui/menu/opcoes.webp?v=20260605-1340");
+        --menu-button-exit: url("../../assets/ui/menu/sair.webp?v=20260605-1340");
         --panel: #101823;
         --panel-2: #192333;
         --line: #435067;
@@ -45,6 +46,16 @@
 
       * {
         box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      html {
+        overscroll-behavior: none;
+        touch-action: manipulation;
+        -webkit-text-size-adjust: 100%;
       }
 
       body {
@@ -55,6 +66,15 @@
         background: #0a0d12;
         color: var(--text);
         font-family: "Anime Ace BB", Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+        overflow: hidden;
+        overscroll-behavior: none;
+        touch-action: manipulation;
+      }
+
+      img,
+      video {
+        -webkit-user-drag: none;
+        user-select: none;
       }
 
       .debug-panel {
@@ -133,8 +153,11 @@
         align-items: center;
         gap: 8px;
         padding: 6px 8px;
-        border: 1px solid #314159;
-        background: rgba(15, 24, 36, 0.72);
+        border: 1px solid rgba(242, 246, 255, 0.42);
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 28%),
+          rgba(9, 12, 18, 0.78);
+        box-shadow: inset 0 0 8px rgba(255, 21, 21, 0.12);
       }
 
       .debug-super-label {
@@ -152,17 +175,24 @@
 
       .debug-super-bar {
         height: 15px;
-        border: 1px solid #526078;
+        border: 1px solid rgba(242, 246, 255, 0.46);
         transform: skewX(-15deg);
-        background: rgba(22, 34, 53, 0.95);
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 28%),
+          linear-gradient(#1b1e27, #07090e 62%, #030407);
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.88);
         cursor: pointer;
       }
 
       .debug-super-bar.is-filled {
-        border-color: #63d7ff;
-        background: var(--blue);
-        box-shadow: 0 0 10px rgba(47, 157, 255, 0.42), inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+        border-color: #f2f6ff;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.5), transparent 24%),
+          linear-gradient(#ff4a4a 0 22%, #d90f18 23% 62%, #78050a 100%);
+        box-shadow:
+          0 0 10px rgba(255, 24, 24, 0.48),
+          inset 0 0 0 1px rgba(0, 0, 0, 0.86),
+          inset 0 0 7px rgba(255, 255, 255, 0.18);
       }
 
       .debug-super-bar:disabled {
@@ -369,11 +399,11 @@
       .portrait {
         position: relative;
         aspect-ratio: 1;
-        border: 3px solid #526078;
-        background: linear-gradient(145deg, #263245, #0f1722);
+        border: 0;
+        background: transparent;
         display: grid;
         place-items: center;
-        overflow: hidden;
+        overflow: visible;
         isolation: isolate;
         color: #dbe6f6;
         font-size: clamp(18px, 7cqw, 38px);
@@ -381,14 +411,41 @@
         transition: border-color 180ms ease, box-shadow 180ms ease;
       }
 
+      .portrait-frame-image {
+        position: absolute;
+        left: -16%;
+        top: -16%;
+        z-index: 2;
+        width: 132%;
+        height: 132%;
+        object-fit: contain;
+        pointer-events: none;
+        user-select: none;
+        transition: filter 180ms ease;
+      }
+
+      .fighter-hud.right .portrait-frame-image {
+        transform: scaleX(-1);
+      }
+
       .portrait.is-advantage {
-        border-color: #ffd157;
-        box-shadow: 0 0 16px rgba(255, 116, 24, 0.92), inset 0 0 14px rgba(255, 209, 87, 0.32);
+        filter: drop-shadow(0 0 14px rgba(255, 116, 24, 0.92));
+      }
+
+      .portrait.is-advantage .portrait-frame-image {
+        filter:
+          brightness(1.2)
+          saturate(1.35)
+          sepia(0.42)
+          drop-shadow(0 0 4px rgba(255, 245, 158, 0.95))
+          drop-shadow(0 0 12px rgba(255, 201, 48, 0.92))
+          drop-shadow(0 0 22px rgba(255, 142, 24, 0.55));
+        animation: portrait-golden-glow 920ms ease-in-out infinite alternate;
       }
 
       .portrait-label {
         position: relative;
-        z-index: 2;
+        z-index: 3;
       }
 
       .portrait.is-advantage .portrait-label {
@@ -415,6 +472,28 @@
         display: none;
       }
 
+      @keyframes portrait-golden-glow {
+        from {
+          filter:
+            brightness(1.12)
+            saturate(1.22)
+            sepia(0.34)
+            drop-shadow(0 0 3px rgba(255, 245, 158, 0.82))
+            drop-shadow(0 0 9px rgba(255, 201, 48, 0.72))
+            drop-shadow(0 0 16px rgba(255, 142, 24, 0.42));
+        }
+
+        to {
+          filter:
+            brightness(1.34)
+            saturate(1.55)
+            sepia(0.5)
+            drop-shadow(0 0 6px rgba(255, 249, 186, 1))
+            drop-shadow(0 0 16px rgba(255, 213, 55, 0.98))
+            drop-shadow(0 0 30px rgba(255, 154, 24, 0.68));
+        }
+      }
+
       .bars {
         display: grid;
         gap: 10%;
@@ -423,18 +502,31 @@
       .health {
         position: relative;
         height: clamp(18px, 5cqw, 34px);
-        border: 3px solid #59657a;
-        background: #121824;
-        padding: 2px;
-        overflow: hidden;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        overflow: visible;
+        isolation: isolate;
+      }
+
+      .health-frame-image {
+        position: absolute;
+        left: -5%;
+        top: -15%;
+        z-index: 6;
+        width: 110%;
+        height: 130%;
+        object-fit: fill;
+        pointer-events: none;
+        user-select: none;
       }
 
       .health-damage,
       .health-fill {
         position: absolute;
-        top: 2px;
-        bottom: 2px;
-        left: 2px;
+        top: 24%;
+        bottom: 24%;
+        left: 4%;
         width: 100%;
       }
 
@@ -455,7 +547,7 @@
 
       .right .health-damage,
       .right .health-fill {
-        right: 2px;
+        right: 4%;
         left: auto;
       }
 
@@ -468,7 +560,7 @@
         inset: 0;
         display: grid;
         place-items: center;
-        z-index: 3;
+        z-index: 7;
         font-family: "Anime Ace BB", Arial, sans-serif;
         font-size: clamp(8px, 2.5cqw, 13px);
         font-weight: 900;
@@ -477,41 +569,94 @@
       }
 
       .super-meter {
-        display: flex;
-        gap: 4%;
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 3%;
+        height: clamp(10px, 2.7cqw, 19px);
+        padding: 3px 5px;
+        border: 2px solid #f2f6ff;
+        background:
+          linear-gradient(135deg, transparent 0 8%, #0a0c10 8% 92%, transparent 92%),
+          linear-gradient(#191d27, #05070b);
+        box-shadow:
+          0 2px 0 #000,
+          inset 0 0 0 2px rgba(0, 0, 0, 0.92),
+          inset 0 0 11px rgba(255, 18, 18, 0.26),
+          0 0 8px rgba(255, 255, 255, 0.16);
+        transform: skewX(-12deg);
+        overflow: hidden;
       }
 
       .pip {
-        width: 28%;
-        height: clamp(9px, 2.4cqw, 18px);
-        transform: skewX(-15deg);
-        background: var(--blue);
-        border: 2px solid #7fd2ff;
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-height: 5px;
+        border: 1px solid rgba(255, 255, 255, 0.88);
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.52), transparent 24%),
+          linear-gradient(#ff4b4b 0 22%, #d80f17 23% 62%, #77050a 100%);
+        box-shadow:
+          inset 0 0 0 1px rgba(0, 0, 0, 0.86),
+          inset 0 0 7px rgba(255, 255, 255, 0.2),
+          0 0 7px rgba(255, 24, 24, 0.58);
         opacity: 1;
-        transition: opacity 180ms ease, filter 180ms ease;
+        transition: opacity 180ms ease, filter 180ms ease, background 180ms ease;
       }
 
       .pip.empty {
-        opacity: 0.22;
-        filter: grayscale(1);
-      }
-
-      .right .pip {
-        background: var(--yellow);
-        border-color: #ffe071;
+        opacity: 1;
+        filter: none;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 28%),
+          linear-gradient(#1c202b, #090b10 62%, #030407);
+        border-color: rgba(242, 246, 255, 0.42);
+        box-shadow:
+          inset 0 0 0 1px rgba(0, 0, 0, 0.92),
+          inset 0 0 9px rgba(255, 255, 255, 0.05);
       }
 
       .timer {
+        position: relative;
         width: 82%;
         justify-self: center;
         aspect-ratio: 1;
-        border: 3px solid #526078;
-        background: #111722;
+        border: 3px solid #f2f6ff;
+        background:
+          radial-gradient(circle at 50% 43%, #252b36 0 28%, #06080d 29% 100%);
         display: grid;
         place-items: center;
         font-size: clamp(18px, 7cqw, 40px);
+        font-weight: 900;
+        line-height: 1;
         color: #fff;
-        text-shadow: 0 2px 0 #000;
+        -webkit-text-stroke: 1px #05070b;
+        text-shadow:
+          0 2px 0 #000,
+          0 0 4px #fff,
+          0 0 10px rgba(255, 34, 34, 0.86);
+        box-shadow:
+          0 3px 0 #000,
+          inset 0 0 0 2px #08090d,
+          inset 0 0 14px rgba(255, 27, 27, 0.34),
+          0 0 14px rgba(255, 255, 255, 0.12);
+        clip-path: polygon(12% 0, 88% 0, 100% 12%, 100% 88%, 88% 100%, 12% 100%, 0 88%, 0 12%);
+      }
+
+      .timer::before,
+      .timer::after {
+        content: "";
+        position: absolute;
+        inset: 13%;
+        border: 2px solid #d90f18;
+        pointer-events: none;
+      }
+
+      .timer::after {
+        inset: 23%;
+        border-color: rgba(242, 246, 255, 0.42);
+      }
       }
 
       .turn-meter {
@@ -902,6 +1047,8 @@
         display: block;
       }
 
+      .portrait-frame-image.advanced-debug-adjusted,
+      .health-frame-image.advanced-debug-adjusted,
       .fighter.advanced-debug-adjusted,
       .block-shield-effect.advanced-debug-adjusted,
       .ultimate-cinematic-panel.advanced-debug-adjusted,
@@ -1907,10 +2054,10 @@
     </style>
   </head>
   <body>
-    <main class="phone" aria-label="Fight Turn mobile battle layout prototype">
+    <main class="phone" aria-label="Final Genesis mobile battle layout prototype">
       <section class="screen start-screen" id="startScreen" aria-label="Tela inicial">
         <div class="title-stack">
-          <img class="game-title" src="../../assets/ui/menu/logo.webp?v=20260605-1322" alt="Fight Turner">
+          <img class="game-title" src="../../assets/ui/menu/logo.webp?v=20260605-1630" alt="Final Genesis" draggable="false">
         </div>
 
         <nav class="menu-actions" aria-label="Menu principal">
@@ -2106,12 +2253,14 @@
         <div class="fighter-hud">
           <div class="portrait" id="p1Portrait">
             <canvas class="advantage-fire-canvas" id="p1AdvantageFire" aria-hidden="true"></canvas>
+            <img class="portrait-frame-image" id="p1PortraitFrame" src="../../assets/ui/hud/portrait-frame-p1.webp?v=20260605-165651" alt="" aria-hidden="true" draggable="false">
             <span class="portrait-label">P1</span>
           </div>
           <div class="bars">
             <div class="health">
               <div class="health-damage" id="p1HealthDamage"></div>
               <div class="health-fill" id="p1HealthFill"></div>
+              <img class="health-frame-image" id="p1HealthFrame" src="../../assets/ui/hud/health-frame.webp?v=20260605-health-front" alt="" aria-hidden="true" draggable="false">
               <div class="health-value" id="p1HealthText">100%</div>
             </div>
             <div class="super-meter" id="p1SuperMeter"><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div>
@@ -2125,12 +2274,14 @@
             <div class="health">
               <div class="health-damage" id="p2HealthDamage"></div>
               <div class="health-fill" id="p2HealthFill"></div>
+              <img class="health-frame-image" id="p2HealthFrame" src="../../assets/ui/hud/health-frame.webp?v=20260605-health-front" alt="" aria-hidden="true" draggable="false">
               <div class="health-value" id="p2HealthText">100%</div>
             </div>
             <div class="super-meter" id="p2SuperMeter"><div class="pip empty"></div><div class="pip empty"></div><div class="pip empty"></div></div>
           </div>
           <div class="portrait" id="p2Portrait">
             <canvas class="advantage-fire-canvas" id="p2AdvantageFire" aria-hidden="true"></canvas>
+            <img class="portrait-frame-image" id="p2PortraitFrame" src="../../assets/ui/hud/portrait-frame-p1.webp?v=20260605-165651" alt="" aria-hidden="true" draggable="false">
             <span class="portrait-label">P2</span>
           </div>
         </div>
@@ -2312,6 +2463,8 @@
             <button class="debug-advanced-button" type="button" data-advanced-effect="guaranteed-p1">GARANT. P1</button>
             <button class="debug-advanced-button" type="button" data-advanced-effect="guaranteed-p2">GARANT. CPU</button>
             <button class="debug-advanced-button" type="button" data-advanced-effect="countdown-p1">3-2-1</button>
+            <button class="debug-advanced-button" type="button" data-advanced-effect="portrait-p1">PORTRAIT P1</button>
+            <button class="debug-advanced-button" type="button" data-advanced-effect="health-p1">VIDA P1</button>
             <button class="debug-advanced-button" type="button" data-advanced-effect="shield-p1">ESCUDO</button>
             <button class="debug-advanced-button" type="button" data-advanced-effect="combo-hit-p1">COMBO HIT</button>
             <button class="debug-advanced-button" type="button" data-advanced-effect="ultimate-p1">ULTIMATE</button>
@@ -2458,10 +2611,14 @@
         p2HealthDamage: document.querySelector("#p2HealthDamage"),
         p1HealthFill: document.querySelector("#p1HealthFill"),
         p2HealthFill: document.querySelector("#p2HealthFill"),
+        p1HealthFrame: document.querySelector("#p1HealthFrame"),
+        p2HealthFrame: document.querySelector("#p2HealthFrame"),
         p1HealthText: document.querySelector("#p1HealthText"),
         p2HealthText: document.querySelector("#p2HealthText"),
         p1Portrait: document.querySelector("#p1Portrait"),
         p2Portrait: document.querySelector("#p2Portrait"),
+        p1PortraitFrame: document.querySelector("#p1PortraitFrame"),
+        p2PortraitFrame: document.querySelector("#p2PortraitFrame"),
         p1AdvantageFire: document.querySelector("#p1AdvantageFire"),
         p2AdvantageFire: document.querySelector("#p2AdvantageFire"),
         advantageFireVideo: document.querySelector("#advantageFireVideo"),
@@ -4280,6 +4437,18 @@
         scheduleAdvancedDebug(advance, 720);
       }
 
+      function showAdvancedPortraitPreview() {
+        clearAdvancedDebugTimers();
+        advancedDebugState.currentFrame = 0;
+        setAdvancedPreviewTarget(el.p1PortraitFrame, "Portrait P1");
+      }
+
+      function showAdvancedHealthFramePreview() {
+        clearAdvancedDebugTimers();
+        advancedDebugState.currentFrame = 0;
+        setAdvancedPreviewTarget(el.p1HealthFrame, "Vida P1");
+      }
+
       function showAdvancedEffect(effect) {
         if (!isAdvancedDebugActive()) {
           return;
@@ -4298,6 +4467,8 @@
           "guaranteed-p1": () => createAdvancedStatePopup("p1", "GOLPE GARANTIDO", "guaranteed"),
           "guaranteed-p2": () => createAdvancedStatePopup("p2", "GOLPE GARANTIDO", "guaranteed"),
           "countdown-p1": () => showAdvancedCountdown("p1"),
+          "portrait-p1": () => showAdvancedPortraitPreview(),
+          "health-p1": () => showAdvancedHealthFramePreview(),
           "shield-p1": () => showAdvancedBlockPreview(),
           "combo-hit-p1": () => showAdvancedComboHitPreview(true),
           "ultimate-p1": () => playAdvancedUltimatePreview(),
@@ -5462,6 +5633,15 @@
       });
       el.musicVolumeSlider.addEventListener("change", () => {
         playSound("ui");
+      });
+      document.addEventListener("dragstart", (event) => {
+        event.preventDefault();
+      });
+      document.addEventListener("selectstart", (event) => {
+        event.preventDefault();
+      });
+      document.addEventListener("gesturestart", (event) => {
+        event.preventDefault();
       });
       document.addEventListener("pointerdown", activateAudioFromGesture, { once: true });
       document.addEventListener("fullscreenchange", handleFullscreenChange);
