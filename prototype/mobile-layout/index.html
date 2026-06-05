@@ -500,6 +500,8 @@
       }
 
       .health {
+        --health-track-left: 1.9%;
+        --health-track-right: 1.85%;
         position: relative;
         height: clamp(18px, 5cqw, 34px);
         border: 0;
@@ -526,8 +528,11 @@
         position: absolute;
         top: 24%;
         bottom: 24%;
-        left: 4%;
-        width: 100%;
+        left: var(--health-track-left);
+        right: var(--health-track-right);
+        width: auto;
+        transform: scaleX(var(--health-scale, 1));
+        transform-origin: left center;
       }
 
       .health-damage {
@@ -536,19 +541,18 @@
           linear-gradient(90deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 18%),
           linear-gradient(#fff06a, #ff9f18 48%, #df2d16);
         box-shadow: inset 0 0 9px rgba(255, 255, 255, 0.62), 0 0 12px rgba(255, 153, 23, 0.45);
-        transition: width 860ms cubic-bezier(0.2, 0.78, 0.2, 1);
+        transition: transform 860ms cubic-bezier(0.2, 0.78, 0.2, 1);
       }
 
       .health-fill {
         z-index: 2;
         background: linear-gradient(#ff5555, var(--red));
-        transition: width 220ms ease-out;
+        transition: transform 220ms ease-out;
       }
 
       .right .health-damage,
       .right .health-fill {
-        right: 4%;
-        left: auto;
+        transform-origin: right center;
       }
 
       .health.is-damaged .health-damage {
@@ -619,44 +623,45 @@
 
       .timer {
         position: relative;
-        width: 82%;
+        width: 72%;
         justify-self: center;
         aspect-ratio: 1;
-        border: 3px solid #f2f6ff;
+        border: 4px solid #f2f6ff;
+        border-radius: 50%;
         background:
-          radial-gradient(circle at 50% 43%, #252b36 0 28%, #06080d 29% 100%);
+          radial-gradient(circle at 50% 38%, #2b3340 0 18%, #111722 19% 62%, #05070b 63% 100%);
         display: grid;
         place-items: center;
-        font-size: clamp(18px, 7cqw, 40px);
+        isolation: isolate;
+        font-size: clamp(18px, 6cqw, 34px);
         font-weight: 900;
         line-height: 1;
         color: #fff;
-        -webkit-text-stroke: 1px #05070b;
+        -webkit-text-stroke: 0;
         text-shadow:
           0 2px 0 #000,
-          0 0 4px #fff,
-          0 0 10px rgba(255, 34, 34, 0.86);
+          0 0 4px #000,
+          0 0 9px rgba(255, 34, 34, 0.78);
         box-shadow:
+          0 0 0 3px #05070b,
+          0 0 0 5px #d90f18,
           0 3px 0 #000,
           inset 0 0 0 2px #08090d,
-          inset 0 0 14px rgba(255, 27, 27, 0.34),
-          0 0 14px rgba(255, 255, 255, 0.12);
-        clip-path: polygon(12% 0, 88% 0, 100% 12%, 100% 88%, 88% 100%, 12% 100%, 0 88%, 0 12%);
+          inset 0 0 12px rgba(255, 27, 27, 0.28),
+          0 0 12px rgba(255, 255, 255, 0.1);
       }
 
-      .timer::before,
-      .timer::after {
+      .timer::before {
         content: "";
         position: absolute;
-        inset: 13%;
-        border: 2px solid #d90f18;
+        border-radius: 50%;
         pointer-events: none;
-      }
-
-      .timer::after {
-        inset: 23%;
-        border-color: rgba(242, 246, 255, 0.42);
-      }
+        inset: -12%;
+        z-index: -1;
+        background:
+          linear-gradient(135deg, transparent 0 18%, #05070b 18% 82%, transparent 82%),
+          linear-gradient(45deg, transparent 0 18%, #d90f18 18% 82%, transparent 82%);
+        opacity: 0.9;
       }
 
       .turn-meter {
@@ -4535,7 +4540,7 @@
           return;
         }
 
-        damageBar.style.width = `${clampPercent(value)}%`;
+        damageBar.style.setProperty("--health-scale", String(clampPercent(value) / 100));
       }
 
       function clearHealthTrailTimers() {
@@ -4585,10 +4590,10 @@
         const p1Health = clampPercent(state.p1.health);
         const p2Health = clampPercent(state.p2.health);
 
-        el.p1HealthFill.style.width = `${p1Health}%`;
-        el.p2HealthFill.style.width = `${p2Health}%`;
-        el.p1HealthDamage.style.width = `${clampPercent(state.healthTrail.p1)}%`;
-        el.p2HealthDamage.style.width = `${clampPercent(state.healthTrail.p2)}%`;
+        el.p1HealthFill.style.setProperty("--health-scale", String(p1Health / 100));
+        el.p2HealthFill.style.setProperty("--health-scale", String(p2Health / 100));
+        el.p1HealthDamage.style.setProperty("--health-scale", String(clampPercent(state.healthTrail.p1) / 100));
+        el.p2HealthDamage.style.setProperty("--health-scale", String(clampPercent(state.healthTrail.p2) / 100));
         el.p1HealthText.textContent = `${p1Health}%`;
         el.p2HealthText.textContent = `${p2Health}%`;
 
