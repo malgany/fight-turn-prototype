@@ -7,7 +7,7 @@
       "framePattern": "../../assets/characters/ninja-idle/ninja-idle-{frame}.webp",
       "frameCount": 45,
       "framePad": 3,
-      "frameIntervalMs": 57,
+      "frameIntervalMs": 42,
       "scale": 1,
       "offsetXPercent": 0,
       "offsetYPercent": 0
@@ -27,7 +27,7 @@
       "framePattern": "../../assets/characters/ninja-crouch/ninja-crouch-{frame}.webp",
       "frameCount": 106,
       "framePad": 3,
-      "frameIntervalMs": 50,
+      "frameIntervalMs": 37,
       "scale": 1,
       "offsetXPercent": 0,
       "offsetYPercent": 0

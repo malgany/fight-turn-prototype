@@ -208,199 +208,105 @@
         display: block;
       }
 
-      body.debug-mode.debug-controls-off .debug-location-toggle,
-      body.debug-mode.debug-controls-off .debug-copy-button,
-      body.debug-mode.debug-controls-off .debug-location-button,
-      body.debug-mode.debug-controls-off .debug-coordinate-field,
-      body.debug-mode.debug-controls-off .debug-jump-frame-control {
-        opacity: 0.42;
-      }
-
-      body.debug-mode.debug-controls-off .debug-location-toggle input {
-        cursor: not-allowed;
-      }
-
-      .debug-visual-heading {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-      }
-
-      .debug-copy-button {
-        width: 32px;
-        height: 32px;
+      .debug-tabs {
         display: grid;
-        place-items: center;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .debug-tab {
+        min-height: 32px;
         border: 1px solid #526078;
-        background: #172235;
-        color: #f2f6ff;
+        background: #121c2c;
+        color: #dce8f7;
+        font: inherit;
+        font-size: 10px;
+        line-height: 1;
         cursor: pointer;
       }
 
-      .debug-copy-button:hover:not(:disabled) {
+      .debug-tab.is-active {
         border-color: #63d7ff;
         background: #164766;
+        color: #ffffff;
+        box-shadow: 0 0 12px rgba(99, 215, 255, 0.24);
       }
 
-      .debug-copy-button:disabled {
-        cursor: not-allowed;
-        opacity: 0.34;
-        filter: grayscale(1);
+      .debug-tab-panel {
+        display: grid;
+        gap: 12px;
       }
 
-      .debug-copy-button svg {
-        width: 17px;
-        height: 17px;
-        stroke: currentColor;
+      .debug-tab-panel[hidden] {
+        display: none;
       }
 
-      .debug-location-controls {
+      .debug-advanced-panel {
+        opacity: 1;
+      }
+
+      .debug-advanced-panel.is-disabled {
+        opacity: 0.48;
+      }
+
+      .debug-advanced-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 6px;
       }
 
-      .debug-location-column {
-        display: grid;
-        gap: 5px;
-      }
-
-      .debug-location-column-title {
-        color: #93a4bc;
-        font-size: 8px;
-        line-height: 1;
-        text-align: center;
-      }
-
-      .debug-location-row {
-        display: grid;
-        grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr);
-        gap: 4px;
-        align-items: center;
-      }
-
-      .debug-location-button {
-        min-height: 28px;
+      .debug-advanced-button,
+      .debug-advanced-play {
+        min-height: 31px;
         border: 1px solid #526078;
         background: #172235;
         color: #f2f6ff;
         font: inherit;
-        font-size: 9px;
+        font-size: 8px;
         line-height: 1;
         cursor: pointer;
       }
 
-      .debug-location-button.selected {
+      .debug-advanced-button:hover:not(:disabled),
+      .debug-advanced-play:hover:not(:disabled) {
         border-color: #63d7ff;
         background: #164766;
-        color: #ffffff;
       }
 
-      .debug-location-button.right.selected {
-        border-color: #ffd157;
-        background: #665118;
-      }
-
-      .debug-location-button.center.selected {
-        border-color: #f2f6ff;
-        background: #374152;
-      }
-
-      .debug-location-button:disabled {
+      .debug-advanced-button:disabled,
+      .debug-advanced-play:disabled,
+      .debug-advanced-select:disabled {
         cursor: not-allowed;
-        opacity: 0.34;
+        opacity: 0.42;
         filter: grayscale(1);
       }
 
-      .debug-coordinate-field {
-        position: relative;
-        display: block;
-        min-width: 0;
+      .debug-advanced-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 72px;
+        gap: 6px;
       }
 
-      .debug-coordinate-field span {
-        position: absolute;
-        left: 4px;
-        top: 50%;
-        translate: 0 -50%;
-        z-index: 1;
-        color: #93a4bc;
-        font-size: 7px;
-        line-height: 1;
-        pointer-events: none;
-      }
-
-      .debug-location-coordinate {
+      .debug-advanced-select {
         width: 100%;
         min-width: 0;
-        height: 28px;
+        min-height: 32px;
         border: 1px solid #526078;
         background: #0f1824;
         color: #f2f6ff;
         font: inherit;
-        font-size: 8px;
-        line-height: 1;
-        padding: 0 3px 0 13px;
+        font-size: 10px;
+        padding: 0 8px;
       }
 
-      .debug-location-coordinate:focus {
-        outline: 1px solid #63d7ff;
-        outline-offset: 1px;
-      }
-
-      .debug-location-coordinate:disabled {
-        cursor: not-allowed;
-        opacity: 0.34;
-        filter: grayscale(1);
-      }
-
-      .debug-jump-frame-control {
-        display: grid;
-        gap: 6px;
+      .debug-inspector-readout {
+        min-height: 32px;
         padding: 8px;
-        border: 1px solid #2f3c50;
+        border: 1px solid #314159;
         background: rgba(15, 24, 36, 0.72);
-      }
-
-      .debug-jump-frame-heading {
-        color: #93a4bc;
-        font-size: 8px;
-        line-height: 1;
-      }
-
-      .debug-jump-frame-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 6px 8px;
-      }
-
-      .debug-frame-slider {
-        display: grid;
-        grid-template-columns: 38px minmax(0, 1fr) 34px;
-        gap: 5px;
-        align-items: center;
-        min-width: 0;
-        color: #f2f6ff;
-        font-size: 7px;
-        line-height: 1;
-      }
-
-      .debug-frame-slider input {
-        width: 100%;
-        min-width: 0;
-        accent-color: #63d7ff;
-      }
-
-      .debug-frame-slider input:disabled {
-        cursor: not-allowed;
-        opacity: 0.34;
-        filter: grayscale(1);
-      }
-
-      .debug-frame-slider-value {
-        color: #93a4bc;
-        text-align: right;
+        color: #dce8f7;
+        font-size: 9px;
+        line-height: 1.25;
       }
 
       .phone {
@@ -661,13 +567,15 @@
       }
 
       .ultimate-cinematic-panel {
+        --ultimate-panel-translate-x: 0px;
+        --ultimate-panel-translate-y: 10px;
         position: absolute;
         inset: 0;
         width: 100%;
         height: 100%;
         display: block;
         overflow: hidden;
-        transform: translateX(-112%);
+        transform: translate(calc(-112% + var(--ultimate-panel-translate-x)), var(--ultimate-panel-translate-y));
         transform-origin: center;
         filter: drop-shadow(0 12px 10px rgba(0, 0, 0, 0.55));
       }
@@ -677,18 +585,20 @@
       }
 
       .ultimate-cinematic.p2 .ultimate-cinematic-panel {
-        transform: translateX(112%) scaleX(-1);
+        transform: translate(calc(112% + var(--ultimate-panel-translate-x)), var(--ultimate-panel-translate-y)) scaleX(-1);
         animation: ultimate-panel-in-right 680ms cubic-bezier(0.2, 0.88, 0.18, 1) forwards;
       }
 
       .ultimate-label-red {
         position: absolute;
-        inset: 0;
+        left: 0;
+        top: 53.28cqw;
         z-index: 1;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: top center;
+        width: 54%;
+        height: auto;
+        scale: 1.452;
+        object-fit: contain;
+        object-position: left bottom;
         opacity: 0;
         animation: ultimate-label-pop 420ms ease-out 120ms forwards;
       }
@@ -807,11 +717,12 @@
       }
 
       .block-shield-effect {
+        --shield-x: 50%;
         position: absolute;
-        left: 50%;
-        bottom: -18%;
+        left: var(--shield-x);
+        bottom: 2%;
         z-index: 4;
-        height: 95%;
+        height: 92%;
         width: auto;
         max-width: none;
         opacity: 0;
@@ -824,7 +735,12 @@
       }
 
       .fighter.p1 .block-shield-effect {
+        --shield-x: 74%;
         transform: translateX(-50%) scale(0.94);
+      }
+
+      .fighter.p2 .block-shield-effect {
+        --shield-x: 26%;
       }
 
       .block-shield-effect.is-visible {
@@ -868,112 +784,6 @@
 
       .fighter.attack-right {
         animation: attack-right 360ms ease;
-      }
-
-      .debug-location-map {
-        position: absolute;
-        inset: 0 0 38%;
-        z-index: 74;
-        display: none;
-        pointer-events: none;
-      }
-
-      body.debug-mode.debug-locations-on .debug-location-map {
-        display: block;
-      }
-
-      .debug-location {
-        position: absolute;
-        z-index: 2;
-        left: var(--left);
-        top: var(--top);
-        width: var(--width);
-        height: var(--height);
-        border: 2px solid currentColor;
-        background: color-mix(in srgb, currentColor 18%, transparent);
-        color: #f2f6ff;
-        box-shadow: 0 0 14px color-mix(in srgb, currentColor 42%, transparent), inset 0 0 18px rgba(255, 255, 255, 0.06);
-        cursor: move;
-        pointer-events: auto;
-        touch-action: none;
-        user-select: none;
-      }
-
-      .debug-location::before {
-        content: attr(data-location);
-        position: absolute;
-        z-index: 2;
-        top: 0;
-        left: 0;
-        min-width: 2.2em;
-        padding: 0.24em 0.34em 0.18em;
-        border-right: 2px solid currentColor;
-        border-bottom: 2px solid currentColor;
-        background: rgba(4, 8, 14, 0.82);
-        color: #ffffff;
-        font-family: "Anime Ace BB", Arial, sans-serif;
-        font-size: clamp(8px, 2.2cqw, 12px);
-        font-weight: 900;
-        line-height: 1;
-        text-align: center;
-        text-shadow: 0 2px 0 #000;
-      }
-
-      .debug-location.left {
-        color: #63d7ff;
-      }
-
-      .debug-location.right {
-        color: #ffd157;
-      }
-
-      .debug-location.center {
-        color: #f2f6ff;
-      }
-
-      .debug-location[data-location="L4"],
-      .debug-location[data-location="R4"] {
-        z-index: 0;
-      }
-
-      .debug-location[data-location="L2"],
-      .debug-location[data-location="R2"] {
-        z-index: 1;
-      }
-
-      .debug-location.is-hidden {
-        display: none;
-      }
-
-      .debug-location.is-dragging {
-        z-index: 8;
-        filter: brightness(1.32);
-      }
-
-      .debug-jump-frame-preview {
-        position: absolute;
-        top: -2px;
-        bottom: auto;
-        z-index: 0;
-        height: calc(100% + 4px);
-        width: auto;
-        max-width: none;
-        opacity: var(--debug-jump-opacity, 0.86);
-        pointer-events: none;
-        filter:
-          hue-rotate(var(--debug-jump-hue, 0deg))
-          saturate(var(--debug-jump-saturation, 100%))
-          brightness(var(--debug-jump-brightness, 100%))
-          contrast(var(--debug-jump-contrast, 100%));
-      }
-
-      .debug-location[data-location="L5"] .debug-jump-frame-preview {
-        right: -2px;
-      }
-
-      .debug-location[data-location="R5"] .debug-jump-frame-preview {
-        left: -2px;
-        transform: scaleX(-1);
       }
 
       .damage-float {
@@ -1039,6 +849,89 @@
         pointer-events: none;
       }
 
+      .advanced-debug-selection {
+        position: absolute;
+        z-index: 118;
+        display: none;
+        border: 2px solid #63d7ff;
+        background: rgba(99, 215, 255, 0.08);
+        box-shadow: 0 0 14px rgba(99, 215, 255, 0.58), inset 0 0 10px rgba(99, 215, 255, 0.15);
+        cursor: move;
+        pointer-events: auto;
+        touch-action: none;
+      }
+
+      .advanced-debug-selection.is-visible {
+        display: block;
+      }
+
+      .advanced-debug-resize-handle {
+        position: absolute;
+        right: -7px;
+        bottom: -7px;
+        width: 14px;
+        height: 14px;
+        border: 2px solid #08131d;
+        background: #63d7ff;
+        box-shadow: 0 0 8px rgba(99, 215, 255, 0.72);
+        cursor: nwse-resize;
+      }
+
+      .advanced-debug-toast {
+        position: absolute;
+        left: 50%;
+        top: 15%;
+        z-index: 119;
+        display: none;
+        translate: -50% 0;
+        padding: 8px 10px;
+        border: 2px solid #63d7ff;
+        background: rgba(7, 12, 20, 0.92);
+        color: #f2f6ff;
+        font-size: clamp(9px, 2.4cqw, 13px);
+        line-height: 1;
+        text-shadow: 0 2px 0 #000;
+        pointer-events: none;
+      }
+
+      .advanced-debug-toast.is-visible {
+        display: block;
+      }
+
+      .fighter.advanced-debug-adjusted,
+      .block-shield-effect.advanced-debug-adjusted,
+      .ultimate-cinematic-panel.advanced-debug-adjusted,
+      .ultimate-frame.advanced-debug-adjusted,
+      .ultimate-label-red.advanced-debug-adjusted {
+        translate: var(--advanced-debug-offset-x, 0px) var(--advanced-debug-offset-y, 0px);
+        scale: var(--advanced-debug-scale, 1);
+      }
+
+      .ultimate-label-red.advanced-debug-adjusted {
+        scale: calc(1.452 * var(--advanced-debug-scale, 1));
+      }
+
+      .combo-hit-effect.advanced-debug-adjusted {
+        translate:
+          calc(-50% + var(--advanced-debug-offset-x, 0px))
+          calc(-50% + var(--advanced-debug-offset-y, 0px));
+        scale: var(--advanced-debug-scale, 1);
+      }
+
+      .state-float.advanced-debug-adjusted {
+        translate:
+          calc(-50% + var(--advanced-debug-offset-x, 0px))
+          var(--advanced-debug-offset-y, 0px);
+        scale: var(--advanced-debug-scale, 1);
+      }
+
+      .guaranteed-countdown.advanced-debug-adjusted {
+        translate:
+          calc(-50% + var(--advanced-debug-offset-x, 0px))
+          var(--advanced-debug-offset-y, 0px);
+        scale: calc(0.72 * var(--advanced-debug-scale, 1));
+      }
+
       .guaranteed-countdown.p1 {
         left: 26.5%;
       }
@@ -1049,7 +942,7 @@
 
       .guaranteed-countdown.is-visible {
         opacity: 1;
-        scale: 1;
+        scale: var(--advanced-debug-scale, 1);
         animation: guaranteed-count-pulse 460ms ease both;
       }
 
@@ -1097,6 +990,10 @@
       .state-float.neutral {
         color: #f2f6ff;
         box-shadow: 0 0 14px rgba(242, 246, 255, 0.42), inset 0 0 12px rgba(242, 246, 255, 0.1);
+      }
+
+      .state-float.advanced-debug-persistent {
+        animation: none;
       }
 
       @keyframes hit-shake {
@@ -1196,15 +1093,15 @@
       }
 
       @keyframes ultimate-panel-in-left {
-        0% { transform: translateX(-112%); opacity: 0; }
-        72% { transform: translateX(3%); opacity: 1; }
-        100% { transform: translateX(0); opacity: 1; }
+        0% { transform: translate(calc(-112% + var(--ultimate-panel-translate-x)), var(--ultimate-panel-translate-y)); opacity: 0; }
+        72% { transform: translate(calc(3% + var(--ultimate-panel-translate-x)), var(--ultimate-panel-translate-y)); opacity: 1; }
+        100% { transform: translate(var(--ultimate-panel-translate-x), var(--ultimate-panel-translate-y)); opacity: 1; }
       }
 
       @keyframes ultimate-panel-in-right {
-        0% { transform: translateX(112%) scaleX(-1); opacity: 0; }
-        72% { transform: translateX(-3%) scaleX(-1); opacity: 1; }
-        100% { transform: translateX(0) scaleX(-1); opacity: 1; }
+        0% { transform: translate(calc(112% + var(--ultimate-panel-translate-x)), var(--ultimate-panel-translate-y)) scaleX(-1); opacity: 0; }
+        72% { transform: translate(calc(-3% + var(--ultimate-panel-translate-x)), var(--ultimate-panel-translate-y)) scaleX(-1); opacity: 1; }
+        100% { transform: translate(var(--ultimate-panel-translate-x), var(--ultimate-panel-translate-y)) scaleX(-1); opacity: 1; }
       }
 
       @keyframes ultimate-label-pop {
@@ -2265,24 +2162,10 @@
 
       <section class="state-popup-layer" id="statePopupLayer" aria-hidden="true"></section>
 
-      <section class="debug-location-map" id="debugLocationMap" aria-hidden="true">
-        <div class="debug-location left" data-location="L1"></div>
-        <div class="debug-location left" data-location="L2"></div>
-        <div class="debug-location left" data-location="L3"></div>
-        <div class="debug-location left" data-location="L4"></div>
-        <div class="debug-location left" data-location="L5">
-          <img class="debug-jump-frame-preview" src="../../assets/characters/ninja-jump/ninja-jump-001.webp" alt="" draggable="false">
-        </div>
-        <div class="debug-location center" data-location="C1"></div>
-        <div class="debug-location center" data-location="C2"></div>
-        <div class="debug-location right" data-location="R1"></div>
-        <div class="debug-location right" data-location="R2"></div>
-        <div class="debug-location right" data-location="R3"></div>
-        <div class="debug-location right" data-location="R4"></div>
-        <div class="debug-location right" data-location="R5">
-          <img class="debug-jump-frame-preview" src="../../assets/characters/ninja-jump/ninja-jump-001.webp" alt="" draggable="false">
-        </div>
-      </section>
+      <div class="advanced-debug-selection" id="advancedDebugSelection" aria-hidden="true">
+        <div class="advanced-debug-resize-handle" id="advancedDebugResizeHandle"></div>
+      </div>
+      <div class="advanced-debug-toast" id="advancedDebugToast" aria-hidden="true">Propriedades copiadas</div>
 
       <section class="turn-meter" aria-label="Tempo do turno">
         <div class="turn-meter-fill" id="turnMeterFill"></div>
@@ -2350,122 +2233,11 @@
         <input type="checkbox" id="debugToggle" checked>
       </label>
       <div class="debug-disabled-note">Debug desligado: o jogo usa timer e CPU normal.</div>
-      <section class="debug-group" aria-label="Debug visual">
-        <div class="debug-visual-heading">
-          <div class="debug-group-title">VISUAL</div>
-          <button class="debug-copy-button" type="button" id="copyDebugLocationsButton" aria-label="Copiar locais visíveis" title="Copiar locais visíveis">
-            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="9" width="11" height="11" rx="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          </button>
-        </div>
-        <label class="debug-toggle debug-location-toggle">
-          <span>LOCAIS</span>
-          <input type="checkbox" id="debugLocationsToggle">
-        </label>
-        <div class="debug-location-controls" id="debugLocationControls" aria-label="Locais do overlay visual">
-          <div class="debug-location-column" aria-label="Locais esquerda">
-            <div class="debug-location-column-title">ESQ</div>
-            <div class="debug-location-row" data-debug-location-row="L1">
-              <button class="debug-location-button left" type="button" data-debug-location-toggle="L1" aria-pressed="true">L1</button>
-              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L1" data-debug-location-axis="x"></label>
-              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L1" data-debug-location-axis="y"></label>
-            </div>
-            <div class="debug-location-row" data-debug-location-row="L2">
-              <button class="debug-location-button left" type="button" data-debug-location-toggle="L2" aria-pressed="true">L2</button>
-              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L2" data-debug-location-axis="x"></label>
-              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L2" data-debug-location-axis="y"></label>
-            </div>
-            <div class="debug-location-row" data-debug-location-row="L3">
-              <button class="debug-location-button left" type="button" data-debug-location-toggle="L3" aria-pressed="true">L3</button>
-              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L3" data-debug-location-axis="x"></label>
-              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L3" data-debug-location-axis="y"></label>
-            </div>
-            <div class="debug-location-row" data-debug-location-row="L4">
-              <button class="debug-location-button left" type="button" data-debug-location-toggle="L4" aria-pressed="true">L4</button>
-              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L4" data-debug-location-axis="x"></label>
-              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L4" data-debug-location-axis="y"></label>
-            </div>
-            <div class="debug-location-row" data-debug-location-row="L5">
-              <button class="debug-location-button left" type="button" data-debug-location-toggle="L5" aria-pressed="true">L5</button>
-              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L5" data-debug-location-axis="x"></label>
-              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="L5" data-debug-location-axis="y"></label>
-            </div>
-          </div>
-          <div class="debug-location-column" aria-label="Locais centro">
-            <div class="debug-location-column-title">CEN</div>
-            <div class="debug-location-row" data-debug-location-row="C1">
-              <button class="debug-location-button center" type="button" data-debug-location-toggle="C1" aria-pressed="true">C1</button>
-              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="C1" data-debug-location-axis="x"></label>
-              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="C1" data-debug-location-axis="y"></label>
-            </div>
-            <div class="debug-location-row" data-debug-location-row="C2">
-              <button class="debug-location-button center" type="button" data-debug-location-toggle="C2" aria-pressed="true">C2</button>
-              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="C2" data-debug-location-axis="x"></label>
-              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="C2" data-debug-location-axis="y"></label>
-            </div>
-          </div>
-          <div class="debug-location-column" aria-label="Locais direita">
-            <div class="debug-location-column-title">DIR</div>
-            <div class="debug-location-row" data-debug-location-row="R1">
-              <button class="debug-location-button right" type="button" data-debug-location-toggle="R1" aria-pressed="true">R1</button>
-              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R1" data-debug-location-axis="x"></label>
-              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R1" data-debug-location-axis="y"></label>
-            </div>
-            <div class="debug-location-row" data-debug-location-row="R2">
-              <button class="debug-location-button right" type="button" data-debug-location-toggle="R2" aria-pressed="true">R2</button>
-              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R2" data-debug-location-axis="x"></label>
-              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R2" data-debug-location-axis="y"></label>
-            </div>
-            <div class="debug-location-row" data-debug-location-row="R3">
-              <button class="debug-location-button right" type="button" data-debug-location-toggle="R3" aria-pressed="true">R3</button>
-              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R3" data-debug-location-axis="x"></label>
-              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R3" data-debug-location-axis="y"></label>
-            </div>
-            <div class="debug-location-row" data-debug-location-row="R4">
-              <button class="debug-location-button right" type="button" data-debug-location-toggle="R4" aria-pressed="true">R4</button>
-              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R4" data-debug-location-axis="x"></label>
-              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R4" data-debug-location-axis="y"></label>
-            </div>
-            <div class="debug-location-row" data-debug-location-row="R5">
-              <button class="debug-location-button right" type="button" data-debug-location-toggle="R5" aria-pressed="true">R5</button>
-              <label class="debug-coordinate-field"><span>X</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R5" data-debug-location-axis="x"></label>
-              <label class="debug-coordinate-field"><span>Y</span><input class="debug-location-coordinate" type="number" inputmode="numeric" step="1" min="0" data-debug-location-id="R5" data-debug-location-axis="y"></label>
-            </div>
-          </div>
-        </div>
-        <div class="debug-jump-frame-control" aria-label="Ajustes do frame Jump L5 e R5">
-          <div class="debug-jump-frame-heading">FRAME JUMP L5/R5</div>
-          <div class="debug-jump-frame-grid">
-            <label class="debug-frame-slider">
-              <span>MATIZ</span>
-              <input type="range" min="0" max="100" value="50" data-debug-jump-filter="hue" id="debugJumpHueSlider">
-              <span class="debug-frame-slider-value" id="debugJumpHueValue">0deg</span>
-            </label>
-            <label class="debug-frame-slider">
-              <span>SAT</span>
-              <input type="range" min="0" max="100" value="50" data-debug-jump-filter="saturation" id="debugJumpSaturationSlider">
-              <span class="debug-frame-slider-value" id="debugJumpSaturationValue">100%</span>
-            </label>
-            <label class="debug-frame-slider">
-              <span>BRILHO</span>
-              <input type="range" min="0" max="100" value="50" data-debug-jump-filter="brightness" id="debugJumpBrightnessSlider">
-              <span class="debug-frame-slider-value" id="debugJumpBrightnessValue">100%</span>
-            </label>
-            <label class="debug-frame-slider">
-              <span>CONT</span>
-              <input type="range" min="0" max="100" value="50" data-debug-jump-filter="contrast" id="debugJumpContrastSlider">
-              <span class="debug-frame-slider-value" id="debugJumpContrastValue">100%</span>
-            </label>
-            <label class="debug-frame-slider">
-              <span>OPAC</span>
-              <input type="range" min="0" max="100" value="86" data-debug-jump-filter="opacity" id="debugJumpOpacitySlider">
-              <span class="debug-frame-slider-value" id="debugJumpOpacityValue">86%</span>
-            </label>
-          </div>
-        </div>
-      </section>
+      <div class="debug-tabs" role="tablist" aria-label="Debug tabs">
+        <button class="debug-tab is-active" type="button" role="tab" aria-selected="true" data-debug-tab="basic">BÁSICO</button>
+        <button class="debug-tab" type="button" role="tab" aria-selected="false" data-debug-tab="advanced">AVANÇADO</button>
+      </div>
+      <div class="debug-tab-panel" data-debug-panel="basic" role="tabpanel">
       <section class="debug-group" aria-label="Debug da ação do jogador">
         <div class="debug-group-title">PLAYER</div>
         <div class="debug-super-control" aria-label="Barra de super do PLAYER">
@@ -2508,6 +2280,47 @@
           <button class="debug-action" type="button" data-debug-side="p2" data-action="Jump">JUMP</button>
         </div>
       </section>
+      </div>
+      <div class="debug-tab-panel debug-advanced-panel" data-debug-panel="advanced" role="tabpanel" hidden>
+        <section class="debug-group" aria-label="Status e efeitos avançados">
+          <div class="debug-group-title">STATUS / EFEITOS</div>
+          <div class="debug-advanced-grid">
+            <button class="debug-advanced-button" type="button" data-advanced-effect="plus-p1">PLUS P1</button>
+            <button class="debug-advanced-button" type="button" data-advanced-effect="plus-p2">PLUS P2</button>
+            <button class="debug-advanced-button" type="button" data-advanced-effect="neutral">NEUTRO</button>
+            <button class="debug-advanced-button" type="button" data-advanced-effect="guaranteed-p1">GARANT. P1</button>
+            <button class="debug-advanced-button" type="button" data-advanced-effect="guaranteed-p2">GARANT. CPU</button>
+            <button class="debug-advanced-button" type="button" data-advanced-effect="countdown-p1">3-2-1</button>
+            <button class="debug-advanced-button" type="button" data-advanced-effect="shield-p1">ESCUDO</button>
+            <button class="debug-advanced-button" type="button" data-advanced-effect="combo-hit-p1">COMBO HIT</button>
+            <button class="debug-advanced-button" type="button" data-advanced-effect="ultimate-p1">ULTIMATE</button>
+            <button class="debug-advanced-button" type="button" data-advanced-effect="clear">LIMPAR</button>
+          </div>
+        </section>
+        <section class="debug-group" aria-label="Animação avançada P1">
+          <div class="debug-group-title">ANIMAÇÃO P1</div>
+          <div class="debug-advanced-row">
+            <select class="debug-advanced-select" id="advancedAnimationSelect" aria-label="Animação P1">
+              <option value="idle">Idle</option>
+              <option value="getUp">Get Up</option>
+              <option value="crouch">Crouch</option>
+              <option value="jump">Jump</option>
+              <option value="ultimate">Ultimate</option>
+              <option value="ultimateTraceBg">Ultimate traço BG</option>
+              <option value="poke">Poke</option>
+              <option value="combo">Combo</option>
+              <option value="grab">Grab</option>
+              <option value="special">Special</option>
+              <option value="block">Block</option>
+            </select>
+            <button class="debug-advanced-play" type="button" id="advancedAnimationPlayButton">PLAY</button>
+          </div>
+        </section>
+        <section class="debug-group" aria-label="Inspector avançado">
+          <div class="debug-group-title">INSPECTOR</div>
+          <div class="debug-inspector-readout" id="advancedInspectorStatus">Selecione uma prévia para editar.</div>
+        </section>
+      </div>
     </aside>
 
     <script type="module">
@@ -2517,7 +2330,7 @@
       const RESULT_REVEAL_DELAY = 720;
       const HEALTH_TRAIL_DELAY = 3000;
       const GET_UP_FIRST_FRAME_HOLD = 1000;
-      const CHARACTER_CONFIG_PATH = "../../assets/characters/ninja/ninja.json?v=20260604-ultimate";
+      const CHARACTER_CONFIG_PATH = "../../assets/characters/ninja/ninja.json?v=20260605-speed";
       const ULTIMATE_CINEMATIC_INTRO_MS = 680;
       const ULTIMATE_CINEMATIC_HOLD_MS = 1000;
       const ULTIMATE_CINEMATIC_EXIT_MS = 180;
@@ -2527,8 +2340,6 @@
       const SFX_VOLUME_STORAGE_KEY = "fightTurn.sfxVolume";
       const MUSIC_STORAGE_KEY = "fightTurn.musicEnabled";
       const MUSIC_VOLUME_STORAGE_KEY = "fightTurn.musicVolume";
-      const DEBUG_VISUAL_STORAGE_KEY = "fightTurn.debugVisual";
-      const DEBUG_VISUAL_STORAGE_VERSION = 6;
       const IRIS_TRANSITION_DURATION = 860;
       const characterConfig = await loadCharacterConfig(CHARACTER_CONFIG_PATH);
       const idleAnimation = characterConfig.animations.idle;
@@ -2589,36 +2400,11 @@
       };
       const blockChip = { Poke: 0, Combo: 2, Special: 2, Super: 3 };
       const tradeDamage = { Poke: 3, Combo: 4, Grab: 0, Special: 5, Super: 8 };
-      const debugLocationDefaults = [
-        { id: "L1", side: "left", xPercent: 17.5, yPercent: 37, widthPercent: 18, heightPercent: 16 },
-        { id: "L2", side: "left", xPercent: 10, yPercent: 29, widthPercent: 34, heightPercent: 13 },
-        { id: "L3", side: "left", xPercent: 12, yPercent: 51, widthPercent: 29, heightPercent: 14 },
-        { id: "L4", side: "left", xPercent: 5, yPercent: 44, widthPercent: 43, heightPercent: 46 },
-        { id: "L5", side: "left", xPercent: -12.51, yPercent: 24, widthPercent: 79.69, heightPercent: 71.6 },
-        { id: "C1", side: "center", xPercent: 20, yPercent: 20, widthPercent: 60, heightPercent: 14 },
-        { id: "C2", side: "center", xPercent: 28, yPercent: 43, widthPercent: 44, heightPercent: 15 },
-        { id: "R1", side: "right", xPercent: 64.5, yPercent: 37, widthPercent: 18, heightPercent: 16 },
-        { id: "R2", side: "right", xPercent: 56, yPercent: 29, widthPercent: 34, heightPercent: 13 },
-        { id: "R3", side: "right", xPercent: 59, yPercent: 51, widthPercent: 29, heightPercent: 14 },
-        { id: "R4", side: "right", xPercent: 52, yPercent: 44, widthPercent: 43, heightPercent: 46 },
-        { id: "R5", side: "right", xPercent: 33.04, yPercent: 24.18, widthPercent: 79.69, heightPercent: 71.6 },
-      ];
-      const debugJumpFrameFilterDefaults = {
-        hue: 48,
-        saturation: 40,
-        brightness: 58,
-        contrast: 44,
-        opacity: 100,
-      };
-      const storedDebugVisualSettings = readDebugVisualSettings();
-
       const state = {
         phase: "choosing",
         debugAvailable,
-        debugMode: debugAvailable && (storedDebugVisualSettings?.debugMode ?? true),
-        debugLocationsVisible: storedDebugVisualSettings?.locationsVisible ?? false,
-        debugLocations: createDebugLocationState(storedDebugVisualSettings?.locations),
-        debugJumpFrameFilters: createDebugJumpFrameFilterState(storedDebugVisualSettings?.jumpFrameFilters),
+        debugMode: debugAvailable,
+        debugTab: "basic",
         mobileFullscreenRequired,
         gameSessionActive: !mobileFullscreenRequired,
         startTransitionActive: false,
@@ -2674,6 +2460,9 @@
         p1GuaranteedCountdown: document.querySelector("#p1GuaranteedCountdown"),
         p2GuaranteedCountdown: document.querySelector("#p2GuaranteedCountdown"),
         statePopupLayer: document.querySelector("#statePopupLayer"),
+        advancedDebugSelection: document.querySelector("#advancedDebugSelection"),
+        advancedDebugResizeHandle: document.querySelector("#advancedDebugResizeHandle"),
+        advancedDebugToast: document.querySelector("#advancedDebugToast"),
         p1Sprite: document.querySelector("#p1Sprite"),
         p2Sprite: document.querySelector("#p2Sprite"),
         p1BlockShield: document.querySelector("#p1BlockShield"),
@@ -2682,6 +2471,7 @@
         p2ComboHitEffect: document.querySelector("#p2ComboHitEffect"),
         ultimateCinematic: document.querySelector("#ultimateCinematic"),
         ultimateCinematicPanel: document.querySelector("#ultimateCinematicPanel"),
+        ultimateLabelRed: document.querySelector("#ultimateLabelRed"),
         ultimateFrame: document.querySelector("#ultimateFrame"),
         startScreen: document.querySelector("#startScreen"),
         helpScreen: document.querySelector("#helpScreen"),
@@ -2712,35 +2502,38 @@
         irisTransitionHole: document.querySelector("#irisTransitionHole"),
         debugPanel: document.querySelector("#debugPanel"),
         debugToggle: document.querySelector("#debugToggle"),
-        debugLocationsToggle: document.querySelector("#debugLocationsToggle"),
-        debugLocationMap: document.querySelector("#debugLocationMap"),
-        debugLocationNodes: [...document.querySelectorAll(".debug-location")],
-        debugLocationButtons: [...document.querySelectorAll(".debug-location-button")],
-        debugLocationInputs: [...document.querySelectorAll(".debug-location-coordinate")],
-        debugJumpFrameSliders: [...document.querySelectorAll("[data-debug-jump-filter]")],
-        debugJumpFrameValues: {
-          hue: document.querySelector("#debugJumpHueValue"),
-          saturation: document.querySelector("#debugJumpSaturationValue"),
-          brightness: document.querySelector("#debugJumpBrightnessValue"),
-          contrast: document.querySelector("#debugJumpContrastValue"),
-          opacity: document.querySelector("#debugJumpOpacityValue"),
-        },
-        copyDebugLocationsButton: document.querySelector("#copyDebugLocationsButton"),
+        debugTabButtons: [...document.querySelectorAll(".debug-tab")],
+        debugTabPanels: [...document.querySelectorAll(".debug-tab-panel")],
+        advancedDebugPanel: document.querySelector("[data-debug-panel='advanced']"),
+        advancedEffectButtons: [...document.querySelectorAll("[data-advanced-effect]")],
+        advancedAnimationSelect: document.querySelector("#advancedAnimationSelect"),
+        advancedAnimationPlayButton: document.querySelector("#advancedAnimationPlayButton"),
+        advancedInspectorStatus: document.querySelector("#advancedInspectorStatus"),
         debugStatus: document.querySelector("#debugStatus"),
         debugActionButtons: [...document.querySelectorAll(".debug-action")],
         debugSuperButtons: [...document.querySelectorAll(".debug-super-bar")],
       };
 
+      const advancedDebugState = {
+        selectedAnimation: "idle",
+        selectedTarget: null,
+        selectedLabel: "",
+        currentFrame: 0,
+        timers: [],
+        temporaryNodes: new Set(),
+        transforms: new Map(),
+        drag: null,
+        toastTimer: null,
+      };
+
       document.body.classList.toggle("debug-mode", state.debugAvailable);
       syncDebugModeUi();
-      syncDebugLocationsUi();
       syncFullscreenGateUi();
 
       let idleFrameIndex = 0;
       const spriteAnimations = { p1: null, p2: null };
       const ultimateCinematicState = { timers: [] };
       const comboHitEffectTimers = { p1: null, p2: null };
-      let debugLocationDrag = null;
       const audioState = {
         context: null,
         masterGain: null,
@@ -3792,6 +3585,10 @@
       }
 
       function selectActionForSide(side, action) {
+        if (isAdvancedDebugActive()) {
+          return;
+        }
+
         if (state.phase !== "choosing" || !canUseAction(side, action)) {
           return;
         }
@@ -3810,7 +3607,7 @@
       }
 
       function tryResolveDebugTurn() {
-        if (!state.debugMode || state.phase !== "choosing") {
+        if (!state.debugMode || isAdvancedDebugActive() || state.phase !== "choosing") {
           return;
         }
 
@@ -3832,11 +3629,8 @@
         }
 
         document.body.classList.toggle("debug-controls-off", !state.debugMode);
-        document.body.classList.toggle("debug-locations-on", state.debugMode && state.debugLocationsVisible);
         el.debugToggle.checked = state.debugMode;
-        el.debugLocationsToggle.checked = state.debugLocationsVisible;
-        el.debugLocationsToggle.disabled = !state.debugMode;
-        syncDebugLocationsUi();
+        syncDebugTabsUi();
       }
 
       function handleDebugToggle() {
@@ -3845,7 +3639,11 @@
         }
 
         state.debugMode = el.debugToggle.checked;
-        writeDebugVisualSettings();
+        if (!state.debugMode) {
+          resetAdvancedDebugPreview();
+        } else if (state.debugTab === "advanced" && state.phase === "choosing") {
+          prepareAdvancedAnimationPreview(advancedDebugState.selectedAnimation);
+        }
         syncDebugModeUi();
 
         if (state.phase === "choosing") {
@@ -3888,516 +3686,604 @@
         updateHud();
       }
 
-      function handleDebugLocationsToggle() {
+      function isAdvancedDebugActive() {
+        return state.debugAvailable && state.debugMode && state.debugTab === "advanced" && state.phase === "choosing";
+      }
+
+      function syncDebugTabsUi() {
         if (!state.debugAvailable) {
           return;
         }
 
-        state.debugLocationsVisible = el.debugLocationsToggle.checked;
-        writeDebugVisualSettings();
-        syncDebugModeUi();
-      }
-
-      function readDebugVisualSettings() {
-        try {
-          const rawSettings = window.localStorage.getItem(DEBUG_VISUAL_STORAGE_KEY);
-          if (!rawSettings) {
-            return null;
-          }
-
-          const parsedSettings = JSON.parse(rawSettings);
-          if (!parsedSettings || typeof parsedSettings !== "object") {
-            return null;
-          }
-
-          if (parsedSettings.version !== DEBUG_VISUAL_STORAGE_VERSION && parsedSettings.locations) {
-            parsedSettings.locations = { ...parsedSettings.locations };
-            delete parsedSettings.locations.L5;
-            delete parsedSettings.locations.R5;
-            delete parsedSettings.jumpFrameFilters;
-          }
-
-          return parsedSettings;
-        } catch {
-          return null;
-        }
-      }
-
-      function createDebugLocationState(savedLocations = null) {
-        return Object.fromEntries(debugLocationDefaults.map((location) => [
-          location.id,
-          createDebugLocationEntry(location, savedLocations?.[location.id]),
-        ]));
-      }
-
-      function createDebugLocationEntry(location, savedLocation = null) {
-        const nextLocation = { ...location, visible: true };
-        if (!savedLocation || typeof savedLocation !== "object") {
-          return nextLocation;
-        }
-
-        ["xPercent", "yPercent", "widthPercent", "heightPercent"].forEach((key) => {
-          if (Number.isFinite(savedLocation[key])) {
-            nextLocation[key] = clampDebugLocationPercent(location.id, key, savedLocation[key]);
-          }
+        el.debugTabButtons.forEach((button) => {
+          const isActive = button.dataset.debugTab === state.debugTab;
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-selected", String(isActive));
         });
 
-        if (typeof savedLocation.visible === "boolean") {
-          nextLocation.visible = savedLocation.visible;
-        }
-
-        return nextLocation;
-      }
-
-      function createDebugJumpFrameFilterState(savedFilters = null) {
-        const nextFilters = { ...debugJumpFrameFilterDefaults };
-        if (!savedFilters || typeof savedFilters !== "object") {
-          return nextFilters;
-        }
-
-        Object.keys(nextFilters).forEach((key) => {
-          if (Number.isFinite(savedFilters[key])) {
-            nextFilters[key] = Math.round(clampNumber(savedFilters[key], 0, 100));
-          }
+        el.debugTabPanels.forEach((panel) => {
+          panel.hidden = panel.dataset.debugPanel !== state.debugTab;
         });
 
-        return nextFilters;
+        syncAdvancedDebugUi();
       }
 
-      function clampDebugLocationPercent(id, key, value) {
-        const isJumpLocation = id === "L5" || id === "R5";
-        if (!isJumpLocation) {
-          return clampNumber(value, 0, 100);
+      function syncAdvancedDebugUi() {
+        const canUseAdvanced = isAdvancedDebugActive();
+
+        el.advancedDebugPanel.classList.toggle("is-disabled", !canUseAdvanced);
+        el.advancedEffectButtons.forEach((button) => {
+          button.disabled = !canUseAdvanced;
+        });
+        el.advancedAnimationSelect.disabled = !canUseAdvanced;
+        el.advancedAnimationPlayButton.disabled = !canUseAdvanced;
+
+        if (!canUseAdvanced) {
+          el.advancedDebugSelection.classList.remove("is-visible");
+        } else {
+          syncAdvancedSelectionFrame();
         }
 
-        if (key === "xPercent") {
-          return clampNumber(value, -100, 200);
+        if (!advancedDebugState.selectedTarget) {
+          el.advancedInspectorStatus.textContent = canUseAdvanced
+            ? "Selecione uma prévia para editar."
+            : "Ative o debug e entre na batalha para usar o avançado.";
         }
-
-        if (key === "widthPercent" || key === "heightPercent") {
-          return clampNumber(value, 1, 200);
-        }
-
-        return clampNumber(value, -30, 130);
       }
 
-      function writeDebugVisualSettings() {
-        if (!state.debugAvailable) {
+      function setDebugTab(tab) {
+        if (tab !== "basic" && tab !== "advanced") {
           return;
         }
 
-        try {
-          const locations = Object.fromEntries(debugLocationDefaults.map(({ id }) => {
-            const location = state.debugLocations[id];
-            return [id, {
-              xPercent: Number(location.xPercent.toFixed(3)),
-              yPercent: Number(location.yPercent.toFixed(3)),
-              widthPercent: Number(location.widthPercent.toFixed(3)),
-              heightPercent: Number(location.heightPercent.toFixed(3)),
-              visible: location.visible,
-            }];
-          }));
+        const wasAdvanced = state.debugTab === "advanced";
+        state.debugTab = tab;
 
-          window.localStorage.setItem(DEBUG_VISUAL_STORAGE_KEY, JSON.stringify({
-            version: DEBUG_VISUAL_STORAGE_VERSION,
-            debugMode: state.debugMode,
-            locationsVisible: state.debugLocationsVisible,
-            locations,
-            jumpFrameFilters: { ...state.debugJumpFrameFilters },
-          }));
-        } catch {
-          // Storage can be unavailable; the current debug session still keeps its in-memory settings.
-        }
-      }
-
-      function debugLocationNode(id) {
-        return el.debugLocationNodes.find((node) => node.dataset.location === id);
-      }
-
-      function debugLocationButton(id) {
-        return el.debugLocationButtons.find((button) => button.dataset.debugLocationToggle === id);
-      }
-
-      function debugLocationMapRect() {
-        const mapRect = el.debugLocationMap.getBoundingClientRect();
-        if (mapRect.width > 0 && mapRect.height > 0) {
-          return mapRect;
+        if (wasAdvanced && tab !== "advanced") {
+          resetAdvancedDebugPreview();
         }
 
+        if (tab === "advanced" && state.debugMode && state.phase === "choosing") {
+          state.selectedAction = null;
+          state.aiAction = null;
+          setTokenDisplay(false);
+          prepareAdvancedAnimationPreview(advancedDebugState.selectedAnimation);
+        }
+
+        syncDebugTabsUi();
+        updateHud();
+      }
+
+      function leaveAdvancedDebugMode() {
+        const wasAdvanced = state.debugTab === "advanced";
+        resetAdvancedDebugPreview();
+        if (wasAdvanced) {
+          state.debugTab = "basic";
+        }
+        syncDebugTabsUi();
+      }
+
+      function clearAdvancedDebugTimers() {
+        advancedDebugState.timers.forEach((timerId) => window.clearTimeout(timerId));
+        advancedDebugState.timers = [];
+      }
+
+      function scheduleAdvancedDebug(callback, delay) {
+        const timerId = window.setTimeout(() => {
+          advancedDebugState.timers = advancedDebugState.timers.filter((id) => id !== timerId);
+          callback();
+        }, delay);
+        advancedDebugState.timers.push(timerId);
+        return timerId;
+      }
+
+      function clearAdvancedTargetTransform(target) {
+        if (!target) {
+          return;
+        }
+
+        target.classList.remove("advanced-debug-adjusted");
+        target.style.removeProperty("--advanced-debug-offset-x");
+        target.style.removeProperty("--advanced-debug-offset-y");
+        target.style.removeProperty("--advanced-debug-scale");
+      }
+
+      function resetAdvancedDebugPreview() {
+        clearAdvancedDebugTimers();
+        clearSpriteAnimation("p1");
+        el.p1Sprite.src = idleFrames[idleFrameIndex] || idleFrames[0] || el.p1Sprite.src;
+        el.p1Fighter.classList.remove("attack-left", "attack-right");
+        clearBlockShieldEffects();
+        clearComboHitEffects();
+        clearUltimateCinematic();
+        clearGuaranteedCountdown();
+
+        advancedDebugState.temporaryNodes.forEach((node) => node.remove());
+        advancedDebugState.temporaryNodes.clear();
+        advancedDebugState.transforms.forEach((_transform, target) => clearAdvancedTargetTransform(target));
+        advancedDebugState.transforms.clear();
+        advancedDebugState.selectedTarget = null;
+        advancedDebugState.selectedLabel = "";
+        advancedDebugState.currentFrame = 0;
+        advancedDebugState.drag = null;
+        window.clearTimeout(advancedDebugState.toastTimer);
+        advancedDebugState.toastTimer = null;
+        el.advancedDebugSelection.classList.remove("is-visible");
+        el.advancedDebugToast.classList.remove("is-visible");
+        syncAdvancedDebugUi();
+      }
+
+      function advancedTargetTransform(target) {
+        if (!advancedDebugState.transforms.has(target)) {
+          advancedDebugState.transforms.set(target, { x: 0, y: 0, scale: 1 });
+        }
+
+        return advancedDebugState.transforms.get(target);
+      }
+
+      function applyAdvancedTargetTransform(target) {
+        const transform = advancedTargetTransform(target);
+        target.classList.add("advanced-debug-adjusted");
+        target.style.setProperty("--advanced-debug-offset-x", `${transform.x}px`);
+        target.style.setProperty("--advanced-debug-offset-y", `${transform.y}px`);
+        target.style.setProperty("--advanced-debug-scale", String(transform.scale));
+        syncAdvancedSelectionFrame();
+      }
+
+      function setAdvancedPreviewTarget(target, label) {
+        advancedDebugState.selectedTarget = target;
+        advancedDebugState.selectedLabel = label || "";
+
+        if (!target) {
+          el.advancedDebugSelection.classList.remove("is-visible");
+          syncAdvancedDebugUi();
+          return;
+        }
+
+        applyAdvancedTargetTransform(target);
+        syncAdvancedSelectionFrame();
+        el.advancedInspectorStatus.textContent = `Selecionado: ${advancedDebugState.selectedLabel}`;
+      }
+
+      function syncAdvancedSelectionFrame() {
+        const target = advancedDebugState.selectedTarget;
+        if (!isAdvancedDebugActive() || !target || !target.isConnected) {
+          el.advancedDebugSelection.classList.remove("is-visible");
+          return;
+        }
+
+        const targetRect = target.getBoundingClientRect();
         const phoneRect = el.phone.getBoundingClientRect();
-        return {
-          left: phoneRect.left,
-          top: phoneRect.top,
-          width: phoneRect.width,
-          height: phoneRect.height * 0.62,
-        };
-      }
 
-      function debugLocationPixelRect(location, mapRect = debugLocationMapRect()) {
-        return {
-          x: Math.round((location.xPercent / 100) * mapRect.width),
-          y: Math.round((location.yPercent / 100) * mapRect.height),
-          width: Math.round((location.widthPercent / 100) * mapRect.width),
-          height: Math.round((location.heightPercent / 100) * mapRect.height),
-        };
-      }
-
-      function syncDebugLocationsUi() {
-        if (!state.debugAvailable) {
+        if (targetRect.width <= 0 || targetRect.height <= 0) {
+          el.advancedDebugSelection.classList.remove("is-visible");
           return;
         }
 
-        const mapRect = debugLocationMapRect();
-        el.copyDebugLocationsButton.disabled = !state.debugMode;
-
-        debugLocationDefaults.forEach(({ id }) => {
-          const location = state.debugLocations[id];
-          const node = debugLocationNode(id);
-          const button = debugLocationButton(id);
-
-          if (node) {
-            node.style.setProperty("--left", `${location.xPercent}%`);
-            node.style.setProperty("--top", `${location.yPercent}%`);
-            node.style.setProperty("--width", `${location.widthPercent}%`);
-            node.style.setProperty("--height", `${location.heightPercent}%`);
-            node.classList.toggle("is-hidden", !location.visible);
-          }
-
-          if (button) {
-            button.classList.toggle("selected", location.visible);
-            button.setAttribute("aria-pressed", String(location.visible));
-            button.disabled = !state.debugMode;
-          }
-        });
-
-        el.debugLocationInputs.forEach((input) => {
-          const location = state.debugLocations[input.dataset.debugLocationId];
-          if (!location) {
-            return;
-          }
-
-          const axis = input.dataset.debugLocationAxis;
-          const rect = debugLocationPixelRect(location, mapRect);
-          const value = axis === "x" ? rect.x : rect.y;
-          input.disabled = !state.debugMode;
-          input.min = location.id === "L5" || location.id === "R5" ? String(axis === "x" ? -rect.width : -rect.height) : "0";
-          input.setAttribute("aria-label", `${location.id} ${axis.toUpperCase()}`);
-
-          if (document.activeElement !== input) {
-            input.value = String(value);
-          }
-        });
-
-        syncDebugJumpFrameUi();
+        el.advancedDebugSelection.style.left = `${targetRect.left - phoneRect.left}px`;
+        el.advancedDebugSelection.style.top = `${targetRect.top - phoneRect.top}px`;
+        el.advancedDebugSelection.style.width = `${targetRect.width}px`;
+        el.advancedDebugSelection.style.height = `${targetRect.height}px`;
+        el.advancedDebugSelection.classList.add("is-visible");
       }
 
-      function clampNumber(value, min, max) {
-        if (!Number.isFinite(value)) {
-          return min;
+      function copyTextToClipboard(text) {
+        if (copyTextWithTextArea(text)) {
+          return Promise.resolve();
         }
 
-        return Math.max(min, Math.min(max, value));
-      }
-
-      function debugJumpFrameFilterValues() {
-        const filters = state.debugJumpFrameFilters;
-        return {
-          hueDeg: Math.round((filters.hue - 50) * 3.6),
-          saturationPercent: filters.saturation * 2,
-          brightnessPercent: filters.brightness * 2,
-          contrastPercent: filters.contrast * 2,
-          opacityPercent: filters.opacity,
-        };
-      }
-
-      function syncDebugJumpFrameUi() {
-        if (!state.debugAvailable) {
-          return;
-        }
-
-        const values = debugJumpFrameFilterValues();
-        el.debugLocationMap.style.setProperty("--debug-jump-hue", `${values.hueDeg}deg`);
-        el.debugLocationMap.style.setProperty("--debug-jump-saturation", `${values.saturationPercent}%`);
-        el.debugLocationMap.style.setProperty("--debug-jump-brightness", `${values.brightnessPercent}%`);
-        el.debugLocationMap.style.setProperty("--debug-jump-contrast", `${values.contrastPercent}%`);
-        el.debugLocationMap.style.setProperty("--debug-jump-opacity", String(values.opacityPercent / 100));
-
-        el.debugJumpFrameSliders.forEach((input) => {
-          const filter = input.dataset.debugJumpFilter;
-          input.disabled = !state.debugMode;
-          if (document.activeElement !== input) {
-            input.value = String(state.debugJumpFrameFilters[filter]);
-          }
-        });
-
-        el.debugJumpFrameValues.hue.textContent = `${values.hueDeg}deg`;
-        el.debugJumpFrameValues.saturation.textContent = `${values.saturationPercent}%`;
-        el.debugJumpFrameValues.brightness.textContent = `${values.brightnessPercent}%`;
-        el.debugJumpFrameValues.contrast.textContent = `${values.contrastPercent}%`;
-        el.debugJumpFrameValues.opacity.textContent = `${values.opacityPercent}%`;
-      }
-
-      function setDebugJumpFrameFilterFromInput(input) {
-        const filter = input.dataset.debugJumpFilter;
-        if (!state.debugMode || !(filter in state.debugJumpFrameFilters)) {
-          return;
-        }
-
-        state.debugJumpFrameFilters[filter] = Math.round(clampNumber(Number(input.value), 0, 100));
-        writeDebugVisualSettings();
-        syncDebugJumpFrameUi();
-      }
-
-      function setDebugLocationPixelPosition(id, x, y) {
-        const location = state.debugLocations[id];
-        if (!location) {
-          return;
-        }
-
-        const mapRect = debugLocationMapRect();
-        const width = (location.widthPercent / 100) * mapRect.width;
-        const height = (location.heightPercent / 100) * mapRect.height;
-        const canOverflow = id === "L5" || id === "R5";
-        const xMin = canOverflow ? -width : 0;
-        const yMin = canOverflow ? -height : 0;
-        const xMax = canOverflow ? mapRect.width : Math.max(0, mapRect.width - width);
-        const yMax = canOverflow ? mapRect.height : Math.max(0, mapRect.height - height);
-        const nextX = Math.round(clampNumber(x, xMin, xMax));
-        const nextY = Math.round(clampNumber(y, yMin, yMax));
-
-        if (mapRect.width > 0) {
-          location.xPercent = (nextX / mapRect.width) * 100;
-        }
-
-        if (mapRect.height > 0) {
-          location.yPercent = (nextY / mapRect.height) * 100;
-        }
-
-        writeDebugVisualSettings();
-        syncDebugLocationsUi();
-      }
-
-      function setDebugLocationCoordinateFromInput(input) {
-        const id = input.dataset.debugLocationId;
-        const axis = input.dataset.debugLocationAxis;
-        const location = state.debugLocations[id];
-        const rawValue = input.value.trim();
-
-        if (!location || rawValue === "") {
-          return;
-        }
-
-        const value = Math.round(Number(rawValue));
-        if (!Number.isFinite(value)) {
-          return;
-        }
-
-        const rect = debugLocationPixelRect(location);
-        const nextX = axis === "x" ? value : rect.x;
-        const nextY = axis === "y" ? value : rect.y;
-        input.value = String(value);
-        setDebugLocationPixelPosition(id, nextX, nextY);
-      }
-
-      function handleDebugLocationCoordinateKeydown(event) {
-        if (event.key !== "ArrowUp" && event.key !== "ArrowDown") {
-          return;
-        }
-
-        if (!state.debugMode) {
-          return;
-        }
-
-        event.preventDefault();
-        const input = event.currentTarget;
-        const id = input.dataset.debugLocationId;
-        const axis = input.dataset.debugLocationAxis;
-        const location = state.debugLocations[id];
-        if (!location) {
-          return;
-        }
-
-        const rect = debugLocationPixelRect(location);
-        const current = input.value.trim() === ""
-          ? axis === "x" ? rect.x : rect.y
-          : Number(input.value);
-        const direction = event.key === "ArrowUp" ? 1 : -1;
-        const step = event.shiftKey ? 10 : 1;
-        input.value = String(Math.round(current + direction * step));
-        setDebugLocationCoordinateFromInput(input);
-      }
-
-      function toggleDebugLocation(id) {
-        const location = state.debugLocations[id];
-        if (!state.debugMode || !location) {
-          return;
-        }
-
-        location.visible = !location.visible;
-        writeDebugVisualSettings();
-        syncDebugLocationsUi();
-      }
-
-      function startDebugLocationDrag(id, node, clientX, clientY, pointerId = null) {
-        if (!state.debugMode || !state.debugLocationsVisible) {
-          return;
-        }
-
-        const location = state.debugLocations[id];
-        if (!location) {
-          return;
-        }
-
-        const mapRect = debugLocationMapRect();
-        const rect = debugLocationPixelRect(location, mapRect);
-        debugLocationDrag = {
-          id,
-          node,
-          pointerId,
-          startClientX: clientX,
-          startClientY: clientY,
-          startX: rect.x,
-          startY: rect.y,
-        };
-
-        node.classList.add("is-dragging");
-      }
-
-      function handleDebugLocationPointerDown(event) {
-        startDebugLocationDrag(event.currentTarget.dataset.location, event.currentTarget, event.clientX, event.clientY, event.pointerId);
-        if (!debugLocationDrag) {
-          return;
-        }
-
-        event.currentTarget.setPointerCapture(event.pointerId);
-        event.preventDefault();
-      }
-
-      function handleDebugLocationPointerMove(event) {
-        if (!debugLocationDrag || event.pointerId !== debugLocationDrag.pointerId) {
-          return;
-        }
-
-        const nextX = debugLocationDrag.startX + event.clientX - debugLocationDrag.startClientX;
-        const nextY = debugLocationDrag.startY + event.clientY - debugLocationDrag.startClientY;
-        setDebugLocationPixelPosition(debugLocationDrag.id, nextX, nextY);
-      }
-
-      function handleDebugLocationPointerEnd(event) {
-        if (!debugLocationDrag || event.pointerId !== debugLocationDrag.pointerId) {
-          return;
-        }
-
-        debugLocationDrag.node.classList.remove("is-dragging");
-        if (debugLocationDrag.node.hasPointerCapture(event.pointerId)) {
-          debugLocationDrag.node.releasePointerCapture(event.pointerId);
-        }
-        debugLocationDrag = null;
-      }
-
-      function handleDebugLocationMouseDown(event) {
-        if (event.button !== 0 || debugLocationDrag) {
-          return;
-        }
-
-        startDebugLocationDrag(event.currentTarget.dataset.location, event.currentTarget, event.clientX, event.clientY);
-        if (debugLocationDrag) {
-          event.preventDefault();
-        }
-      }
-
-      function handleDebugLocationMouseMove(event) {
-        if (!debugLocationDrag || debugLocationDrag.pointerId !== null) {
-          return;
-        }
-
-        const nextX = debugLocationDrag.startX + event.clientX - debugLocationDrag.startClientX;
-        const nextY = debugLocationDrag.startY + event.clientY - debugLocationDrag.startClientY;
-        setDebugLocationPixelPosition(debugLocationDrag.id, nextX, nextY);
-      }
-
-      function handleDebugLocationMouseUp() {
-        if (!debugLocationDrag || debugLocationDrag.pointerId !== null) {
-          return;
-        }
-
-        debugLocationDrag.node.classList.remove("is-dragging");
-        debugLocationDrag = null;
-      }
-
-      function buildDebugLocationsSummary() {
-        const mapRect = debugLocationMapRect();
-        const visibleLocationIds = new Set(debugLocationDefaults
-          .map(({ id }) => state.debugLocations[id])
-          .filter((location) => location.visible)
-          .map((location) => location.id));
-        const includesJumpPair = visibleLocationIds.has("L5") || visibleLocationIds.has("R5");
-
-        if (includesJumpPair) {
-          visibleLocationIds.add("L5");
-          visibleLocationIds.add("R5");
-        }
-
-        const visibleLocations = debugLocationDefaults
-          .map(({ id }) => state.debugLocations[id])
-          .filter((location) => visibleLocationIds.has(location.id));
-        const lines = [
-          "Locais visiveis da luta",
-          `Area visual: ${Math.round(mapRect.width)}x${Math.round(mapRect.height)}px`,
-        ];
-
-        visibleLocations.forEach((location) => {
-          const rect = debugLocationPixelRect(location, mapRect);
-          lines.push(
-            `${location.id}: x=${rect.x}px, y=${rect.y}px, w=${rect.width}px, h=${rect.height}px, x%=${location.xPercent.toFixed(2)}, y%=${location.yPercent.toFixed(2)}`
-          );
-        });
-
-        if (includesJumpPair) {
-          const filters = debugJumpFrameFilterValues();
-          lines.push(
-            "Frame Jump L5/R5:",
-            `matiz=${filters.hueDeg}deg, saturacao=${filters.saturationPercent}%, brilho=${filters.brightnessPercent}%, contraste=${filters.contrastPercent}%, opacidade=${filters.opacityPercent}%`,
-            `sliders: matiz=${state.debugJumpFrameFilters.hue}, saturacao=${state.debugJumpFrameFilters.saturation}, brilho=${state.debugJumpFrameFilters.brightness}, contraste=${state.debugJumpFrameFilters.contrast}, opacidade=${state.debugJumpFrameFilters.opacity}`
-          );
-        }
-
-        return lines.join("\n");
-      }
-
-      async function copyTextToClipboard(text) {
         if (navigator.clipboard?.writeText) {
-          try {
-            await navigator.clipboard.writeText(text);
-            return;
-          } catch {
-            // Fall back to the legacy path below when browser permissions block the async clipboard API.
-          }
+          return navigator.clipboard.writeText(text);
         }
 
+        return Promise.reject(new Error("copy failed"));
+      }
+
+      function copyTextWithTextArea(text) {
         const textArea = document.createElement("textarea");
         textArea.value = text;
         textArea.setAttribute("readonly", "");
         textArea.style.position = "fixed";
         textArea.style.left = "-9999px";
+        textArea.style.top = "0";
         document.body.append(textArea);
+        textArea.focus({ preventScroll: true });
         textArea.select();
+        textArea.setSelectionRange(0, textArea.value.length);
         const copied = document.execCommand("copy");
         textArea.remove();
-
-        if (!copied) {
-          throw new Error("copy failed");
-        }
+        return copied;
       }
 
-      async function copyDebugLocationsSummary() {
-        const summary = buildDebugLocationsSummary();
-        try {
-          await copyTextToClipboard(summary);
-          el.debugStatus.textContent = "Resumo dos locais copiado.";
-        } catch {
-          el.debugStatus.textContent = "Nao foi possivel copiar os locais.";
+      function showAdvancedDebugToast(message) {
+        el.advancedDebugToast.textContent = message;
+        el.advancedDebugToast.classList.add("is-visible");
+        window.clearTimeout(advancedDebugState.toastTimer);
+        advancedDebugState.toastTimer = window.setTimeout(() => {
+          el.advancedDebugToast.classList.remove("is-visible");
+          advancedDebugState.toastTimer = null;
+        }, 1300);
+      }
+
+      function copyAdvancedTargetProperties(target = advancedDebugState.selectedTarget) {
+        if (!target || !target.isConnected) {
+          return;
         }
+
+        const targetRect = target.getBoundingClientRect();
+        const phoneRect = el.phone.getBoundingClientRect();
+        const computed = window.getComputedStyle(target);
+        const transform = advancedTargetTransform(target);
+        const lines = [
+          `target: ${advancedDebugState.selectedLabel || target.id || target.className}`,
+          `x: ${Math.round(targetRect.left - phoneRect.left)}px`,
+          `y: ${Math.round(targetRect.top - phoneRect.top)}px`,
+          `width: ${Math.round(targetRect.width)}px`,
+          `height: ${Math.round(targetRect.height)}px`,
+          `translateX: ${Math.round(transform.x)}px`,
+          `translateY: ${Math.round(transform.y)}px`,
+          `scale: ${Number(transform.scale.toFixed(3))}`,
+          `zIndex: ${computed.zIndex}`,
+          `animation: ${advancedDebugState.selectedAnimation}`,
+          `frame: ${advancedDebugState.currentFrame + 1}`,
+        ];
+
+        copyTextToClipboard(lines.join("\n"))
+          .then(() => showAdvancedDebugToast("Propriedades copiadas"))
+          .catch(() => showAdvancedDebugToast("Não foi possível copiar"));
+      }
+
+      function beginAdvancedSelectionDrag(mode, event) {
+        if (!isAdvancedDebugActive() || !advancedDebugState.selectedTarget) {
+          return;
+        }
+
+        const transform = advancedTargetTransform(advancedDebugState.selectedTarget);
+        const rect = advancedDebugState.selectedTarget.getBoundingClientRect();
+        advancedDebugState.drag = {
+          mode,
+          pointerId: event.pointerId,
+          startClientX: event.clientX,
+          startClientY: event.clientY,
+          startX: transform.x,
+          startY: transform.y,
+          startScale: transform.scale,
+          startSize: Math.max(rect.width, rect.height, 1),
+        };
+        el.advancedDebugSelection.setPointerCapture(event.pointerId);
+        event.preventDefault();
+      }
+
+      function handleAdvancedSelectionPointerMove(event) {
+        const drag = advancedDebugState.drag;
+        if (!drag || event.pointerId !== drag.pointerId || !advancedDebugState.selectedTarget) {
+          return;
+        }
+
+        const transform = advancedTargetTransform(advancedDebugState.selectedTarget);
+        const deltaX = event.clientX - drag.startClientX;
+        const deltaY = event.clientY - drag.startClientY;
+
+        if (drag.mode === "resize") {
+          const delta = Math.max(deltaX, deltaY);
+          transform.scale = Math.max(0.15, drag.startScale + delta / drag.startSize);
+        } else {
+          transform.x = drag.startX + deltaX;
+          transform.y = drag.startY + deltaY;
+        }
+
+        applyAdvancedTargetTransform(advancedDebugState.selectedTarget);
+      }
+
+      function handleAdvancedSelectionPointerEnd(event) {
+        const drag = advancedDebugState.drag;
+        if (!drag || event.pointerId !== drag.pointerId) {
+          return;
+        }
+
+        if (el.advancedDebugSelection.hasPointerCapture(event.pointerId)) {
+          el.advancedDebugSelection.releasePointerCapture(event.pointerId);
+        }
+        advancedDebugState.drag = null;
+      }
+
+      function setAdvancedStaticFrame(animationConfig, frames, frameIndex, label) {
+        clearSpriteAnimation("p1");
+        spriteAnimations.p1 = { timerId: null, advanced: true };
+        applySpriteDisplay("p1", animationConfig);
+        advancedDebugState.currentFrame = frameIndex;
+        if (frames[frameIndex]) {
+          el.p1Sprite.src = frames[frameIndex];
+        }
+        setAdvancedPreviewTarget(el.p1Fighter, label);
+      }
+
+      function playAdvancedFrameSequence(animationConfig, frames, label) {
+        if (!frames.length) {
+          return;
+        }
+
+        clearAdvancedDebugTimers();
+        clearSpriteAnimation("p1");
+        const playback = { timerId: null, advanced: true };
+        spriteAnimations.p1 = playback;
+        applySpriteDisplay("p1", animationConfig);
+        setAdvancedPreviewTarget(el.p1Fighter, label);
+
+        let frameIndex = 0;
+        const advance = () => {
+          if (spriteAnimations.p1 !== playback) {
+            return;
+          }
+
+          advancedDebugState.currentFrame = frameIndex;
+          el.p1Sprite.src = frames[frameIndex];
+          frameIndex += 1;
+
+          if (frameIndex < frames.length) {
+            playback.timerId = scheduleAdvancedDebug(advance, animationConfig.frameIntervalMs);
+          } else {
+            playback.timerId = null;
+            syncAdvancedSelectionFrame();
+          }
+        };
+
+        advance();
+      }
+
+      function advancedAnimationDefinition(option) {
+        const definitions = {
+          idle: { label: "Idle", animation: idleAnimation, frames: idleFrames },
+          getUp: { label: "Get Up", animation: getUpAnimation, frames: getUpFrames },
+          crouch: { label: "Crouch", animation: crouchAnimation, frames: crouchFrames },
+          jump: { label: "Jump", animation: jumpAnimation, frames: jumpFrames },
+        };
+
+        return definitions[option] || null;
+      }
+
+      function showAdvancedUltimateFrame(frameIndex = 0, options = {}) {
+        if (!options.preserveCinematic) {
+          clearUltimateCinematic();
+        }
+        if (!ultimateFrames.length) {
+          return;
+        }
+
+        advancedDebugState.currentFrame = frameIndex;
+        el.ultimateFrame.src = ultimateFrames[frameIndex];
+        el.ultimateCinematic.classList.add("is-active", "p1");
+        setAdvancedPreviewTarget(el.ultimateFrame, "Ultimate frames");
+      }
+
+      function showAdvancedUltimateTraceBg(options = {}) {
+        if (!options.preserveCinematic) {
+          clearUltimateCinematic();
+        }
+        if (ultimateFrames.length) {
+          advancedDebugState.currentFrame = 0;
+          el.ultimateFrame.src = ultimateFrames[0];
+        }
+        el.ultimateCinematic.classList.add("is-active", "p1");
+        setAdvancedPreviewTarget(el.ultimateLabelRed, "Ultimate traco bg");
+      }
+
+      function playAdvancedUltimatePreview() {
+        if (!ultimateFrames.length) {
+          return;
+        }
+
+        clearAdvancedDebugTimers();
+        clearUltimateCinematic();
+        el.ultimateCinematic.classList.add("is-active", "p1", "is-playing");
+        setAdvancedPreviewTarget(el.ultimateFrame, "Ultimate frames");
+
+        let frameIndex = 0;
+        const advance = () => {
+          advancedDebugState.currentFrame = frameIndex;
+          el.ultimateFrame.src = ultimateFrames[frameIndex];
+          frameIndex += 1;
+
+          if (frameIndex < ultimateFrames.length) {
+            scheduleAdvancedDebug(advance, ultimateAnimation.frameIntervalMs);
+          } else {
+            syncAdvancedSelectionFrame();
+          }
+        };
+
+        advance();
+      }
+
+      function showAdvancedBlockPreview() {
+        clearBlockShieldEffects();
+        el.p1BlockShield.classList.remove("is-visible");
+        void el.p1BlockShield.offsetWidth;
+        el.p1BlockShield.classList.add("is-visible");
+        setAdvancedPreviewTarget(el.p1BlockShield, "Escudo P1");
+      }
+
+      function showAdvancedComboHitPreview(play = false) {
+        clearComboHitEffect("p1");
+        el.p1ComboHitEffect.classList.add("is-visible");
+        if (comboHitFrames.length) {
+          el.p1ComboHitEffect.src = comboHitFrames[0];
+        }
+        setAdvancedPreviewTarget(el.p1ComboHitEffect, "Combo hit P1");
+
+        if (!play || !comboHitFrames.length) {
+          return;
+        }
+
+        clearAdvancedDebugTimers();
+        let frameIndex = 0;
+        const advance = () => {
+          advancedDebugState.currentFrame = frameIndex;
+          el.p1ComboHitEffect.src = comboHitFrames[frameIndex];
+          frameIndex += 1;
+
+          if (frameIndex < comboHitFrames.length) {
+            scheduleAdvancedDebug(advance, comboHitEffect.frameIntervalMs);
+          } else {
+            syncAdvancedSelectionFrame();
+          }
+        };
+
+        advance();
+      }
+
+      function playAdvancedAttackPreview(option) {
+        clearAdvancedDebugTimers();
+        clearSpriteAnimation("p1");
+        spriteAnimations.p1 = { timerId: null, advanced: true };
+        applySpriteDisplay("p1", idleAnimation);
+        el.p1Sprite.src = idleFrames[0] || el.p1Sprite.src;
+        el.p1Fighter.classList.remove("attack-left", "attack-right");
+        void el.p1Fighter.offsetWidth;
+        el.p1Fighter.classList.add("attack-left");
+        setAdvancedPreviewTarget(el.p1Fighter, `${option.toUpperCase()} aproximado`);
+
+        if (option === "combo") {
+          showAdvancedComboHitPreview(true);
+          setAdvancedPreviewTarget(el.p1Fighter, "Combo aproximado");
+        }
+
+        scheduleAdvancedDebug(() => {
+          el.p1Fighter.classList.remove("attack-left");
+          syncAdvancedSelectionFrame();
+        }, 390);
+      }
+
+      function prepareAdvancedAnimationPreview(option = advancedDebugState.selectedAnimation) {
+        const previousOption = advancedDebugState.selectedAnimation;
+        const isUltimateDebugPart = (value) => value === "ultimate" || value === "ultimateTraceBg";
+        const preserveUltimatePreview = isUltimateDebugPart(previousOption) && isUltimateDebugPart(option);
+
+        advancedDebugState.selectedAnimation = option;
+        el.advancedAnimationSelect.value = option;
+
+        if (!isAdvancedDebugActive()) {
+          syncAdvancedDebugUi();
+          return;
+        }
+
+        if (preserveUltimatePreview) {
+          clearAdvancedDebugTimers();
+        } else {
+          resetAdvancedDebugPreview();
+        }
+        advancedDebugState.selectedAnimation = option;
+        el.advancedAnimationSelect.value = option;
+
+        const definition = advancedAnimationDefinition(option);
+        if (definition) {
+          setAdvancedStaticFrame(definition.animation, definition.frames, 0, definition.label);
+        } else if (option === "ultimate") {
+          showAdvancedUltimateFrame(0, { preserveCinematic: preserveUltimatePreview });
+        } else if (option === "ultimateTraceBg") {
+          showAdvancedUltimateTraceBg({ preserveCinematic: preserveUltimatePreview });
+        } else if (option === "block") {
+          showAdvancedBlockPreview();
+        } else {
+          setAdvancedStaticFrame(idleAnimation, idleFrames, 0, `${option.toUpperCase()} aproximado`);
+        }
+
+        syncAdvancedDebugUi();
+      }
+
+      function playAdvancedAnimationPreview(option = advancedDebugState.selectedAnimation) {
+        if (!isAdvancedDebugActive()) {
+          return;
+        }
+
+        advancedDebugState.selectedAnimation = option;
+        const definition = advancedAnimationDefinition(option);
+
+        if (definition) {
+          playAdvancedFrameSequence(definition.animation, definition.frames, definition.label);
+          return;
+        }
+
+        if (option === "ultimate") {
+          playAdvancedUltimatePreview();
+          return;
+        }
+
+        if (option === "ultimateTraceBg") {
+          showAdvancedUltimateTraceBg();
+          return;
+        }
+
+        if (option === "block") {
+          showAdvancedBlockPreview();
+          return;
+        }
+
+        playAdvancedAttackPreview(option);
+      }
+
+      function createAdvancedStatePopup(side, label, kind) {
+        const popup = document.createElement("span");
+        popup.className = `state-float ${kind}${side === "center" ? " center" : ""} advanced-debug-persistent`;
+        popup.textContent = label;
+
+        const position = getStatePopupPosition(side, kind);
+        popup.style.left = `${position.left}px`;
+        popup.style.top = `${position.top}px`;
+        el.statePopupLayer.append(popup);
+        advancedDebugState.temporaryNodes.add(popup);
+        setAdvancedPreviewTarget(popup, label);
+      }
+
+      function showAdvancedCountdown(side = "p1") {
+        clearAdvancedDebugTimers();
+        const countdown = guaranteedCountdownElement(side);
+        let value = 3;
+        countdown.textContent = String(value);
+        countdown.classList.add("is-visible");
+        setAdvancedPreviewTarget(countdown, `Contador ${side.toUpperCase()}`);
+
+        const advance = () => {
+          value -= 1;
+          if (value < 1) {
+            syncAdvancedSelectionFrame();
+            return;
+          }
+
+          countdown.classList.remove("is-visible");
+          void countdown.offsetWidth;
+          countdown.textContent = String(value);
+          countdown.classList.add("is-visible");
+          scheduleAdvancedDebug(advance, 720);
+        };
+
+        scheduleAdvancedDebug(advance, 720);
+      }
+
+      function showAdvancedEffect(effect) {
+        if (!isAdvancedDebugActive()) {
+          return;
+        }
+
+        if (effect === "clear") {
+          resetAdvancedDebugPreview();
+          prepareAdvancedAnimationPreview(advancedDebugState.selectedAnimation);
+          return;
+        }
+
+        const effects = {
+          "plus-p1": () => createAdvancedStatePopup("p1", "PLUS", "plus"),
+          "plus-p2": () => createAdvancedStatePopup("p2", "PLUS", "plus"),
+          neutral: () => createAdvancedStatePopup("center", "NEUTRO", "neutral"),
+          "guaranteed-p1": () => createAdvancedStatePopup("p1", "GOLPE GARANTIDO", "guaranteed"),
+          "guaranteed-p2": () => createAdvancedStatePopup("p2", "GOLPE GARANTIDO", "guaranteed"),
+          "countdown-p1": () => showAdvancedCountdown("p1"),
+          "shield-p1": () => showAdvancedBlockPreview(),
+          "combo-hit-p1": () => showAdvancedComboHitPreview(true),
+          "ultimate-p1": () => playAdvancedUltimatePreview(),
+        };
+
+        effects[effect]?.();
+        syncAdvancedDebugUi();
       }
 
       function resetChoosingTimerStart() {
@@ -4521,7 +4407,7 @@
 
         el.actionButtons.forEach((button) => {
           const isSelected = button.dataset.action === state.selectedAction;
-          const isDisabled = state.phase !== "choosing" || !canUseAction("p1", button.dataset.action);
+          const isDisabled = isAdvancedDebugActive() || state.phase !== "choosing" || !canUseAction("p1", button.dataset.action);
           button.classList.toggle("selected", isSelected);
           button.classList.toggle("disabled", isDisabled);
           button.disabled = isDisabled;
@@ -4542,7 +4428,7 @@
           const action = button.dataset.action;
           const selectedAction = side === "p1" ? state.selectedAction : state.aiAction;
           const isSelected = selectedAction === action;
-          const isDisabled = !state.debugMode || state.phase !== "choosing" || !canUseAction(side, action);
+          const isDisabled = !state.debugMode || state.debugTab !== "basic" || state.phase !== "choosing" || !canUseAction(side, action);
 
           button.classList.toggle("selected", isSelected);
           button.disabled = isDisabled;
@@ -4575,6 +4461,13 @@
 
         if (state.phase !== "choosing") {
           el.debugStatus.textContent = "Resolvendo turno...";
+          return;
+        }
+
+        if (state.debugTab === "advanced") {
+          el.debugStatus.textContent = isAdvancedDebugActive()
+            ? "Debug avançado: prévias visuais ativas."
+            : "Debug avançado disponível durante a batalha.";
           return;
         }
 
@@ -4753,12 +4646,6 @@
       }
 
       function showStatePopups(result) {
-        const knockedDown = new Set(result.knockedDown || []);
-
-        knockedDown.forEach((side) => {
-          createStatePopup(side, "DERRUBADO", "knockdown");
-        });
-
         if (result.guaranteedTurn?.side) {
           createStatePopup(result.guaranteedTurn.side, "GOLPE GARANTIDO", "guaranteed");
           return;
@@ -5181,6 +5068,7 @@
       }
 
       function showGameOver() {
+        leaveAdvancedDebugMode();
         state.phase = "over";
         window.clearInterval(state.timerId);
         stopMusic();
@@ -5199,6 +5087,7 @@
       }
 
       function resetBattle() {
+        leaveAdvancedDebugMode();
         clearSpriteAnimations();
         clearBlockShieldEffects();
         clearComboHitEffects();
@@ -5220,6 +5109,7 @@
       }
 
       function exitBattleToMenu() {
+        leaveAdvancedDebugMode();
         clearSpriteAnimations();
         clearBlockShieldEffects();
         clearComboHitEffects();
@@ -5233,6 +5123,7 @@
       }
 
       function showStartScreen() {
+        leaveAdvancedDebugMode();
         window.clearInterval(state.timerId);
         clearUltimateCinematic();
         state.phase = "menu";
@@ -5258,6 +5149,7 @@
       }
 
       function showHelpScreen() {
+        leaveAdvancedDebugMode();
         window.clearInterval(state.timerId);
         state.phase = "help";
         el.startScreen.classList.add("is-hidden");
@@ -5269,6 +5161,7 @@
       }
 
       function showOptionsScreen() {
+        leaveAdvancedDebugMode();
         window.clearInterval(state.timerId);
         state.phase = "options";
         el.startScreen.classList.add("is-hidden");
@@ -5439,48 +5332,56 @@
         playSound("ui");
         handleDebugToggle();
       });
-      el.debugLocationsToggle.addEventListener("change", () => {
-        playSound("ui");
-        handleDebugLocationsToggle();
-      });
-      el.debugLocationButtons.forEach((button) => {
+      el.debugTabButtons.forEach((button) => {
         button.addEventListener("click", () => {
           playSound("ui");
-          toggleDebugLocation(button.dataset.debugLocationToggle);
+          setDebugTab(button.dataset.debugTab);
         });
       });
-      el.debugLocationInputs.forEach((input) => {
-        input.addEventListener("input", () => {
-          setDebugLocationCoordinateFromInput(input);
-        });
-        input.addEventListener("change", () => {
-          if (input.value.trim() === "") {
-            syncDebugLocationsUi();
-            return;
-          }
-
-          setDebugLocationCoordinateFromInput(input);
-        });
-        input.addEventListener("keydown", handleDebugLocationCoordinateKeydown);
-      });
-      el.debugJumpFrameSliders.forEach((input) => {
-        input.addEventListener("input", () => {
-          setDebugJumpFrameFilterFromInput(input);
-        });
-        input.addEventListener("change", () => {
-          setDebugJumpFrameFilterFromInput(input);
+      el.advancedEffectButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          playSound("ui");
+          showAdvancedEffect(button.dataset.advancedEffect);
         });
       });
-      el.debugLocationNodes.forEach((node) => {
-        node.addEventListener("pointerdown", handleDebugLocationPointerDown);
-        node.addEventListener("pointermove", handleDebugLocationPointerMove);
-        node.addEventListener("pointerup", handleDebugLocationPointerEnd);
-        node.addEventListener("pointercancel", handleDebugLocationPointerEnd);
-        node.addEventListener("mousedown", handleDebugLocationMouseDown);
-      });
-      el.copyDebugLocationsButton.addEventListener("click", () => {
+      el.advancedAnimationSelect.addEventListener("change", () => {
         playSound("ui");
-        copyDebugLocationsSummary();
+        prepareAdvancedAnimationPreview(el.advancedAnimationSelect.value);
+      });
+      el.advancedAnimationPlayButton.addEventListener("click", () => {
+        playSound("ui");
+        playAdvancedAnimationPreview(el.advancedAnimationSelect.value);
+      });
+      el.advancedDebugSelection.addEventListener("pointerdown", (event) => {
+        if (event.button === 2) {
+          event.preventDefault();
+          copyAdvancedTargetProperties();
+          return;
+        }
+
+        if (event.button !== 0) {
+          return;
+        }
+
+        if (event.target === el.advancedDebugResizeHandle) {
+          return;
+        }
+
+        beginAdvancedSelectionDrag("move", event);
+      });
+      el.advancedDebugResizeHandle.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0) {
+          return;
+        }
+
+        event.stopPropagation();
+        beginAdvancedSelectionDrag("resize", event);
+      });
+      el.advancedDebugSelection.addEventListener("pointermove", handleAdvancedSelectionPointerMove);
+      el.advancedDebugSelection.addEventListener("pointerup", handleAdvancedSelectionPointerEnd);
+      el.advancedDebugSelection.addEventListener("pointercancel", handleAdvancedSelectionPointerEnd);
+      el.advancedDebugSelection.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
       });
       el.resetButton.addEventListener("click", () => {
         playSound("ui");
@@ -5544,10 +5445,10 @@
       document.addEventListener("pointerdown", activateAudioFromGesture, { once: true });
       document.addEventListener("fullscreenchange", handleFullscreenChange);
       document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
-      window.addEventListener("mousemove", handleDebugLocationMouseMove);
-      window.addEventListener("mouseup", handleDebugLocationMouseUp);
-      window.addEventListener("resize", syncDebugLocationsUi);
-
+      window.addEventListener("pointermove", handleAdvancedSelectionPointerMove);
+      window.addEventListener("pointerup", handleAdvancedSelectionPointerEnd);
+      window.addEventListener("pointercancel", handleAdvancedSelectionPointerEnd);
+      window.addEventListener("resize", syncAdvancedSelectionFrame);
       syncAudioToggleUi();
       showStartScreen();
     </script>
