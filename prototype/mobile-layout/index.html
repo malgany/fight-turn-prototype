@@ -24,7 +24,11 @@
       :root {
         --action-panel-backplate: url("../../assets/ui/action-panel/backplate.webp?v=20260603");
         --arena-background: url("../../assets/backgrounds/city-street-arena.webp");
-        --title-screen-art: url("../../assets/backgrounds/title-screen-fighters.png");
+        --title-screen-art: url("../../assets/backgrounds/title-screen-fighters.webp?v=20260605-1322");
+        --menu-button-play: url("../../assets/ui/menu/jogar.webp?v=20260605-1322");
+        --menu-button-help: url("../../assets/ui/menu/ajuda.webp?v=20260605-1322");
+        --menu-button-options: url("../../assets/ui/menu/opcoes.webp?v=20260605-1322");
+        --menu-button-exit: url("../../assets/ui/menu/sair.webp?v=20260605-1322");
         --panel: #101823;
         --panel-2: #192333;
         --line: #435067;
@@ -1114,6 +1118,19 @@
         100% { opacity: 1; transform: translateX(0) scale(1); }
       }
 
+      @keyframes menu-logo-pulse {
+        0%,
+        100% {
+          transform: scale(0.985);
+          filter: drop-shadow(0 12px 9px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 10px rgba(255, 28, 28, 0.18));
+        }
+
+        50% {
+          transform: scale(1.035);
+          filter: drop-shadow(0 16px 12px rgba(0, 0, 0, 0.58)) drop-shadow(0 0 20px rgba(255, 38, 38, 0.42));
+        }
+      }
+
       .resolution {
         top: 15.5%;
         z-index: 30;
@@ -1394,68 +1411,72 @@
       }
 
       .start-screen {
-        grid-template-rows: 1fr auto;
-        padding: 8% 7% 10%;
+        grid-template-rows: auto auto;
+        align-content: center;
+        gap: clamp(6px, 2.2cqw, 14px);
+        padding: 7% 7% 9%;
         background:
-          linear-gradient(to bottom, rgba(2, 7, 14, 0.18), rgba(2, 7, 14, 0.2) 36%, rgba(2, 7, 14, 0.78) 71%, rgba(2, 7, 14, 0.95)),
+          linear-gradient(to bottom, rgba(2, 7, 14, 0.02), rgba(2, 7, 14, 0.12) 30%, rgba(2, 7, 14, 0.52) 64%, rgba(2, 7, 14, 0.84)),
           var(--title-screen-art) center / cover no-repeat;
       }
 
       .title-stack {
         display: grid;
-        align-content: start;
+        align-content: center;
         justify-items: center;
-        padding-top: 3%;
+        padding-top: 0;
         text-align: center;
       }
 
       .game-title {
+        width: min(76%, 380px);
+        aspect-ratio: 1000 / 592;
         margin: 0;
-        color: #fff8d6;
-        font-size: clamp(42px, 14cqw, 76px);
-        line-height: 0.88;
-        letter-spacing: 0;
-        text-transform: uppercase;
-        text-shadow:
-          0 4px 0 #000,
-          0 0 18px rgba(255, 50, 42, 0.72),
-          0 0 28px rgba(67, 197, 200, 0.42);
+        display: block;
+        object-fit: contain;
+        animation: menu-logo-pulse 3.6s ease-in-out infinite;
+        transform-origin: center;
+        will-change: transform, filter;
       }
 
       .menu-actions {
         display: grid;
-        gap: clamp(10px, 3cqw, 18px);
+        justify-items: center;
+        gap: clamp(0px, 0.8cqw, 5px);
       }
 
       .menu-button {
-        width: 100%;
-        min-height: clamp(52px, 13cqw, 78px);
-        border: 3px solid #6d7f9d;
-        background: linear-gradient(#24354f, #111b2a);
-        color: #f2f6ff;
+        width: min(82%, 360px);
+        aspect-ratio: 960 / 300;
+        min-height: 0;
+        border: 0;
+        background: center / contain no-repeat;
+        color: transparent;
         font: inherit;
-        font-size: clamp(22px, 7cqw, 38px);
+        font-size: 0;
         line-height: 1;
         cursor: pointer;
-        text-shadow: 0 3px 0 #000;
-        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.07), 0 12px 0 rgba(0, 0, 0, 0.42);
+        text-shadow: none;
+        box-shadow: none;
+        filter: drop-shadow(0 10px 7px rgba(0, 0, 0, 0.46));
       }
 
       .menu-button.primary {
-        width: min(100%, 430px);
-        justify-self: center;
-        aspect-ratio: 1994 / 535;
-        min-height: 0;
-        padding: 0 14%;
-        border: 0;
-        background: url("../../assets/ui/menu/play-button-panel.png") center / 100% 100% no-repeat;
-        color: #fff7d0;
-        font-size: clamp(24px, 7cqw, 40px);
-        text-shadow:
-          0 3px 0 #000,
-          0 0 12px rgba(0, 0, 0, 0.7),
-          0 0 18px rgba(255, 236, 150, 0.6);
-        box-shadow: none;
+        background-image: var(--menu-button-play);
+      }
+
+      #helpButton {
+        background-image: var(--menu-button-help);
+      }
+
+      #optionsButton {
+        aspect-ratio: 960 / 248;
+        background-image: var(--menu-button-options);
+      }
+
+      #exitFullscreenButton {
+        aspect-ratio: 960 / 237;
+        background-image: var(--menu-button-exit);
       }
 
       .menu-button:disabled {
@@ -1485,7 +1506,7 @@
       .help-back:active,
       .audio-toggle:active {
         transform: translateY(3px);
-        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.07), 0 7px 0 rgba(0, 0, 0, 0.42);
+        filter: drop-shadow(0 6px 4px rgba(0, 0, 0, 0.5));
       }
 
       .help-screen,
@@ -1889,7 +1910,7 @@
     <main class="phone" aria-label="Fight Turn mobile battle layout prototype">
       <section class="screen start-screen" id="startScreen" aria-label="Tela inicial">
         <div class="title-stack">
-          <h1 class="game-title">Fight Turner</h1>
+          <img class="game-title" src="../../assets/ui/menu/logo.webp?v=20260605-1322" alt="Fight Turner">
         </div>
 
         <nav class="menu-actions" aria-label="Menu principal">
