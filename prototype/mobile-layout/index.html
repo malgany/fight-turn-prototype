@@ -33,6 +33,12 @@
         --menu-button-back: url("../../assets/ui/menu/voltar.webp?v=20260606-2045");
         --menu-button-restart: url("../../assets/ui/menu/reiniciar.webp?v=20260606-2045");
         --battle-over-panel-art: url("../../assets/ui/panels/battle-over-panel.webp?v=20260606-2045");
+        --character-select-bg: url("../../assets/ui/character-select/background.webp?v=20260606-select");
+        --character-select-title: url("../../assets/ui/character-select/title.webp?v=20260606-select");
+        --character-select-subtitle: url("../../assets/ui/character-select/subtitle.webp?v=20260606-select");
+        --character-select-card-frame: url("../../assets/ui/character-select/card-frame.webp?v=20260606-select-clean");
+        --character-select-back: url("../../assets/ui/character-select/back.webp?v=20260606-select");
+        --character-select-confirm: url("../../assets/ui/character-select/confirm.webp?v=20260606-select");
         --panel: #101823;
         --panel-2: #192333;
         --line: #435067;
@@ -535,8 +541,8 @@
       }
 
       .health {
-        --health-track-left: calc(-5% + 4px);
-        --health-track-right: calc(-10.52% + 4px);
+        --health-track-left: calc(-5% + 10px);
+        --health-track-right: calc(-10.52% + 10px);
         position: relative;
         height: clamp(18px, 5cqw, 34px);
         border: 0;
@@ -565,8 +571,8 @@
       }
 
       .fighter-hud.right .health {
-        --health-track-left: calc(-10.52% + 4px);
-        --health-track-right: calc(-5% + 4px);
+        --health-track-left: calc(-10.52% + 10px);
+        --health-track-right: calc(-5% + 10px);
       }
 
       .health-damage,
@@ -578,7 +584,7 @@
         right: var(--health-track-right);
         width: auto;
         transform: scaleX(var(--health-scale, 1));
-        transform-origin: left center;
+        transform-origin: right center;
       }
 
       .health-damage {
@@ -598,7 +604,7 @@
 
       .right .health-damage,
       .right .health-fill {
-        transform-origin: right center;
+        transform-origin: left center;
       }
 
       .health.is-damaged .health-damage {
@@ -962,6 +968,14 @@
         animation: attack-right 360ms ease;
       }
 
+      .fighter.special-lunge-left {
+        animation: special-lunge-left 980ms cubic-bezier(0.22, 0.9, 0.2, 1) both;
+      }
+
+      .fighter.special-lunge-right {
+        animation: special-lunge-right 980ms cubic-bezier(0.22, 0.9, 0.2, 1) both;
+      }
+
       .damage-float {
         position: absolute;
         left: 50%;
@@ -1189,6 +1203,20 @@
       @keyframes attack-right {
         0%, 100% { transform: translateX(0); }
         48% { transform: translateX(-38%); }
+      }
+
+      @keyframes special-lunge-left {
+        0% { transform: translateX(0); }
+        34% { transform: translateX(45%); }
+        58% { transform: translateX(42%); }
+        100% { transform: translateX(0); }
+      }
+
+      @keyframes special-lunge-right {
+        0% { transform: translateX(0); }
+        34% { transform: translateX(-45%); }
+        58% { transform: translateX(-42%); }
+        100% { transform: translateX(0); }
       }
 
       @keyframes sprite-damage-flash {
@@ -1573,6 +1601,7 @@
         text-shadow: none;
         box-shadow: none;
         filter: drop-shadow(0 7px 5px rgba(0, 0, 0, 0.48));
+        transition: filter 150ms ease, transform 150ms ease;
       }
 
       .reset-button {
@@ -1648,6 +1677,7 @@
         text-shadow: none;
         box-shadow: none;
         filter: drop-shadow(0 10px 7px rgba(0, 0, 0, 0.46));
+        transition: filter 150ms ease, transform 150ms ease;
       }
 
       .menu-button.primary {
@@ -1683,6 +1713,8 @@
       }
 
       .menu-button:focus-visible,
+      .character-card:focus-visible,
+      .character-select-button:focus-visible,
       .help-tab:focus-visible,
       .help-back:focus-visible,
       .battle-over-button:focus-visible,
@@ -1691,13 +1723,278 @@
         outline-offset: 5px;
       }
 
+      body.ui-input-locked .menu-button,
+      body.ui-input-locked .character-select-button,
+      body.ui-input-locked .help-tab,
+      body.ui-input-locked .help-back,
+      body.ui-input-locked .battle-over-button {
+        pointer-events: none;
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        .menu-button:hover:not(:disabled),
+        .character-select-button:hover:not(:disabled),
+        .help-back:hover:not(:disabled),
+        .battle-over-button:hover:not(:disabled) {
+          transform: translateY(-2px) scale(1.045);
+          filter: brightness(1.08) drop-shadow(0 14px 10px rgba(0, 0, 0, 0.54));
+        }
+
+        .help-tab:hover:not(:disabled) {
+          transform: translateY(-2px) scale(1.035);
+          filter: brightness(1.1);
+          box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.1), 0 10px 0 rgba(0, 0, 0, 0.42);
+        }
+
+        .character-card:hover:not(.is-locked) {
+          transform: translateY(-2px) scale(1.025);
+          filter: brightness(1.04);
+        }
+
+        .character-card.is-selected:hover:not(.is-locked) {
+          filter: brightness(1.1);
+        }
+
+        .audio-toggle:hover {
+          transform: translateY(-2px) scale(1.02);
+          filter: brightness(1.08);
+        }
+
+        .fullscreen-play-button:hover {
+          transform: translateY(-2px) scale(1.05);
+          filter: brightness(1.08);
+        }
+
+        .action:not(.disabled):hover {
+          scale: 1.07;
+        }
+
+        .action:not(.disabled):hover::before {
+          filter: brightness(1.18) drop-shadow(0 0 13px rgba(99, 215, 255, 0.42));
+          transform: translateY(-2%);
+        }
+      }
+
       .menu-button:active,
+      .menu-button.is-pressing,
       .help-tab:active,
+      .help-tab.is-pressing,
+      .character-select-button:active,
+      .character-select-button.is-pressing,
+      .character-card:not(.is-locked):active,
       .help-back:active,
+      .help-back.is-pressing,
       .battle-over-button:active,
+      .battle-over-button.is-pressing,
       .audio-toggle:active {
         transform: translateY(3px);
         filter: drop-shadow(0 6px 4px rgba(0, 0, 0, 0.5));
+      }
+
+      .character-select-screen {
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        gap: clamp(5px, 1.3cqw, 9px);
+        padding: 3.8% 5.4% 4.8%;
+        background:
+          linear-gradient(to bottom, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.42) 78%, rgba(0, 0, 0, 0.54)),
+          var(--character-select-bg) center / cover no-repeat;
+        overflow: hidden;
+      }
+
+      .character-select-title-art,
+      .character-select-subtitle-art {
+        justify-self: center;
+        display: block;
+        object-fit: contain;
+        filter: drop-shadow(0 7px 5px rgba(0, 0, 0, 0.58));
+      }
+
+      .character-select-title-art {
+        width: min(54%, 285px);
+        aspect-ratio: 1000 / 592;
+        margin-top: -2%;
+        animation: menu-logo-pulse 3.6s ease-in-out infinite;
+        transform-origin: center;
+        will-change: transform, filter;
+      }
+
+      .character-select-subtitle-art {
+        width: min(88%, 500px);
+        aspect-ratio: 2048 / 682;
+        margin-top: -8%;
+      }
+
+      .character-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        gap: clamp(8px, 2.1cqw, 13px);
+        min-height: 0;
+        padding: 0 1%;
+      }
+
+      .character-card {
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: #ffffff;
+        font: inherit;
+        cursor: pointer;
+        filter: grayscale(1) brightness(0.82);
+        transition: filter 150ms ease, transform 150ms ease;
+      }
+
+      .character-card.is-selected {
+        filter: none;
+      }
+
+      .character-card.is-locked {
+        cursor: not-allowed;
+      }
+
+      .character-card::before {
+        content: "";
+        position: absolute;
+        inset: 7.5% 7.2% 8.4%;
+        background:
+          radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.96) 0 32%, transparent 33%),
+          repeating-radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.2) 0 1px, transparent 1px 7px),
+          linear-gradient(135deg, transparent 0 32%, rgba(218, 22, 22, 0.72) 33% 35%, transparent 36%),
+          linear-gradient(45deg, transparent 0 37%, rgba(0, 0, 0, 0.78) 38% 40%, transparent 41%),
+          #f5f2ec;
+        clip-path: polygon(2% 0, 98% 0, 100% 2%, 100% 98%, 98% 100%, 2% 100%, 0 98%, 0 2%);
+      }
+
+      .character-card-frame {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--character-select-card-frame) center / 100% 100% no-repeat;
+        filter: drop-shadow(0 6px 4px rgba(0, 0, 0, 0.58));
+      }
+
+      .character-card.is-selected .character-card-frame {
+        filter:
+          drop-shadow(0 0 7px rgba(255, 21, 21, 0.95))
+          drop-shadow(0 0 16px rgba(255, 21, 21, 0.68))
+          drop-shadow(0 6px 4px rgba(0, 0, 0, 0.58));
+      }
+
+      .character-art {
+        position: absolute;
+        left: 50%;
+        bottom: 19%;
+        z-index: 1;
+        width: var(--character-width, 93%);
+        height: var(--character-height, 80%);
+        object-fit: contain;
+        object-position: center bottom;
+        transform: translateX(-50%) translate(var(--character-x, 0), var(--character-y, 0)) scale(var(--character-scale, 1));
+        transform-origin: center bottom;
+        pointer-events: none;
+        filter: drop-shadow(0 8px 5px rgba(0, 0, 0, 0.68));
+      }
+
+      .character-art.ninja {
+        --character-width: 104%;
+        --character-height: 87%;
+        --character-y: 1%;
+      }
+
+      .character-art.shaman {
+        --character-width: 116%;
+        --character-height: 91%;
+        --character-y: 2%;
+      }
+
+      .character-art.urban {
+        --character-width: 108%;
+        --character-height: 84%;
+        --character-y: 3%;
+      }
+
+      .character-art.coming-soon {
+        --character-width: 109%;
+        --character-height: 86%;
+        --character-y: 3%;
+      }
+
+      .character-nameplate {
+        position: absolute;
+        left: 9%;
+        right: 9%;
+        bottom: 4.8%;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        min-height: clamp(30px, 8.3cqw, 45px);
+        padding: 0.12rem 0.35rem;
+        border: clamp(2px, 0.8cqw, 4px) solid #f2f2f2;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 28%),
+          linear-gradient(#2a2c31, #0b0c0e 62%, #050506);
+        color: #ffffff;
+        font-size: clamp(15px, 4.5cqw, 24px);
+        font-weight: 900;
+        line-height: 0.92;
+        text-align: center;
+        text-shadow: 0 3px 0 #000, 1px 1px 0 #e01818;
+        box-shadow:
+          0 4px 0 rgba(0, 0, 0, 0.55),
+          inset 0 0 0 2px rgba(0, 0, 0, 0.5);
+        transform: skewX(-8deg);
+      }
+
+      .character-card.is-selected .character-nameplate {
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 28%),
+          linear-gradient(#e03333, #b70f17 55%, #5f0508);
+      }
+
+      .character-nameplate span {
+        display: block;
+        transform: skewX(8deg);
+      }
+
+      .character-select-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: end;
+        gap: clamp(16px, 4.5cqw, 26px);
+        padding: 0 2%;
+      }
+
+      .character-select-button {
+        width: 100%;
+        aspect-ratio: 2048 / 682;
+        min-height: 0;
+        border: 0;
+        padding: 0;
+        background: center / contain no-repeat;
+        color: transparent;
+        font: inherit;
+        font-size: 0;
+        cursor: pointer;
+        filter: drop-shadow(0 9px 6px rgba(0, 0, 0, 0.58));
+        transition: filter 150ms ease, transform 150ms ease;
+      }
+
+      .character-select-button.back {
+        background-image: var(--character-select-back);
+      }
+
+      .character-select-button.confirm {
+        background-image: var(--character-select-confirm);
+      }
+
+      .character-select-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.48;
+        filter: grayscale(1) brightness(0.78);
       }
 
       .help-screen,
@@ -1750,6 +2047,7 @@
         cursor: pointer;
         text-shadow: 0 2px 0 #000, 1px 1px 0 #e01818;
         box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.06), 0 7px 0 rgba(0, 0, 0, 0.45);
+        transition: filter 150ms ease, transform 150ms ease, box-shadow 150ms ease;
       }
 
       .help-tab.is-active {
@@ -1901,6 +2199,7 @@
         text-shadow: none;
         box-shadow: none;
         filter: drop-shadow(0 10px 7px rgba(0, 0, 0, 0.48));
+        transition: filter 150ms ease, transform 150ms ease;
       }
 
       .option-card {
@@ -1939,6 +2238,7 @@
         cursor: pointer;
         text-shadow: 0 2px 0 #000;
         box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.06), 0 8px 0 rgba(0, 0, 0, 0.42);
+        transition: filter 150ms ease, transform 150ms ease;
       }
 
       .audio-toggle-label {
@@ -2054,6 +2354,7 @@
           0 0 26px rgba(255, 41, 41, 0.55),
           inset 0 0 0 5px rgba(255, 255, 255, 0.08);
         cursor: pointer;
+        transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
       }
 
       .fullscreen-play-button:active {
@@ -2116,6 +2417,42 @@
           <button class="menu-button" type="button" id="helpButton">AJUDA</button>
           <button class="menu-button" type="button" id="optionsButton">OPÇÕES</button>
           <button class="menu-button mobile-exit-button" type="button" id="exitFullscreenButton">SAIR</button>
+        </nav>
+      </section>
+
+      <section class="screen character-select-screen is-hidden" id="characterSelectScreen" aria-label="Seleção de personagem">
+        <img class="character-select-title-art" src="../../assets/ui/menu/logo.webp?v=20260605-1630" alt="Final Genesis" draggable="false">
+        <img class="character-select-subtitle-art" src="../../assets/ui/character-select/subtitle.webp?v=20260606-select" alt="Escolha seu lutador" draggable="false">
+
+        <div class="character-grid" role="list" aria-label="Lutadores">
+          <button class="character-card is-selected" type="button" role="listitem" data-character="ninja" aria-pressed="true">
+            <span class="character-card-frame" aria-hidden="true"></span>
+            <img class="character-art ninja" src="../../assets/ui/character-select/fighter-ninja.webp?v=20260606-select" alt="" draggable="false">
+            <span class="character-nameplate"><span>NINJA</span></span>
+          </button>
+
+          <button class="character-card" type="button" role="listitem" data-character="itzcoatl" aria-pressed="false">
+            <span class="character-card-frame" aria-hidden="true"></span>
+            <img class="character-art shaman" src="../../assets/ui/character-select/fighter-shaman.webp?v=20260606-select" alt="" draggable="false">
+            <span class="character-nameplate"><span>ITZCÓATL</span></span>
+          </button>
+
+          <button class="character-card is-locked" type="button" role="listitem" data-character="urban" aria-pressed="false" aria-disabled="true">
+            <span class="character-card-frame" aria-hidden="true"></span>
+            <img class="character-art urban" src="../../assets/ui/character-select/fighter-urban.webp?v=20260606-select" alt="" draggable="false">
+            <span class="character-nameplate"><span>URBANO</span></span>
+          </button>
+
+          <button class="character-card is-locked" type="button" role="listitem" data-character="coming-soon" aria-pressed="false" aria-disabled="true">
+            <span class="character-card-frame" aria-hidden="true"></span>
+            <img class="character-art coming-soon" src="../../assets/ui/character-select/fighter-coming-soon.webp?v=20260606-select" alt="" draggable="false">
+            <span class="character-nameplate"><span>EM BREVE</span></span>
+          </button>
+        </div>
+
+        <nav class="character-select-actions" aria-label="Ações da seleção de personagem">
+          <button class="character-select-button back" type="button" id="characterBackButton">VOLTAR</button>
+          <button class="character-select-button confirm" type="button" id="characterConfirmButton">CONFIRMAR</button>
         </nav>
       </section>
 
@@ -2198,7 +2535,7 @@
             <article class="rule-card">
               <h3 class="rule-title"><img class="rule-icon" src="../../assets/ui/action-panel/buttons/jump.webp" alt="">JUMP</h3>
               <div class="rule-text">
-                <p>Escapa de <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/grab.webp" alt="">GRAB</span> e garante 3s para escolher qualquer opção. É arriscado: <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/combo.webp" alt="">COMBO</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/special.webp" alt="">SPECIAL</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/super.webp" alt="">ULTIMATE</span> pegam no ar.</p>
+                <p>Escapa de <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/grab.webp" alt="">GRAB</span> e garante 3s para escolher qualquer opção. É arriscado: <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/combo.webp" alt="">COMBO</span>, <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/special.webp" alt="">ESPECIAL</span> e <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/super.webp" alt="">ULTIMATE</span> pegam no ar. É interrompido por <span class="inline-rule"><img src="../../assets/ui/action-panel/buttons/poke.webp" alt="">POKE</span>.</p>
               </div>
             </article>
           </div>
@@ -2557,7 +2894,10 @@
       const RESULT_REVEAL_DELAY = 720;
       const HEALTH_TRAIL_DELAY = 3000;
       const GET_UP_FIRST_FRAME_HOLD = 1000;
-      const CHARACTER_CONFIG_PATH = "../../assets/characters/ninja/ninja.json?v=20260605-speed";
+      const CHARACTER_CONFIGS = {
+        ninja: "../../assets/characters/ninja/ninja.json?v=20260606-special-impact-frame56",
+        itzcoatl: "../../assets/characters/itzcoatl/itzcoatl.json?v=20260606-itzcoatl",
+      };
       const ULTIMATE_CINEMATIC_INTRO_MS = 680;
       const ULTIMATE_CINEMATIC_HOLD_MS = 1000;
       const ULTIMATE_CINEMATIC_EXIT_MS = 180;
@@ -2568,17 +2908,24 @@
       const MUSIC_STORAGE_KEY = "fightTurn.musicEnabled";
       const MUSIC_VOLUME_STORAGE_KEY = "fightTurn.musicVolume";
       const IRIS_TRANSITION_DURATION = 860;
-      const characterConfig = await loadCharacterConfig(CHARACTER_CONFIG_PATH);
-      const idleAnimation = characterConfig.animations.idle;
-      const getUpAnimation = characterConfig.animations.getUp;
-      const crouchAnimation = characterConfig.animations.crouch;
-      const jumpAnimation = characterConfig.animations.jump;
-      const ultimateAnimation = characterConfig.animations.ultimate;
-      const idleFrames = buildAnimationFrames(idleAnimation);
-      const getUpFrames = buildAnimationFrames(getUpAnimation);
-      const crouchFrames = buildAnimationFrames(crouchAnimation);
-      const jumpFrames = buildAnimationFrames(jumpAnimation);
-      const ultimateFrames = buildAnimationFrames(ultimateAnimation);
+      const MOBILE_UI_ACTION_DELAY = 650;
+      const characterConfigCache = new Map();
+      let activeCharacterId = "ninja";
+      let characterConfig = await loadCharacterConfig(CHARACTER_CONFIGS.ninja);
+      characterConfigCache.set(activeCharacterId, characterConfig);
+      let idleAnimation = null;
+      let getUpAnimation = null;
+      let crouchAnimation = null;
+      let jumpAnimation = null;
+      let specialAnimation = null;
+      let ultimateAnimation = null;
+      let idleFrames = [];
+      let getUpFrames = [];
+      let crouchFrames = [];
+      let jumpFrames = [];
+      let specialFrames = [];
+      let ultimateFrames = [];
+      setCharacterAssets(characterConfig);
       const comboHitEffect = {
         framePattern: "../../assets/effects/combo-hit/combo-hit-{frame}.webp",
         frameCount: 53,
@@ -2635,6 +2982,7 @@
         mobileFullscreenRequired,
         gameSessionActive: !mobileFullscreenRequired,
         startTransitionActive: false,
+        selectedCharacter: "ninja",
         selectedAction: null,
         aiAction: null,
         advantage: null,
@@ -2705,6 +3053,10 @@
         ultimateLabelRed: document.querySelector("#ultimateLabelRed"),
         ultimateFrame: document.querySelector("#ultimateFrame"),
         startScreen: document.querySelector("#startScreen"),
+        characterSelectScreen: document.querySelector("#characterSelectScreen"),
+        characterCards: [...document.querySelectorAll(".character-card")],
+        characterBackButton: document.querySelector("#characterBackButton"),
+        characterConfirmButton: document.querySelector("#characterConfirmButton"),
         helpScreen: document.querySelector("#helpScreen"),
         optionsScreen: document.querySelector("#optionsScreen"),
         helpTabs: [...document.querySelectorAll(".help-tab")],
@@ -2762,9 +3114,11 @@
       syncFullscreenGateUi();
 
       let idleFrameIndex = 0;
+      let idleTimerId = null;
       const spriteAnimations = { p1: null, p2: null };
       const ultimateCinematicState = { timers: [] };
       const comboHitEffectTimers = { p1: null, p2: null };
+      let mobileUiActionLocked = false;
       const audioState = {
         context: null,
         masterGain: null,
@@ -3318,7 +3672,7 @@
           return;
         }
 
-        if (state.phase === "menu" || state.phase === "help" || state.phase === "options") {
+        if (state.phase === "menu" || state.phase === "character-select" || state.phase === "help" || state.phase === "options") {
           startMusic("menu");
           return;
         }
@@ -3358,6 +3712,35 @@
         });
       }
 
+      function setCharacterAssets(config) {
+        characterConfig = config;
+        idleAnimation = characterConfig.animations.idle;
+        getUpAnimation = characterConfig.animations.getUp;
+        crouchAnimation = characterConfig.animations.crouch;
+        jumpAnimation = characterConfig.animations.jump;
+        specialAnimation = characterConfig.animations.special;
+        ultimateAnimation = characterConfig.animations.ultimate;
+        idleFrames = buildAnimationFrames(idleAnimation);
+        getUpFrames = buildAnimationFrames(getUpAnimation);
+        crouchFrames = buildAnimationFrames(crouchAnimation);
+        jumpFrames = buildAnimationFrames(jumpAnimation);
+        specialFrames = buildAnimationFrames(specialAnimation);
+        ultimateFrames = buildAnimationFrames(ultimateAnimation);
+      }
+
+      async function getCharacterConfig(characterId) {
+        const configPath = CHARACTER_CONFIGS[characterId];
+        if (!configPath) {
+          return null;
+        }
+
+        if (!characterConfigCache.has(characterId)) {
+          characterConfigCache.set(characterId, await loadCharacterConfig(configPath));
+        }
+
+        return characterConfigCache.get(characterId);
+      }
+
       function preloadFrames(frames) {
         frames.forEach((frame) => {
           const image = new Image();
@@ -3365,11 +3748,16 @@
         });
       }
 
-      preloadFrames(idleFrames);
-      preloadFrames(getUpFrames);
-      preloadFrames(crouchFrames);
-      preloadFrames(jumpFrames);
-      preloadFrames(ultimateFrames);
+      function preloadActiveCharacterFrames() {
+        preloadFrames(idleFrames);
+        preloadFrames(getUpFrames);
+        preloadFrames(crouchFrames);
+        preloadFrames(jumpFrames);
+        preloadFrames(specialFrames);
+        preloadFrames(ultimateFrames);
+      }
+
+      preloadActiveCharacterFrames();
       preloadFrames(comboHitFrames);
 
       function fighterSprite(side) {
@@ -3402,6 +3790,30 @@
       function clearSpriteAnimations() {
         clearSpriteAnimation("p1");
         clearSpriteAnimation("p2");
+        clearSpecialLunges();
+      }
+
+      function animationFrameDelay(animationConfig, frameIndex) {
+        if (
+          Number.isFinite(animationConfig.fastUntilFrame) &&
+          Number.isFinite(animationConfig.fastFrameIntervalMs) &&
+          frameIndex < animationConfig.fastUntilFrame
+        ) {
+          return animationConfig.fastFrameIntervalMs;
+        }
+
+        return animationConfig.frameIntervalMs;
+      }
+
+      function animationStartDelay(animationConfig, targetFrameIndex) {
+        const frameCount = Math.max(0, Math.min(animationConfig.frameCount || 0, targetFrameIndex));
+        let duration = 0;
+
+        for (let index = 0; index < frameCount; index += 1) {
+          duration += animationFrameDelay(animationConfig, index);
+        }
+
+        return duration;
       }
 
       function playSpriteAnimation(side, animationConfig, frames, { firstFrameHoldMs = 0, holdLastFrame = false } = {}) {
@@ -3420,7 +3832,7 @@
           playback.frameIndex += 1;
 
           if (playback.frameIndex < frames.length) {
-            playback.timerId = window.setTimeout(advance, animationConfig.frameIntervalMs);
+            playback.timerId = window.setTimeout(advance, animationFrameDelay(animationConfig, playback.frameIndex - 1));
             return;
           }
 
@@ -3433,7 +3845,7 @@
             if (spriteAnimations[side] === playback) {
               clearSpriteAnimation(side);
             }
-          }, animationConfig.frameIntervalMs);
+          }, animationFrameDelay(animationConfig, playback.frameIndex - 1));
         };
 
         if (firstFrameHoldMs > 0 && frames.length > 0) {
@@ -3451,7 +3863,7 @@
           return 0;
         }
 
-        return firstFrameHoldMs + frames.length * animationConfig.frameIntervalMs;
+        return firstFrameHoldMs + animationStartDelay(animationConfig, frames.length);
       }
 
       function playKnockdownAnimation(sides) {
@@ -3466,6 +3878,65 @@
 
       function playJumpAnimation(sides) {
         sides.forEach((side) => playSpriteAnimation(side, jumpAnimation, jumpFrames));
+      }
+
+      function fighterElement(side) {
+        return side === "p1" ? el.p1Fighter : el.p2Fighter;
+      }
+
+      const specialLungeTimers = { p1: null, p2: null };
+
+      function clearSpecialLunge(side) {
+        if (specialLungeTimers[side]) {
+          window.clearTimeout(specialLungeTimers[side]);
+          specialLungeTimers[side] = null;
+        }
+
+        fighterElement(side).classList.remove("special-lunge-left", "special-lunge-right");
+      }
+
+      function clearSpecialLunges() {
+        clearSpecialLunge("p1");
+        clearSpecialLunge("p2");
+      }
+
+      function playSpecialLunge(side) {
+        const fighter = fighterElement(side);
+        const lungeClass = side === "p1" ? "special-lunge-left" : "special-lunge-right";
+        clearSpecialLunge(side);
+        void fighter.offsetWidth;
+        fighter.classList.add(lungeClass);
+        window.setTimeout(() => {
+          fighter.classList.remove(lungeClass);
+        }, specialAnimation.lungeMs ?? 980);
+      }
+
+      function specialAnimationFrameDelay(frameNumber) {
+        const startFrame = frameNumber ?? Math.max(1, specialAnimation.frameCount - 20);
+        const startFrameIndex = Math.max(0, Math.min(specialAnimation.frameCount - 1, startFrame - 1));
+        return animationStartDelay(specialAnimation, startFrameIndex);
+      }
+
+      function scheduleSpecialLunge(side) {
+        if (activeCharacterId !== "ninja" || !Number.isFinite(specialAnimation.lungeStartFrame)) {
+          return;
+        }
+
+        const startDelay = specialAnimationFrameDelay(specialAnimation.lungeStartFrame);
+        if (specialLungeTimers[side]) {
+          window.clearTimeout(specialLungeTimers[side]);
+        }
+        specialLungeTimers[side] = window.setTimeout(() => {
+          specialLungeTimers[side] = null;
+          playSpecialLunge(side);
+        }, startDelay);
+      }
+
+      function playSpecialAnimation(sides) {
+        sides.forEach((side) => {
+          scheduleSpecialLunge(side);
+          playSpriteAnimation(side, specialAnimation, specialFrames);
+        });
       }
 
       function blockShieldElement(side) {
@@ -3586,10 +4057,15 @@
         return totalDurationMs;
       }
 
-      function playResponseAnimations(p1Action, p2Action) {
+      function specialConnects(side, action, result) {
+        return action === "Special" && result?.type === "hit" && result.winner === side;
+      }
+
+      function playResponseAnimations(p1Action, p2Action, result) {
         const crouchingSides = [];
         const jumpingSides = [];
         const blockingSides = [];
+        const specialSides = [];
 
         if (p1Action === "Block" && p2Action !== "Grab") {
           blockingSides.push("p1");
@@ -3615,12 +4091,21 @@
           jumpingSides.push("p2");
         }
 
+        if (specialConnects("p1", p1Action, result)) {
+          specialSides.push("p1");
+        }
+
+        if (specialConnects("p2", p2Action, result)) {
+          specialSides.push("p2");
+        }
+
         playCrouchAnimation(crouchingSides);
         playJumpAnimation(jumpingSides);
+        playSpecialAnimation(specialSides);
         showBlockShieldEffects(blockingSides);
       }
 
-      function responseAnimationBreak(p1Action, p2Action) {
+      function responseAnimationBreak(p1Action, p2Action, result) {
         let duration = 0;
 
         if (p1Action === "Crouch" || p2Action === "Crouch") {
@@ -3631,10 +4116,38 @@
           duration = Math.max(duration, animationPlaybackDuration(jumpFrames, jumpAnimation));
         }
 
+        if (specialConnects("p1", p1Action, result) || specialConnects("p2", p2Action, result)) {
+          duration = Math.max(duration, animationPlaybackDuration(specialFrames, specialAnimation));
+        }
+
         return duration + 120;
       }
 
+      function shouldUseNinjaSpecialImpact(result, winningAction) {
+        return activeCharacterId === "ninja" && result.type === "hit" && result.winner && winningAction === "Special";
+      }
+
+      function ninjaSpecialImpactDelay() {
+        return specialAnimationFrameDelay(specialAnimation.impactFrame ?? specialAnimation.lungeStartFrame);
+      }
+
+      function playTurnImpactFeedback(result, damageLosses, wasGuaranteedTurn) {
+        const knockedDown = result.knockedDown || [];
+        addSequenceDamage(damageLosses);
+        flashDamagedFighters(result.damaged || []);
+        playKnockdownAnimation(knockedDown);
+        if (knockedDown.length) {
+          playSound("knockdown");
+        }
+        showDamagePopups(damageLosses, { total: wasGuaranteedTurn });
+        updateHud();
+      }
+
       function updateIdleSprites() {
+        if (!idleFrames.length) {
+          return;
+        }
+
         idleFrameIndex = (idleFrameIndex + 1) % idleFrames.length;
         if (!spriteAnimations.p1) {
           el.p1Sprite.src = idleFrames[idleFrameIndex];
@@ -3644,9 +4157,28 @@
         }
       }
 
-      applySpriteDisplay("p1", idleAnimation);
-      applySpriteDisplay("p2", idleAnimation);
-      window.setInterval(updateIdleSprites, idleAnimation.frameIntervalMs);
+      function syncCharacterSpritesToIdle() {
+        idleFrameIndex = 0;
+        applySpriteDisplay("p1", idleAnimation);
+        applySpriteDisplay("p2", idleAnimation);
+        if (idleFrames.length) {
+          el.p1Sprite.src = idleFrames[0];
+          el.p2Sprite.src = idleFrames[0];
+        }
+        if (ultimateFrames.length) {
+          el.ultimateFrame.src = ultimateFrames[0];
+        }
+      }
+
+      function startIdleLoop() {
+        if (idleTimerId) {
+          window.clearInterval(idleTimerId);
+        }
+        idleTimerId = window.setInterval(updateIdleSprites, idleAnimation.frameIntervalMs);
+      }
+
+      syncCharacterSpritesToIdle();
+      startIdleLoop();
 
       const advantageFire = {
         animationFrame: null,
@@ -4240,6 +4772,9 @@
         spriteAnimations.p1 = playback;
         applySpriteDisplay("p1", animationConfig);
         setAdvancedPreviewTarget(el.p1Fighter, label);
+        if (animationConfig === specialAnimation) {
+          scheduleSpecialLunge("p1");
+        }
 
         let frameIndex = 0;
         const advance = () => {
@@ -4252,7 +4787,7 @@
           frameIndex += 1;
 
           if (frameIndex < frames.length) {
-            playback.timerId = scheduleAdvancedDebug(advance, animationConfig.frameIntervalMs);
+            playback.timerId = scheduleAdvancedDebug(advance, animationFrameDelay(animationConfig, frameIndex - 1));
           } else {
             playback.timerId = null;
             syncAdvancedSelectionFrame();
@@ -4268,6 +4803,7 @@
           getUp: { label: "Get Up", animation: getUpAnimation, frames: getUpFrames },
           crouch: { label: "Crouch", animation: crouchAnimation, frames: crouchFrames },
           jump: { label: "Jump", animation: jumpAnimation, frames: jumpFrames },
+          special: { label: "Special", animation: specialAnimation, frames: specialFrames },
         };
 
         return definitions[option] || null;
@@ -4686,6 +5222,11 @@
 
         if (state.phase === "menu") {
           el.debugStatus.textContent = "Clique JOGAR para iniciar o debug.";
+          return;
+        }
+
+        if (state.phase === "character-select") {
+          el.debugStatus.textContent = "Confirme um personagem para entrar no debug.";
           return;
         }
 
@@ -5156,14 +5697,12 @@
 
         const p1Action = state.selectedAction;
         const p2Action = state.aiAction;
-        const responseBreak = responseAnimationBreak(p1Action, p2Action);
         const beforeHealth = {
           p1: state.p1.health,
           p2: state.p2.health,
         };
         revealCpuToken();
         playSound("reveal");
-        playResponseAnimations(p1Action, p2Action);
 
         consumeSuper("p1", p1Action);
         consumeSuper("p2", p2Action);
@@ -5199,8 +5738,24 @@
           result = { type: "draw", primary: "NEUTRO", secondary: `${displayActionName(p1Action)} vs ${displayActionName(p2Action)}`, damaged: [] };
         }
 
+        const responseBreak = responseAnimationBreak(p1Action, p2Action, result);
+        playResponseAnimations(p1Action, p2Action, result);
+
         const winningAction = resultWinnerAction(result, p1Action, p2Action);
         const isUltimateHit = result.type === "hit" && winningAction === "Super";
+        const damageLosses = getDamageLosses(beforeHealth);
+        const useNinjaSpecialImpact = shouldUseNinjaSpecialImpact(result, winningAction);
+        let gameOverQueued = false;
+
+        if (useNinjaSpecialImpact) {
+          window.setTimeout(() => {
+            playTurnImpactFeedback(result, damageLosses, wasGuaranteedTurn);
+            if (state.p1.health <= 0 || state.p2.health <= 0) {
+              gameOverQueued = true;
+              window.setTimeout(showGameOver, 900);
+            }
+          }, ninjaSpecialImpactDelay());
+        }
 
         el.turnMeterFill.style.width = "0%";
         el.roundClock.textContent = "0";
@@ -5210,9 +5765,9 @@
           playTurnResultSound(result);
           const ultimateCinematicBreak = isUltimateHit ? playUltimateCinematic(result.winner) : 0;
 
-          if (result.type === "hit" && result.winner && !isUltimateHit) {
+          if (result.type === "hit" && result.winner && !isUltimateHit && winningAction !== "Special") {
             window.setTimeout(() => animateHit(result.winner), 250);
-            if (resultWinnerAction(result, p1Action, p2Action) === "Combo") {
+            if (winningAction === "Combo") {
               window.setTimeout(() => playComboHitEffect(result.loser), 250);
             }
           } else if (result.type === "trade") {
@@ -5221,20 +5776,20 @@
 
           window.setTimeout(() => {
             const knockedDown = result.knockedDown || [];
-            const damageLosses = getDamageLosses(beforeHealth);
-            addSequenceDamage(damageLosses);
-            flashDamagedFighters(result.damaged || []);
-            playKnockdownAnimation(knockedDown);
-            if (knockedDown.length) {
-              playSound("knockdown");
+            if (!useNinjaSpecialImpact) {
+              playTurnImpactFeedback(result, damageLosses, wasGuaranteedTurn);
             }
-            showDamagePopups(damageLosses, { total: wasGuaranteedTurn });
             showStatePopups(result);
             flashNotice(result.primary);
-            updateHud();
 
             if (state.p1.health <= 0 || state.p2.health <= 0) {
-              window.setTimeout(showGameOver, 900);
+              if (useNinjaSpecialImpact) {
+                return;
+              }
+
+              if (!gameOverQueued) {
+                window.setTimeout(showGameOver, 900);
+              }
               return;
             }
 
@@ -5373,8 +5928,60 @@
         clearUltimateCinematic();
         state.phase = "menu";
         el.startScreen.classList.remove("is-hidden");
+        el.characterSelectScreen.classList.add("is-hidden");
         el.helpScreen.classList.add("is-hidden");
         el.optionsScreen.classList.add("is-hidden");
+        syncMusicForPhase();
+        updateDebugPanel();
+      }
+
+      async function activateCharacter(characterId) {
+        const nextConfig = await getCharacterConfig(characterId);
+        if (!nextConfig) {
+          return false;
+        }
+
+        activeCharacterId = characterId;
+        setCharacterAssets(nextConfig);
+        preloadActiveCharacterFrames();
+        clearSpriteAnimations();
+        clearUltimateCinematic();
+        syncCharacterSpritesToIdle();
+        startIdleLoop();
+        return true;
+      }
+
+      function syncCharacterSelectionUi() {
+        el.characterCards.forEach((card) => {
+          const isSelected = card.dataset.character === state.selectedCharacter;
+          card.classList.toggle("is-selected", isSelected);
+          card.setAttribute("aria-pressed", String(isSelected));
+        });
+
+        el.characterConfirmButton.disabled = !CHARACTER_CONFIGS[state.selectedCharacter];
+      }
+
+      function selectCharacter(character) {
+        if (!CHARACTER_CONFIGS[character]) {
+          playSound("draw");
+          return;
+        }
+
+        state.selectedCharacter = character;
+        syncCharacterSelectionUi();
+        playSound("select");
+      }
+
+      function showCharacterSelectScreen() {
+        leaveAdvancedDebugMode();
+        window.clearInterval(state.timerId);
+        state.phase = "character-select";
+        state.selectedCharacter = "ninja";
+        el.startScreen.classList.add("is-hidden");
+        el.characterSelectScreen.classList.remove("is-hidden");
+        el.helpScreen.classList.add("is-hidden");
+        el.optionsScreen.classList.add("is-hidden");
+        syncCharacterSelectionUi();
         syncMusicForPhase();
         updateDebugPanel();
       }
@@ -5398,6 +6005,7 @@
         window.clearInterval(state.timerId);
         state.phase = "help";
         el.startScreen.classList.add("is-hidden");
+        el.characterSelectScreen.classList.add("is-hidden");
         el.helpScreen.classList.remove("is-hidden");
         el.optionsScreen.classList.add("is-hidden");
         setHelpTab("basic");
@@ -5410,6 +6018,7 @@
         window.clearInterval(state.timerId);
         state.phase = "options";
         el.startScreen.classList.add("is-hidden");
+        el.characterSelectScreen.classList.add("is-hidden");
         el.helpScreen.classList.add("is-hidden");
         el.optionsScreen.classList.remove("is-hidden");
         syncAudioToggleUi();
@@ -5429,8 +6038,38 @@
         });
       }
 
-      function setMenuButtonsDisabled(disabled) {
-        [el.playButton, el.helpButton, el.optionsButton].forEach((button) => {
+      function shouldDelayUiButtonAction() {
+        return window.matchMedia("(hover: none), (pointer: coarse)").matches;
+      }
+
+      function runUiButtonAction(button, action, { sound = true } = {}) {
+        if (button.disabled || mobileUiActionLocked) {
+          return;
+        }
+
+        if (sound) {
+          playSound("ui");
+        }
+
+        if (!shouldDelayUiButtonAction()) {
+          action();
+          return;
+        }
+
+        mobileUiActionLocked = true;
+        document.body.classList.add("ui-input-locked");
+        button.classList.add("is-pressing");
+
+        window.setTimeout(() => {
+          button.classList.remove("is-pressing");
+          document.body.classList.remove("ui-input-locked");
+          mobileUiActionLocked = false;
+          action();
+        }, MOBILE_UI_ACTION_DELAY);
+      }
+
+      function setCharacterSelectButtonsDisabled(disabled) {
+        [el.characterBackButton, el.characterConfirmButton, ...el.characterCards].forEach((button) => {
           button.disabled = disabled;
         });
       }
@@ -5504,28 +6143,34 @@
 
       function playGame() {
         el.startScreen.classList.add("is-hidden");
+        el.characterSelectScreen.classList.add("is-hidden");
         el.helpScreen.classList.add("is-hidden");
         el.optionsScreen.classList.add("is-hidden");
         resetBattle();
       }
 
-      async function startGameFromMenu() {
-        if (state.startTransitionActive || state.phase !== "menu") {
+      async function startGameFromSelection() {
+        if (state.startTransitionActive || state.phase !== "character-select" || !CHARACTER_CONFIGS[state.selectedCharacter]) {
           return;
         }
 
         state.startTransitionActive = true;
-        setMenuButtonsDisabled(true);
+        setCharacterSelectButtonsDisabled(true);
         playSound("ui");
 
-        const musicFade = fadeOutCurrentMusic(IRIS_TRANSITION_DURATION);
-
         try {
+          const characterLoaded = await activateCharacter(state.selectedCharacter);
+          if (!characterLoaded) {
+            return;
+          }
+
+          const musicFade = fadeOutCurrentMusic(IRIS_TRANSITION_DURATION);
           await runIrisTransition(playGame);
           await musicFade;
         } finally {
           state.startTransitionActive = false;
-          setMenuButtonsDisabled(false);
+          setCharacterSelectButtonsDisabled(false);
+          syncCharacterSelectionUi();
         }
       }
 
@@ -5629,23 +6274,30 @@
         event.preventDefault();
       });
       el.resetButton.addEventListener("click", () => {
-        playSound("ui");
-        resetBattle();
+        runUiButtonAction(el.resetButton, resetBattle);
       });
       el.exitBattleButton.addEventListener("click", () => {
-        playSound("ui");
-        exitBattleToMenu();
+        runUiButtonAction(el.exitBattleButton, exitBattleToMenu);
       });
       el.playButton.addEventListener("click", () => {
-        startGameFromMenu();
+        runUiButtonAction(el.playButton, showCharacterSelectScreen);
+      });
+      el.characterCards.forEach((card) => {
+        card.addEventListener("click", () => {
+          selectCharacter(card.dataset.character);
+        });
+      });
+      el.characterBackButton.addEventListener("click", () => {
+        runUiButtonAction(el.characterBackButton, showStartScreen);
+      });
+      el.characterConfirmButton.addEventListener("click", () => {
+        runUiButtonAction(el.characterConfirmButton, startGameFromSelection, { sound: false });
       });
       el.helpButton.addEventListener("click", () => {
-        playSound("ui");
-        showHelpScreen();
+        runUiButtonAction(el.helpButton, showHelpScreen);
       });
       el.optionsButton.addEventListener("click", () => {
-        playSound("ui");
-        showOptionsScreen();
+        runUiButtonAction(el.optionsButton, showOptionsScreen);
       });
       el.exitFullscreenButton.addEventListener("click", () => {
         leaveGameSession();
@@ -5655,17 +6307,14 @@
       });
       el.helpTabs.forEach((tab) => {
         tab.addEventListener("click", () => {
-          playSound("ui");
-          setHelpTab(tab.dataset.helpTab);
+          runUiButtonAction(tab, () => setHelpTab(tab.dataset.helpTab));
         });
       });
       el.backFromHelpButton.addEventListener("click", () => {
-        playSound("ui");
-        showStartScreen();
+        runUiButtonAction(el.backFromHelpButton, showStartScreen);
       });
       el.backFromOptionsButton.addEventListener("click", () => {
-        playSound("ui");
-        showStartScreen();
+        runUiButtonAction(el.backFromOptionsButton, showStartScreen);
       });
       el.audioToggle.addEventListener("change", () => {
         setAudioEnabled(el.audioToggle.checked);

@@ -1,0 +1,103 @@
+{
+  "id": "itzcoatl",
+  "name": "Itzcóatl",
+  "animations": {
+    "idle": {
+      "label": "Idle",
+      "framePattern": "../../assets/characters/itzcoatl-idle/itzcoatl-idle-{frame}.webp",
+      "frameCount": 59,
+      "framePad": 3,
+      "frameIntervalMs": 33,
+      "scale": 1.64,
+      "offsetXPercent": 0,
+      "offsetYPercent": 0,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": 12
+        },
+        "p2": {
+          "offsetXPercent": -12
+        }
+      }
+    },
+    "getUp": {
+      "label": "Get Up",
+      "framePattern": "../../assets/characters/itzcoatl-idle/itzcoatl-idle-{frame}.webp",
+      "frameCount": 59,
+      "framePad": 3,
+      "frameIntervalMs": 33,
+      "scale": 1.64,
+      "offsetXPercent": 0,
+      "offsetYPercent": 0,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": 12
+        },
+        "p2": {
+          "offsetXPercent": -12
+        }
+      }
+    },
+    "crouch": {
+      "label": "Crouch",
+      "framePattern": "../../assets/characters/itzcoatl-crouch/itzcoatl-crouch-{frame}.webp",
+      "frameCount": 140,
+      "framePad": 3,
+      "frameIntervalMs": 33,
+      "scale": 1.64,
+      "offsetXPercent": 0,
+      "offsetYPercent": 0,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": 12
+        },
+        "p2": {
+          "offsetXPercent": -12
+        }
+      }
+    },
+    "jump": {
+      "label": "Jump",
+      "framePattern": "../../assets/characters/itzcoatl-jump/itzcoatl-jump-{frame}.webp",
+      "frameCount": 64,
+      "framePad": 3,
+      "frameIntervalMs": 33,
+      "scale": 1.64,
+      "offsetXPercent": 0,
+      "offsetYPercent": 0,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": 12
+        },
+        "p2": {
+          "offsetXPercent": -12
+        }
+      }
+    },
+    "special": {
+      "label": "Special",
+      "framePattern": "../../assets/characters/itzcoatl-special/itzcoatl-special-{frame}.webp",
+      "frameCount": 149,
+      "framePad": 3,
+      "frameIntervalMs": 33,
+      "scale": 1.64,
+      "offsetXPercent": 0,
+      "offsetYPercent": 0,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": 12
+        },
+        "p2": {
+          "offsetXPercent": -12
+        }
+      }
+    },
+    "ultimate": {
+      "label": "Ultimate",
+      "framePattern": "../../assets/characters/itzcoatl-ultimate/itzcoatl-ultimate-{frame}.webp",
+      "frameCount": 176,
+      "framePad": 3,
+      "frameIntervalMs": 33
+    }
+  }
+}

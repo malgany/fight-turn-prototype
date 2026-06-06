@@ -59,6 +59,21 @@
         }
       }
     },
+    "special": {
+      "label": "Special",
+      "framePattern": "../../assets/characters/ninja-special/ninja-special-{frame}.webp",
+      "frameCount": 88,
+      "framePad": 3,
+      "frameIntervalMs": 66,
+      "fastUntilFrame": 55,
+      "fastFrameIntervalMs": 33,
+      "lungeStartFrame": 56,
+      "impactFrame": 56,
+      "lungeMs": 980,
+      "scale": 1,
+      "offsetXPercent": 0,
+      "offsetYPercent": 0
+    },
     "ultimate": {
       "label": "Ultimate",
       "framePattern": "../../assets/characters/ninja-ultimate/ninja-ultimate-{frame}.webp",
