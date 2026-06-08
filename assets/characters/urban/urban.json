@@ -1,0 +1,105 @@
+{
+  "id": "urban",
+  "name": "Urbano",
+  "animations": {
+    "idle": {
+      "label": "Idle",
+      "framePattern": "../../assets/characters/urban-idle/urban-idle-{frame}.webp",
+      "frameCount": 127,
+      "framePad": 3,
+      "frameIntervalMs": 33,
+      "scale": 1.6,
+      "offsetXPercent": 0,
+      "offsetYPercent": 0,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": 25
+        },
+        "p2": {
+          "offsetXPercent": -25
+        }
+      }
+    },
+    "getUp": {
+      "label": "Get Up",
+      "framePattern": "../../assets/characters/urban-get-up/urban-get-up-{frame}.webp",
+      "frameCount": 119,
+      "framePad": 3,
+      "frameIntervalMs": 33,
+      "scale": 1.6,
+      "offsetXPercent": 0,
+      "offsetYPercent": 0,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": 25
+        },
+        "p2": {
+          "offsetXPercent": -25
+        }
+      }
+    },
+    "crouch": {
+      "label": "Crouch",
+      "framePattern": "../../assets/characters/urban-crouch/urban-crouch-{frame}.webp",
+      "frameCount": 253,
+      "framePad": 3,
+      "frameIntervalMs": 13.2,
+      "scale": 1.6,
+      "offsetXPercent": 0,
+      "offsetYPercent": 0,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": 25
+        },
+        "p2": {
+          "offsetXPercent": -25
+        }
+      }
+    },
+    "jump": {
+      "label": "Jump",
+      "framePattern": "../../assets/characters/urban-jump/urban-jump-{frame}.webp",
+      "frameCount": 119,
+      "framePad": 3,
+      "frameIntervalMs": 33,
+      "scale": 1.6,
+      "offsetXPercent": 0,
+      "offsetYPercent": 0,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": 25
+        },
+        "p2": {
+          "offsetXPercent": -25
+        }
+      }
+    },
+    "special": {
+      "label": "Special",
+      "framePattern": "../../assets/characters/urban-special/urban-special-{frame}.webp",
+      "frameCount": 154,
+      "framePad": 3,
+      "frameIntervalMs": 33,
+      "scale": 2.56,
+      "offsetXPercent": 0,
+      "offsetYPercent": 35,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": 60,
+          "offsetYPercent": 35
+        },
+        "p2": {
+          "offsetXPercent": -60,
+          "offsetYPercent": 35
+        }
+      }
+    },
+    "ultimate": {
+      "label": "Ultimate",
+      "framePattern": "../../assets/characters/urban-ultimate/urban-ultimate-{frame}.webp",
+      "frameCount": 176,
+      "framePad": 3,
+      "frameIntervalMs": 33
+    }
+  }
+}
