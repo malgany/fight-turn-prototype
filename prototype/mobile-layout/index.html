@@ -1389,7 +1389,7 @@
       .action {
         --x: 50%;
         --y: 50%;
-        --size: 17%;
+        --size: 23%;
         position: absolute;
         left: var(--x);
         top: var(--y);
@@ -1466,7 +1466,7 @@
       .action-label {
         position: absolute;
         left: 50%;
-        top: calc(100% + 6%);
+        top: calc(100% - 2%);
         translate: -50% 0;
         font-size: clamp(11px, 3.4cqw, 18px);
         line-height: 1;
@@ -1495,49 +1495,49 @@
       .action:nth-child(1) {
         --button-image: url("../../assets/ui/action-panel/buttons/poke.webp");
         --x: 17.8%;
-        --y: 28%;
+        --y: 25%;
       }
 
       .action:nth-child(2) {
         --button-image: url("../../assets/ui/action-panel/buttons/combo.webp");
         --x: 38.2%;
-        --y: 28%;
+        --y: 25%;
       }
 
       .action:nth-child(3) {
         --button-image: url("../../assets/ui/action-panel/buttons/grab.webp");
         --x: 58.4%;
-        --y: 28%;
+        --y: 25%;
       }
 
       .action:nth-child(4) {
         --button-image: url("../../assets/ui/action-panel/buttons/special.webp");
         --x: 79.5%;
-        --y: 28%;
+        --y: 25%;
       }
 
       .action:nth-child(5) {
         --button-image: url("../../assets/ui/action-panel/buttons/super.webp");
         --x: 17.8%;
-        --y: 66%;
+        --y: 72%;
       }
 
       .action:nth-child(6) {
         --button-image: url("../../assets/ui/action-panel/buttons/block.webp");
         --x: 38.2%;
-        --y: 66%;
+        --y: 72%;
       }
 
       .action:nth-child(7) {
         --button-image: url("../../assets/ui/action-panel/buttons/crouch.webp");
         --x: 58.4%;
-        --y: 66%;
+        --y: 72%;
       }
 
       .action:nth-child(8) {
         --button-image: url("../../assets/ui/action-panel/buttons/jump.webp");
         --x: 79.5%;
-        --y: 66%;
+        --y: 72%;
       }
 
       .action-hit {
@@ -1792,9 +1792,9 @@
       }
 
       .character-select-screen {
-        grid-template-rows: auto auto minmax(0, 1fr) auto;
-        gap: clamp(5px, 1.3cqw, 9px);
-        padding: 3.8% 5.4% 4.8%;
+        grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+        gap: clamp(4px, 1.05cqw, 8px);
+        padding: 3.1% 5% 4.2%;
         background:
           linear-gradient(to bottom, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.42) 78%, rgba(0, 0, 0, 0.54)),
           var(--character-select-bg) center / cover no-repeat;
@@ -1810,40 +1810,103 @@
       }
 
       .character-select-title-art {
-        width: min(54%, 285px);
+        width: min(50%, 260px);
         aspect-ratio: 1000 / 592;
-        margin-top: -2%;
+        margin-top: -3%;
         animation: menu-logo-pulse 3.6s ease-in-out infinite;
         transform-origin: center;
         will-change: transform, filter;
       }
 
       .character-select-subtitle-art {
-        width: min(88%, 500px);
+        width: min(83%, 460px);
         aspect-ratio: 2048 / 682;
-        margin-top: -8%;
+        margin-top: -9%;
+      }
+
+      .character-preview-stage {
+        position: relative;
+        min-height: 0;
+        display: grid;
+        place-items: end center;
+        overflow: visible;
+        pointer-events: none;
+      }
+
+      .character-preview-stage::after {
+        content: "";
+        position: absolute;
+        left: 14%;
+        right: 14%;
+        bottom: 1%;
+        height: 10%;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.45);
+        filter: blur(8px);
+      }
+
+      .character-preview-art {
+        position: relative;
+        z-index: 1;
+        width: var(--preview-width, min(94%, 440px));
+        height: var(--preview-height, 112%);
+        object-fit: contain;
+        object-position: center bottom;
+        transform: translate(var(--preview-x, 0), var(--preview-y, 3%)) scale(var(--preview-scale, 1));
+        transform-origin: center bottom;
+        filter: drop-shadow(0 17px 12px rgba(0, 0, 0, 0.72));
+        -webkit-mask-image: linear-gradient(to bottom, #000 0 84%, rgba(0, 0, 0, 0.82) 90%, transparent 100%);
+        mask-image: linear-gradient(to bottom, #000 0 84%, rgba(0, 0, 0, 0.82) 90%, transparent 100%);
+        transition: opacity 140ms ease, transform 180ms ease;
+      }
+
+      .character-preview-art.ninja {
+        --preview-width: min(92%, 430px);
+        --preview-y: -5%;
+        --preview-scale: 1.03;
+      }
+
+      .character-preview-art.shaman {
+        --preview-width: min(98%, 462px);
+        --preview-y: -4%;
+        --preview-scale: 1.03;
+      }
+
+      .character-preview-art.aton {
+        --preview-width: min(92%, 430px);
+        --preview-y: -5%;
+        --preview-scale: 1.02;
+      }
+
+      .character-preview-art.coming-soon {
+        --preview-width: min(88%, 410px);
+        --preview-y: -5%;
       }
 
       .character-grid {
+        position: relative;
+        z-index: 3;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        grid-template-rows: repeat(2, minmax(0, 1fr));
-        gap: clamp(8px, 2.1cqw, 13px);
-        min-height: 0;
-        padding: 0 1%;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-rows: auto;
+        align-items: end;
+        gap: clamp(5px, 1.3cqw, 8px);
+        padding: 0 0.5%;
       }
 
       .character-card {
         position: relative;
         min-width: 0;
         min-height: 0;
+        width: 100%;
+        aspect-ratio: 1122 / 1402;
         border: 0;
         padding: 0;
         background: transparent;
         color: #ffffff;
         font: inherit;
         cursor: pointer;
-        filter: grayscale(1) brightness(0.82);
+        filter: grayscale(1) brightness(0.68);
         transition: filter 150ms ease, transform 150ms ease;
       }
 
@@ -1871,10 +1934,12 @@
       .character-card-frame {
         position: absolute;
         inset: 0;
+        z-index: 2;
         width: 100%;
         height: 100%;
         background: var(--character-select-card-frame) center / 100% 100% no-repeat;
         filter: drop-shadow(0 6px 4px rgba(0, 0, 0, 0.58));
+        pointer-events: none;
       }
 
       .character-card.is-selected .character-card-frame {
@@ -1884,68 +1949,71 @@
           drop-shadow(0 6px 4px rgba(0, 0, 0, 0.58));
       }
 
+      .character-portrait-window {
+        position: absolute;
+        z-index: 1;
+        inset: 7.8% 7.6% 8.7%;
+        overflow: hidden;
+        clip-path: polygon(2% 0, 98% 0, 100% 2%, 100% 98%, 98% 100%, 2% 100%, 0 98%, 0 2%);
+        pointer-events: none;
+      }
+
       .character-art {
         position: absolute;
-        left: 50%;
-        bottom: 19%;
-        z-index: 1;
-        width: var(--character-width, 93%);
-        height: var(--character-height, 80%);
-        object-fit: contain;
-        object-position: center bottom;
-        transform: translateX(-50%) translate(var(--character-x, 0), var(--character-y, 0)) scale(var(--character-scale, 1));
-        transform-origin: center bottom;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: var(--character-position, center top);
+        transform: translate(var(--character-x, 0), var(--character-y, 0)) scale(var(--character-zoom, 1.6));
+        transform-origin: center top;
         pointer-events: none;
-        filter: drop-shadow(0 8px 5px rgba(0, 0, 0, 0.68));
       }
 
       .character-art.ninja {
-        --character-width: 104%;
-        --character-height: 87%;
-        --character-y: 1%;
+        --character-position: center 4%;
+        --character-zoom: 1.6;
       }
 
       .character-art.shaman {
-        --character-width: 116%;
-        --character-height: 91%;
-        --character-y: 2%;
+        --character-position: center 3%;
+        --character-zoom: 1.6;
       }
 
-      .character-art.urban {
-        --character-width: 108%;
-        --character-height: 84%;
-        --character-y: 3%;
+      .character-art.aton {
+        --character-position: center 4%;
+        --character-zoom: 1.6;
       }
 
       .character-art.coming-soon {
-        --character-width: 109%;
-        --character-height: 86%;
-        --character-y: 3%;
+        --character-position: center 2%;
+        --character-zoom: 1.6;
       }
 
       .character-nameplate {
         position: absolute;
-        left: 9%;
-        right: 9%;
-        bottom: 4.8%;
-        z-index: 2;
+        left: 8.5%;
+        right: 8.5%;
+        bottom: 5.2%;
+        z-index: 3;
         display: grid;
         place-items: center;
-        min-height: clamp(30px, 8.3cqw, 45px);
-        padding: 0.12rem 0.35rem;
-        border: clamp(2px, 0.8cqw, 4px) solid #f2f2f2;
+        min-height: clamp(18px, 4.6cqw, 25px);
+        padding: 0.08rem 0.16rem;
+        border: clamp(1px, 0.43cqw, 2px) solid #f2f2f2;
         background:
           linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 28%),
           linear-gradient(#2a2c31, #0b0c0e 62%, #050506);
         color: #ffffff;
-        font-size: clamp(15px, 4.5cqw, 24px);
+        font-size: clamp(7px, 2.35cqw, 12px);
         font-weight: 900;
         line-height: 0.92;
         text-align: center;
+        white-space: nowrap;
         text-shadow: 0 3px 0 #000, 1px 1px 0 #e01818;
         box-shadow:
-          0 4px 0 rgba(0, 0, 0, 0.55),
-          inset 0 0 0 2px rgba(0, 0, 0, 0.5);
+          0 3px 0 rgba(0, 0, 0, 0.55),
+          inset 0 0 0 1px rgba(0, 0, 0, 0.5);
         transform: skewX(-8deg);
       }
 
@@ -1961,6 +2029,8 @@
       }
 
       .character-select-actions {
+        position: relative;
+        z-index: 4;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         align-items: end;
@@ -2424,28 +2494,40 @@
         <img class="character-select-title-art" src="../../assets/ui/menu/logo.webp?v=20260605-1630" alt="Final Genesis" draggable="false">
         <img class="character-select-subtitle-art" src="../../assets/ui/character-select/subtitle.webp?v=20260606-select" alt="Escolha seu lutador" draggable="false">
 
+        <div class="character-preview-stage" aria-hidden="true">
+          <img class="character-preview-art ninja" id="characterPreviewArt" src="../../assets/ui/character-select/fighter-ninja.webp?v=20260606-select" alt="" draggable="false">
+        </div>
+
         <div class="character-grid" role="list" aria-label="Lutadores">
           <button class="character-card is-selected" type="button" role="listitem" data-character="ninja" aria-pressed="true">
             <span class="character-card-frame" aria-hidden="true"></span>
-            <img class="character-art ninja" src="../../assets/ui/character-select/fighter-ninja.webp?v=20260606-select" alt="" draggable="false">
+            <span class="character-portrait-window" aria-hidden="true">
+              <img class="character-art ninja" src="../../assets/ui/character-select/fighter-ninja.webp?v=20260606-select" alt="" draggable="false">
+            </span>
             <span class="character-nameplate"><span>NINJA</span></span>
           </button>
 
           <button class="character-card" type="button" role="listitem" data-character="itzcoatl" aria-pressed="false">
             <span class="character-card-frame" aria-hidden="true"></span>
-            <img class="character-art shaman" src="../../assets/ui/character-select/fighter-shaman.webp?v=20260606-select" alt="" draggable="false">
+            <span class="character-portrait-window" aria-hidden="true">
+              <img class="character-art shaman" src="../../assets/ui/character-select/fighter-shaman.webp?v=20260606-select" alt="" draggable="false">
+            </span>
             <span class="character-nameplate"><span>ITZCÓATL</span></span>
           </button>
 
-          <button class="character-card" type="button" role="listitem" data-character="urban" aria-pressed="false">
+          <button class="character-card" type="button" role="listitem" data-character="aton" aria-pressed="false">
             <span class="character-card-frame" aria-hidden="true"></span>
-            <img class="character-art urban" src="../../assets/ui/character-select/fighter-urban.webp?v=20260606-select" alt="" draggable="false">
-            <span class="character-nameplate"><span>URBANO</span></span>
+            <span class="character-portrait-window" aria-hidden="true">
+              <img class="character-art aton" src="../../assets/ui/character-select/fighter-urban.webp?v=20260606-select" alt="" draggable="false">
+            </span>
+            <span class="character-nameplate"><span>ATON</span></span>
           </button>
 
           <button class="character-card is-locked" type="button" role="listitem" data-character="coming-soon" aria-pressed="false" aria-disabled="true">
             <span class="character-card-frame" aria-hidden="true"></span>
-            <img class="character-art coming-soon" src="../../assets/ui/character-select/fighter-coming-soon.webp?v=20260606-select" alt="" draggable="false">
+            <span class="character-portrait-window" aria-hidden="true">
+              <img class="character-art coming-soon" src="../../assets/ui/character-select/fighter-coming-soon-face-question.webp?v=20260608-face-question" alt="" draggable="false">
+            </span>
             <span class="character-nameplate"><span>EM BREVE</span></span>
           </button>
         </div>
@@ -2895,9 +2977,9 @@
       const HEALTH_TRAIL_DELAY = 3000;
       const GET_UP_FIRST_FRAME_HOLD = 1000;
       const CHARACTER_CONFIGS = {
-        ninja: "../../assets/characters/ninja/ninja.json?v=20260606-special-impact-frame56",
+        ninja: "../../assets/characters/ninja/ninja.json?v=20260608-refeito-special",
         itzcoatl: "../../assets/characters/itzcoatl/itzcoatl.json?v=20260606-itzcoatl",
-        urban: "../../assets/characters/urban/urban.json?v=20260608-urban",
+        aton: "../../assets/characters/urban/urban.json?v=20260608-aton",
       };
       const ULTIMATE_CINEMATIC_INTRO_MS = 680;
       const ULTIMATE_CINEMATIC_HOLD_MS = 1000;
@@ -3055,6 +3137,7 @@
         ultimateFrame: document.querySelector("#ultimateFrame"),
         startScreen: document.querySelector("#startScreen"),
         characterSelectScreen: document.querySelector("#characterSelectScreen"),
+        characterPreviewArt: document.querySelector("#characterPreviewArt"),
         characterCards: [...document.querySelectorAll(".character-card")],
         characterBackButton: document.querySelector("#characterBackButton"),
         characterConfirmButton: document.querySelector("#characterConfirmButton"),
@@ -5953,11 +6036,22 @@
       }
 
       function syncCharacterSelectionUi() {
+        let selectedCard = null;
         el.characterCards.forEach((card) => {
           const isSelected = card.dataset.character === state.selectedCharacter;
           card.classList.toggle("is-selected", isSelected);
           card.setAttribute("aria-pressed", String(isSelected));
+          if (isSelected) {
+            selectedCard = card;
+          }
         });
+
+        if (selectedCard && el.characterPreviewArt) {
+          const selectedArt = selectedCard.querySelector(".character-art");
+          const characterClasses = [...selectedArt.classList].filter((className) => className !== "character-art");
+          el.characterPreviewArt.src = selectedArt.getAttribute("src");
+          el.characterPreviewArt.className = ["character-preview-art", ...characterClasses].join(" ");
+        }
 
         el.characterConfirmButton.disabled = !CHARACTER_CONFIGS[state.selectedCharacter];
       }
