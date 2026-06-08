@@ -13,10 +13,10 @@
       "offsetYPercent": 0,
       "sideOffsets": {
         "p1": {
-          "offsetXPercent": 25
+          "offsetXPercent": 10
         },
         "p2": {
-          "offsetXPercent": -25
+          "offsetXPercent": -10
         }
       }
     },
@@ -31,10 +31,10 @@
       "offsetYPercent": 0,
       "sideOffsets": {
         "p1": {
-          "offsetXPercent": 25
+          "offsetXPercent": 10
         },
         "p2": {
-          "offsetXPercent": -25
+          "offsetXPercent": -10
         }
       }
     },
@@ -49,10 +49,10 @@
       "offsetYPercent": 0,
       "sideOffsets": {
         "p1": {
-          "offsetXPercent": 25
+          "offsetXPercent": 10
         },
         "p2": {
-          "offsetXPercent": -25
+          "offsetXPercent": -10
         }
       }
     },
@@ -67,10 +67,10 @@
       "offsetYPercent": 0,
       "sideOffsets": {
         "p1": {
-          "offsetXPercent": 25
+          "offsetXPercent": 10
         },
         "p2": {
-          "offsetXPercent": -25
+          "offsetXPercent": -10
         }
       }
     },
@@ -85,11 +85,11 @@
       "offsetYPercent": 35,
       "sideOffsets": {
         "p1": {
-          "offsetXPercent": 60,
+          "offsetXPercent": 45,
           "offsetYPercent": 35
         },
         "p2": {
-          "offsetXPercent": -60,
+          "offsetXPercent": -45,
           "offsetYPercent": 35
         }
       }

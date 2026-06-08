@@ -66,9 +66,17 @@
       "framePad": 3,
       "frameIntervalMs": 33,
       "impactFrame": 72,
-      "scale": 1,
+      "scale": 1.84,
       "offsetXPercent": 0,
-      "offsetYPercent": 0
+      "offsetYPercent": 0,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": 35
+        },
+        "p2": {
+          "offsetXPercent": -35
+        }
+      }
     },
     "ultimate": {
       "label": "Ultimate",

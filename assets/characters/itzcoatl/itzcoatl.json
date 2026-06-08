@@ -22,8 +22,8 @@
     },
     "getUp": {
       "label": "Get Up",
-      "framePattern": "../../assets/characters/itzcoatl-idle/itzcoatl-idle-{frame}.webp",
-      "frameCount": 59,
+      "framePattern": "../../assets/characters/itzcoatl-get-up/itzcoatl-get-up-{frame}.webp?v=20260608-get-up",
+      "frameCount": 105,
       "framePad": 3,
       "frameIntervalMs": 33,
       "scale": 1.64,

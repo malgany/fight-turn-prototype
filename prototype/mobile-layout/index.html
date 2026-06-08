@@ -423,12 +423,51 @@
         inset: 7%;
         z-index: 0;
         background:
-          radial-gradient(circle at 50% 42%, #fff 0 48%, #f7f7f7 49% 68%, #d9d9d9 100%);
+          linear-gradient(135deg, #fff 0 48%, #f7f7f7 49% 68%, #d9d9d9 100%);
         box-shadow:
           inset 0 0 0 2px rgba(0, 0, 0, 0.78),
           inset 0 0 10px rgba(0, 0, 0, 0.24),
           0 1px 0 rgba(255, 255, 255, 0.42);
         pointer-events: none;
+      }
+
+      .portrait-art-window {
+        position: absolute;
+        inset: 12%;
+        z-index: 1;
+        overflow: hidden;
+        border-radius: 0;
+        background: #080b10;
+        box-shadow:
+          inset 0 0 0 1px rgba(0, 0, 0, 0.76),
+          inset 0 0 8px rgba(0, 0, 0, 0.34);
+        pointer-events: none;
+      }
+
+      .portrait-art {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: var(--portrait-position, center top);
+        transform: translate(var(--portrait-x, 0), var(--portrait-y, 0)) scale(var(--portrait-zoom, 1.9));
+        transform-origin: center top;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .portrait-art.ninja {
+        --portrait-position: center 4%;
+        --portrait-zoom: 1.95;
+      }
+
+      .portrait-art.shaman {
+        --portrait-position: center 2%;
+        --portrait-zoom: 1.82;
+      }
+
+      .portrait-art.aton {
+        --portrait-position: center 3%;
+        --portrait-zoom: 1.9;
       }
 
       .portrait-frame-image {
@@ -1910,7 +1949,9 @@
         transition: filter 150ms ease, transform 150ms ease;
       }
 
-      .character-card.is-selected {
+      .character-card.is-selected,
+      .character-card.is-p1-selected,
+      .character-card.is-p2-selected {
         filter: none;
       }
 
@@ -1942,11 +1983,49 @@
         pointer-events: none;
       }
 
-      .character-card.is-selected .character-card-frame {
+      .character-card.is-selected .character-card-frame,
+      .character-card.is-p1-selected .character-card-frame,
+      .character-card.is-p2-selected .character-card-frame {
         filter:
           drop-shadow(0 0 7px rgba(255, 21, 21, 0.95))
           drop-shadow(0 0 16px rgba(255, 21, 21, 0.68))
           drop-shadow(0 6px 4px rgba(0, 0, 0, 0.58));
+      }
+
+      .character-selection-badge {
+        position: absolute;
+        top: 5.5%;
+        z-index: 4;
+        display: none;
+        min-width: clamp(18px, 5cqw, 26px);
+        padding: 0.06rem 0.18rem 0.1rem;
+        border: 1px solid #f7fbff;
+        border-radius: 3px;
+        font-size: clamp(8px, 2.5cqw, 13px);
+        font-weight: 900;
+        line-height: 1;
+        text-align: center;
+        text-shadow: 0 2px 0 #000;
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.62);
+        pointer-events: none;
+      }
+
+      .character-selection-badge.p1 {
+        left: 7%;
+        background: linear-gradient(#5edcff, #1267ff);
+        color: #ffffff;
+      }
+
+      .character-selection-badge.p2 {
+        right: 7%;
+        background: linear-gradient(#ff5959, #b40713);
+        color: #ffffff;
+      }
+
+      .character-card.is-p1-selected .character-selection-badge.p1,
+      .character-card.is-p2-selected .character-selection-badge.p2 {
+        display: inline-grid;
+        place-items: center;
       }
 
       .character-portrait-window {
@@ -2495,30 +2574,36 @@
         <img class="character-select-subtitle-art" src="../../assets/ui/character-select/subtitle.webp?v=20260606-select" alt="Escolha seu lutador" draggable="false">
 
         <div class="character-preview-stage" aria-hidden="true">
-          <img class="character-preview-art ninja" id="characterPreviewArt" src="../../assets/ui/character-select/fighter-ninja.webp?v=20260606-select" alt="" draggable="false">
+          <img class="character-preview-art ninja" id="characterPreviewArt" src="../../assets/ui/character-select/fighter-ninja.webp?v=20260608-despill" alt="" draggable="false">
         </div>
 
         <div class="character-grid" role="list" aria-label="Lutadores">
           <button class="character-card is-selected" type="button" role="listitem" data-character="ninja" aria-pressed="true">
             <span class="character-card-frame" aria-hidden="true"></span>
+            <span class="character-selection-badge p1" aria-hidden="true">P1</span>
+            <span class="character-selection-badge p2" aria-hidden="true">P2</span>
             <span class="character-portrait-window" aria-hidden="true">
-              <img class="character-art ninja" src="../../assets/ui/character-select/fighter-ninja.webp?v=20260606-select" alt="" draggable="false">
+              <img class="character-art ninja" src="../../assets/ui/character-select/fighter-ninja.webp?v=20260608-despill" alt="" draggable="false">
             </span>
             <span class="character-nameplate"><span>NINJA</span></span>
           </button>
 
           <button class="character-card" type="button" role="listitem" data-character="itzcoatl" aria-pressed="false">
             <span class="character-card-frame" aria-hidden="true"></span>
+            <span class="character-selection-badge p1" aria-hidden="true">P1</span>
+            <span class="character-selection-badge p2" aria-hidden="true">P2</span>
             <span class="character-portrait-window" aria-hidden="true">
-              <img class="character-art shaman" src="../../assets/ui/character-select/fighter-shaman.webp?v=20260606-select" alt="" draggable="false">
+              <img class="character-art shaman" src="../../assets/ui/character-select/fighter-shaman.webp?v=20260608-despill" alt="" draggable="false">
             </span>
             <span class="character-nameplate"><span>ITZCÓATL</span></span>
           </button>
 
           <button class="character-card" type="button" role="listitem" data-character="aton" aria-pressed="false">
             <span class="character-card-frame" aria-hidden="true"></span>
+            <span class="character-selection-badge p1" aria-hidden="true">P1</span>
+            <span class="character-selection-badge p2" aria-hidden="true">P2</span>
             <span class="character-portrait-window" aria-hidden="true">
-              <img class="character-art aton" src="../../assets/ui/character-select/fighter-urban.webp?v=20260606-select" alt="" draggable="false">
+              <img class="character-art aton" src="../../assets/ui/character-select/fighter-urban.webp?v=20260608-despill" alt="" draggable="false">
             </span>
             <span class="character-nameplate"><span>ATON</span></span>
           </button>
@@ -2723,9 +2808,11 @@
         <div class="fighter-hud">
           <div class="portrait" id="p1Portrait">
             <div class="portrait-backdrop" aria-hidden="true"></div>
+            <span class="portrait-art-window" aria-hidden="true">
+              <img class="portrait-art ninja" id="p1PortraitArt" src="../../assets/ui/character-select/fighter-ninja.webp?v=20260608-despill" alt="" draggable="false">
+            </span>
             <canvas class="advantage-fire-canvas" id="p1AdvantageFire" aria-hidden="true"></canvas>
             <img class="portrait-frame-image" id="p1PortraitFrame" src="../../assets/ui/hud/portrait-frame-p1.webp?v=20260605-165651" alt="" aria-hidden="true" draggable="false">
-            <span class="portrait-label">P1</span>
           </div>
           <div class="bars">
             <div class="health">
@@ -2752,9 +2839,11 @@
           </div>
           <div class="portrait" id="p2Portrait">
             <div class="portrait-backdrop" aria-hidden="true"></div>
+            <span class="portrait-art-window" aria-hidden="true">
+              <img class="portrait-art ninja" id="p2PortraitArt" src="../../assets/ui/character-select/fighter-ninja.webp?v=20260608-despill" alt="" draggable="false">
+            </span>
             <canvas class="advantage-fire-canvas" id="p2AdvantageFire" aria-hidden="true"></canvas>
             <img class="portrait-frame-image" id="p2PortraitFrame" src="../../assets/ui/hud/portrait-frame-p1.webp?v=20260605-165651" alt="" aria-hidden="true" draggable="false">
-            <span class="portrait-label">P2</span>
           </div>
         </div>
       </section>
@@ -2977,9 +3066,23 @@
       const HEALTH_TRAIL_DELAY = 3000;
       const GET_UP_FIRST_FRAME_HOLD = 1000;
       const CHARACTER_CONFIGS = {
-        ninja: "../../assets/characters/ninja/ninja.json?v=20260608-refeito-special",
-        itzcoatl: "../../assets/characters/itzcoatl/itzcoatl.json?v=20260606-itzcoatl",
-        aton: "../../assets/characters/urban/urban.json?v=20260608-aton",
+        ninja: "../../assets/characters/ninja/ninja.json?v=20260608-special-position-plus",
+        itzcoatl: "../../assets/characters/itzcoatl/itzcoatl.json?v=20260608-get-up",
+        aton: "../../assets/characters/urban/urban.json?v=20260608-aton-position-plus",
+      };
+      const CHARACTER_PORTRAITS = {
+        ninja: {
+          src: "../../assets/ui/character-select/fighter-ninja.webp?v=20260608-despill",
+          className: "ninja",
+        },
+        itzcoatl: {
+          src: "../../assets/ui/character-select/fighter-shaman.webp?v=20260608-despill",
+          className: "shaman",
+        },
+        aton: {
+          src: "../../assets/ui/character-select/fighter-urban.webp?v=20260608-despill",
+          className: "aton",
+        },
       };
       const ULTIMATE_CINEMATIC_INTRO_MS = 680;
       const ULTIMATE_CINEMATIC_HOLD_MS = 1000;
@@ -2994,8 +3097,10 @@
       const MOBILE_UI_ACTION_DELAY = 650;
       const characterConfigCache = new Map();
       let activeCharacterId = "ninja";
+      const activeCharacterIds = { p1: "ninja", p2: "ninja" };
       let characterConfig = await loadCharacterConfig(CHARACTER_CONFIGS.ninja);
       characterConfigCache.set(activeCharacterId, characterConfig);
+      const characterLoadouts = { p1: null, p2: null };
       let idleAnimation = null;
       let getUpAnimation = null;
       let crouchAnimation = null;
@@ -3066,6 +3171,9 @@
         gameSessionActive: !mobileFullscreenRequired,
         startTransitionActive: false,
         selectedCharacter: "ninja",
+        selectedP1Character: null,
+        selectedP2Character: null,
+        nextCharacterSelectionSide: "p1",
         selectedAction: null,
         aiAction: null,
         advantage: null,
@@ -3101,6 +3209,8 @@
         p2HealthText: document.querySelector("#p2HealthText"),
         p1Portrait: document.querySelector("#p1Portrait"),
         p2Portrait: document.querySelector("#p2Portrait"),
+        p1PortraitArt: document.querySelector("#p1PortraitArt"),
+        p2PortraitArt: document.querySelector("#p2PortraitArt"),
         p1PortraitFrame: document.querySelector("#p1PortraitFrame"),
         p2PortraitFrame: document.querySelector("#p2PortraitFrame"),
         p1AdvantageFire: document.querySelector("#p1AdvantageFire"),
@@ -3796,20 +3906,52 @@
         });
       }
 
-      function setCharacterAssets(config) {
-        characterConfig = config;
-        idleAnimation = characterConfig.animations.idle;
-        getUpAnimation = characterConfig.animations.getUp;
-        crouchAnimation = characterConfig.animations.crouch;
-        jumpAnimation = characterConfig.animations.jump;
-        specialAnimation = characterConfig.animations.special;
-        ultimateAnimation = characterConfig.animations.ultimate;
-        idleFrames = buildAnimationFrames(idleAnimation);
-        getUpFrames = buildAnimationFrames(getUpAnimation);
-        crouchFrames = buildAnimationFrames(crouchAnimation);
-        jumpFrames = buildAnimationFrames(jumpAnimation);
-        specialFrames = buildAnimationFrames(specialAnimation);
-        ultimateFrames = buildAnimationFrames(ultimateAnimation);
+      function createCharacterLoadout(characterId, config) {
+        const animations = config.animations;
+        const loadout = {
+          id: characterId,
+          config,
+          idleAnimation: animations.idle,
+          getUpAnimation: animations.getUp,
+          crouchAnimation: animations.crouch,
+          jumpAnimation: animations.jump,
+          specialAnimation: animations.special,
+          ultimateAnimation: animations.ultimate,
+        };
+
+        loadout.idleFrames = buildAnimationFrames(loadout.idleAnimation);
+        loadout.getUpFrames = buildAnimationFrames(loadout.getUpAnimation);
+        loadout.crouchFrames = buildAnimationFrames(loadout.crouchAnimation);
+        loadout.jumpFrames = buildAnimationFrames(loadout.jumpAnimation);
+        loadout.specialFrames = buildAnimationFrames(loadout.specialAnimation);
+        loadout.ultimateFrames = buildAnimationFrames(loadout.ultimateAnimation);
+        return loadout;
+      }
+
+      function syncGlobalCharacterAssets(loadout) {
+        characterConfig = loadout.config;
+        activeCharacterId = loadout.id;
+        idleAnimation = loadout.idleAnimation;
+        getUpAnimation = loadout.getUpAnimation;
+        crouchAnimation = loadout.crouchAnimation;
+        jumpAnimation = loadout.jumpAnimation;
+        specialAnimation = loadout.specialAnimation;
+        ultimateAnimation = loadout.ultimateAnimation;
+        idleFrames = loadout.idleFrames;
+        getUpFrames = loadout.getUpFrames;
+        crouchFrames = loadout.crouchFrames;
+        jumpFrames = loadout.jumpFrames;
+        specialFrames = loadout.specialFrames;
+        ultimateFrames = loadout.ultimateFrames;
+      }
+
+      function setCharacterAssets(config, characterId = activeCharacterId) {
+        const loadout = createCharacterLoadout(characterId, config);
+        characterLoadouts.p1 = loadout;
+        characterLoadouts.p2 = loadout;
+        activeCharacterIds.p1 = characterId;
+        activeCharacterIds.p2 = characterId;
+        syncGlobalCharacterAssets(loadout);
       }
 
       async function getCharacterConfig(characterId) {
@@ -3832,13 +3974,17 @@
         });
       }
 
+      function preloadCharacterLoadout(loadout) {
+        preloadFrames(loadout.idleFrames);
+        preloadFrames(loadout.getUpFrames);
+        preloadFrames(loadout.crouchFrames);
+        preloadFrames(loadout.jumpFrames);
+        preloadFrames(loadout.specialFrames);
+        preloadFrames(loadout.ultimateFrames);
+      }
+
       function preloadActiveCharacterFrames() {
-        preloadFrames(idleFrames);
-        preloadFrames(getUpFrames);
-        preloadFrames(crouchFrames);
-        preloadFrames(jumpFrames);
-        preloadFrames(specialFrames);
-        preloadFrames(ultimateFrames);
+        new Set(Object.values(characterLoadouts).filter(Boolean)).forEach(preloadCharacterLoadout);
       }
 
       preloadActiveCharacterFrames();
@@ -3848,12 +3994,19 @@
         return side === "p1" ? el.p1Sprite : el.p2Sprite;
       }
 
+      function characterLoadoutForSide(side) {
+        return characterLoadouts[side] || characterLoadouts.p1;
+      }
+
       function applySpriteDisplay(side, animation) {
         const sprite = fighterSprite(side);
+        const loadout = characterLoadoutForSide(side);
         const sideDisplay = animation.sideOffsets?.[side] ?? {};
         const colorFilter = animation.colorFilter ?? {};
+        const baseOffsetX = sideDisplay.offsetXPercent ?? animation.offsetXPercent ?? 0;
+        const battleOffsetX = animation === loadout.ultimateAnimation || loadout.id === "ninja" ? 0 : (side === "p1" ? 20 : -20);
         sprite.style.setProperty("--sprite-scale", sideDisplay.scale ?? animation.scale ?? 1);
-        sprite.style.setProperty("--sprite-offset-x", `${sideDisplay.offsetXPercent ?? animation.offsetXPercent ?? 0}%`);
+        sprite.style.setProperty("--sprite-offset-x", `${baseOffsetX + battleOffsetX}%`);
         sprite.style.setProperty("--sprite-offset-y", `${sideDisplay.offsetYPercent ?? animation.offsetYPercent ?? 0}%`);
         sprite.style.setProperty("--sprite-hue", `${colorFilter.hueDeg ?? 0}deg`);
         sprite.style.setProperty("--sprite-saturation", `${colorFilter.saturationPercent ?? 100}%`);
@@ -3868,7 +4021,7 @@
           window.clearTimeout(animation.timerId);
           spriteAnimations[side] = null;
         }
-        applySpriteDisplay(side, idleAnimation);
+        applySpriteDisplay(side, characterLoadoutForSide(side).idleAnimation);
       }
 
       function clearSpriteAnimations() {
@@ -3951,17 +4104,26 @@
       }
 
       function playKnockdownAnimation(sides) {
-        sides.forEach((side) => playSpriteAnimation(side, getUpAnimation, getUpFrames, {
-          firstFrameHoldMs: GET_UP_FIRST_FRAME_HOLD,
-        }));
+        sides.forEach((side) => {
+          const loadout = characterLoadoutForSide(side);
+          playSpriteAnimation(side, loadout.getUpAnimation, loadout.getUpFrames, {
+            firstFrameHoldMs: GET_UP_FIRST_FRAME_HOLD,
+          });
+        });
       }
 
       function playCrouchAnimation(sides) {
-        sides.forEach((side) => playSpriteAnimation(side, crouchAnimation, crouchFrames, { holdLastFrame: true }));
+        sides.forEach((side) => {
+          const loadout = characterLoadoutForSide(side);
+          playSpriteAnimation(side, loadout.crouchAnimation, loadout.crouchFrames, { holdLastFrame: true });
+        });
       }
 
       function playJumpAnimation(sides) {
-        sides.forEach((side) => playSpriteAnimation(side, jumpAnimation, jumpFrames));
+        sides.forEach((side) => {
+          const loadout = characterLoadoutForSide(side);
+          playSpriteAnimation(side, loadout.jumpAnimation, loadout.jumpFrames);
+        });
       }
 
       function fighterElement(side) {
@@ -3986,27 +4148,31 @@
 
       function playSpecialLunge(side) {
         const fighter = fighterElement(side);
+        const special = characterLoadoutForSide(side).specialAnimation;
         const lungeClass = side === "p1" ? "special-lunge-left" : "special-lunge-right";
         clearSpecialLunge(side);
         void fighter.offsetWidth;
         fighter.classList.add(lungeClass);
         window.setTimeout(() => {
           fighter.classList.remove(lungeClass);
-        }, specialAnimation.lungeMs ?? 980);
+        }, special.lungeMs ?? 980);
       }
 
-      function specialAnimationFrameDelay(frameNumber) {
-        const startFrame = frameNumber ?? Math.max(1, specialAnimation.frameCount - 20);
-        const startFrameIndex = Math.max(0, Math.min(specialAnimation.frameCount - 1, startFrame - 1));
-        return animationStartDelay(specialAnimation, startFrameIndex);
+      function specialAnimationFrameDelay(side, frameNumber) {
+        const special = characterLoadoutForSide(side).specialAnimation;
+        const startFrame = frameNumber ?? Math.max(1, special.frameCount - 20);
+        const startFrameIndex = Math.max(0, Math.min(special.frameCount - 1, startFrame - 1));
+        return animationStartDelay(special, startFrameIndex);
       }
 
       function scheduleSpecialLunge(side) {
-        if (activeCharacterId !== "ninja" || !Number.isFinite(specialAnimation.lungeStartFrame)) {
+        const loadout = characterLoadoutForSide(side);
+        const special = loadout.specialAnimation;
+        if (loadout.id !== "ninja" || !Number.isFinite(special.lungeStartFrame)) {
           return;
         }
 
-        const startDelay = specialAnimationFrameDelay(specialAnimation.lungeStartFrame);
+        const startDelay = specialAnimationFrameDelay(side, special.lungeStartFrame);
         if (specialLungeTimers[side]) {
           window.clearTimeout(specialLungeTimers[side]);
         }
@@ -4018,8 +4184,9 @@
 
       function playSpecialAnimation(sides) {
         sides.forEach((side) => {
+          const loadout = characterLoadoutForSide(side);
           scheduleSpecialLunge(side);
-          playSpriteAnimation(side, specialAnimation, specialFrames);
+          playSpriteAnimation(side, loadout.specialAnimation, loadout.specialFrames);
         });
       }
 
@@ -4102,22 +4269,26 @@
         ultimateCinematicState.timers.forEach((timerId) => window.clearTimeout(timerId));
         ultimateCinematicState.timers = [];
         el.ultimateCinematic.classList.remove("is-active", "is-playing", "p1", "p2");
-        if (ultimateFrames.length) {
-          el.ultimateFrame.src = ultimateFrames[0];
+        const loadout = characterLoadoutForSide("p1");
+        if (loadout.ultimateFrames.length) {
+          el.ultimateFrame.src = loadout.ultimateFrames[0];
         }
       }
 
       function playUltimateCinematic(side) {
-        if (!ultimateFrames.length) {
+        const loadout = characterLoadoutForSide(side);
+        const frames = loadout.ultimateFrames;
+        const animation = loadout.ultimateAnimation;
+        if (!frames.length) {
           return 0;
         }
 
         clearUltimateCinematic();
-        el.ultimateFrame.src = ultimateFrames[0];
+        el.ultimateFrame.src = frames[0];
         el.ultimateCinematic.classList.add("is-active", side);
 
         const playbackStartMs = ULTIMATE_CINEMATIC_INTRO_MS + ULTIMATE_CINEMATIC_HOLD_MS;
-        const playbackDurationMs = ultimateFrames.length * ultimateAnimation.frameIntervalMs;
+        const playbackDurationMs = frames.length * animation.frameIntervalMs;
         const totalDurationMs = playbackStartMs + playbackDurationMs + ULTIMATE_CINEMATIC_EXIT_MS;
 
         scheduleUltimateCinematic(() => {
@@ -4125,13 +4296,13 @@
           el.ultimateCinematic.classList.add("is-playing");
 
           const advance = () => {
-            if (frameIndex >= ultimateFrames.length) {
+            if (frameIndex >= frames.length) {
               return;
             }
 
-            el.ultimateFrame.src = ultimateFrames[frameIndex];
+            el.ultimateFrame.src = frames[frameIndex];
             frameIndex += 1;
-            scheduleUltimateCinematic(advance, ultimateAnimation.frameIntervalMs);
+            scheduleUltimateCinematic(advance, animation.frameIntervalMs);
           };
 
           advance();
@@ -4191,28 +4362,43 @@
 
       function responseAnimationBreak(p1Action, p2Action, result) {
         let duration = 0;
+        const p1Loadout = characterLoadoutForSide("p1");
+        const p2Loadout = characterLoadoutForSide("p2");
 
-        if (p1Action === "Crouch" || p2Action === "Crouch") {
-          duration = Math.max(duration, animationPlaybackDuration(crouchFrames, crouchAnimation));
+        if (p1Action === "Crouch") {
+          duration = Math.max(duration, animationPlaybackDuration(p1Loadout.crouchFrames, p1Loadout.crouchAnimation));
         }
 
-        if (p1Action === "Jump" || p2Action === "Jump") {
-          duration = Math.max(duration, animationPlaybackDuration(jumpFrames, jumpAnimation));
+        if (p2Action === "Crouch") {
+          duration = Math.max(duration, animationPlaybackDuration(p2Loadout.crouchFrames, p2Loadout.crouchAnimation));
         }
 
-        if (specialConnects("p1", p1Action, result) || specialConnects("p2", p2Action, result)) {
-          duration = Math.max(duration, animationPlaybackDuration(specialFrames, specialAnimation));
+        if (p1Action === "Jump") {
+          duration = Math.max(duration, animationPlaybackDuration(p1Loadout.jumpFrames, p1Loadout.jumpAnimation));
+        }
+
+        if (p2Action === "Jump") {
+          duration = Math.max(duration, animationPlaybackDuration(p2Loadout.jumpFrames, p2Loadout.jumpAnimation));
+        }
+
+        if (specialConnects("p1", p1Action, result)) {
+          duration = Math.max(duration, animationPlaybackDuration(p1Loadout.specialFrames, p1Loadout.specialAnimation));
+        }
+
+        if (specialConnects("p2", p2Action, result)) {
+          duration = Math.max(duration, animationPlaybackDuration(p2Loadout.specialFrames, p2Loadout.specialAnimation));
         }
 
         return duration + 120;
       }
 
       function shouldUseNinjaSpecialImpact(result, winningAction) {
-        return activeCharacterId === "ninja" && result.type === "hit" && result.winner && winningAction === "Special";
+        return result.type === "hit" && result.winner && characterLoadoutForSide(result.winner).id === "ninja" && winningAction === "Special";
       }
 
-      function ninjaSpecialImpactDelay() {
-        return specialAnimationFrameDelay(specialAnimation.impactFrame ?? specialAnimation.lungeStartFrame);
+      function ninjaSpecialImpactDelay(side) {
+        const special = characterLoadoutForSide(side).specialAnimation;
+        return specialAnimationFrameDelay(side, special.impactFrame ?? special.lungeStartFrame);
       }
 
       function playTurnImpactFeedback(result, damageLosses, wasGuaranteedTurn) {
@@ -4228,40 +4414,61 @@
       }
 
       function updateIdleSprites() {
-        if (!idleFrames.length) {
+        const p1Loadout = characterLoadoutForSide("p1");
+        const p2Loadout = characterLoadoutForSide("p2");
+        if (!p1Loadout.idleFrames.length && !p2Loadout.idleFrames.length) {
           return;
         }
 
-        idleFrameIndex = (idleFrameIndex + 1) % idleFrames.length;
+        idleFrameIndex += 1;
         if (!spriteAnimations.p1) {
-          el.p1Sprite.src = idleFrames[idleFrameIndex];
+          el.p1Sprite.src = p1Loadout.idleFrames[idleFrameIndex % p1Loadout.idleFrames.length] || el.p1Sprite.src;
         }
         if (!spriteAnimations.p2) {
-          el.p2Sprite.src = idleFrames[idleFrameIndex];
+          el.p2Sprite.src = p2Loadout.idleFrames[idleFrameIndex % p2Loadout.idleFrames.length] || el.p2Sprite.src;
         }
       }
 
       function syncCharacterSpritesToIdle() {
+        const p1Loadout = characterLoadoutForSide("p1");
+        const p2Loadout = characterLoadoutForSide("p2");
         idleFrameIndex = 0;
-        applySpriteDisplay("p1", idleAnimation);
-        applySpriteDisplay("p2", idleAnimation);
-        if (idleFrames.length) {
-          el.p1Sprite.src = idleFrames[0];
-          el.p2Sprite.src = idleFrames[0];
+        applySpriteDisplay("p1", p1Loadout.idleAnimation);
+        applySpriteDisplay("p2", p2Loadout.idleAnimation);
+        if (p1Loadout.idleFrames.length) {
+          el.p1Sprite.src = p1Loadout.idleFrames[0];
         }
-        if (ultimateFrames.length) {
-          el.ultimateFrame.src = ultimateFrames[0];
+        if (p2Loadout.idleFrames.length) {
+          el.p2Sprite.src = p2Loadout.idleFrames[0];
         }
+        if (p1Loadout.ultimateFrames.length) {
+          el.ultimateFrame.src = p1Loadout.ultimateFrames[0];
+        }
+      }
+
+      function setHudPortrait(side, characterId) {
+        const portrait = CHARACTER_PORTRAITS[characterId] || CHARACTER_PORTRAITS.ninja;
+        const image = side === "p1" ? el.p1PortraitArt : el.p2PortraitArt;
+        image.src = portrait.src;
+        image.className = `portrait-art ${portrait.className}`;
+      }
+
+      function syncHudPortraits() {
+        setHudPortrait("p1", activeCharacterIds.p1);
+        setHudPortrait("p2", activeCharacterIds.p2);
       }
 
       function startIdleLoop() {
         if (idleTimerId) {
           window.clearInterval(idleTimerId);
         }
-        idleTimerId = window.setInterval(updateIdleSprites, idleAnimation.frameIntervalMs);
+        const p1Interval = characterLoadoutForSide("p1").idleAnimation.frameIntervalMs;
+        const p2Interval = characterLoadoutForSide("p2").idleAnimation.frameIntervalMs;
+        idleTimerId = window.setInterval(updateIdleSprites, Math.min(p1Interval, p2Interval));
       }
 
       syncCharacterSpritesToIdle();
+      syncHudPortraits();
       startIdleLoop();
 
       const advantageFire = {
@@ -5838,7 +6045,7 @@
               gameOverQueued = true;
               window.setTimeout(showGameOver, 900);
             }
-          }, ninjaSpecialImpactDelay());
+          }, ninjaSpecialImpactDelay(result.winner));
         }
 
         el.turnMeterFill.style.width = "0%";
@@ -5878,9 +6085,10 @@
             }
 
             queueGuaranteedTurn(result);
-            const knockdownBreak = knockedDown.length
-              ? GET_UP_FIRST_FRAME_HOLD + getUpFrames.length * getUpAnimation.frameIntervalMs + 220
-              : 0;
+            const knockdownBreak = knockedDown.reduce((duration, side) => {
+              const loadout = characterLoadoutForSide(side);
+              return Math.max(duration, GET_UP_FIRST_FRAME_HOLD + loadout.getUpFrames.length * loadout.getUpAnimation.frameIntervalMs + 220);
+            }, 0);
             window.setTimeout(startTurn, Math.max(TURN_BREAK, knockdownBreak, responseBreak));
           }, Math.max(360, ultimateCinematicBreak));
         }, RESULT_REVEAL_DELAY);
@@ -6019,18 +6227,32 @@
         updateDebugPanel();
       }
 
-      async function activateCharacter(characterId) {
-        const nextConfig = await getCharacterConfig(characterId);
-        if (!nextConfig) {
+      async function activateSelectedCharacters() {
+        const p1Character = state.selectedP1Character;
+        const p2Character = state.selectedP2Character;
+        if (!CHARACTER_CONFIGS[p1Character] || !CHARACTER_CONFIGS[p2Character]) {
           return false;
         }
 
-        activeCharacterId = characterId;
-        setCharacterAssets(nextConfig);
+        const [p1Config, p2Config] = await Promise.all([
+          getCharacterConfig(p1Character),
+          getCharacterConfig(p2Character),
+        ]);
+
+        if (!p1Config || !p2Config) {
+          return false;
+        }
+
+        activeCharacterIds.p1 = p1Character;
+        activeCharacterIds.p2 = p2Character;
+        characterLoadouts.p1 = createCharacterLoadout(p1Character, p1Config);
+        characterLoadouts.p2 = createCharacterLoadout(p2Character, p2Config);
+        syncGlobalCharacterAssets(characterLoadouts.p1);
         preloadActiveCharacterFrames();
         clearSpriteAnimations();
         clearUltimateCinematic();
         syncCharacterSpritesToIdle();
+        syncHudPortraits();
         startIdleLoop();
         return true;
       }
@@ -6039,7 +6261,11 @@
         let selectedCard = null;
         el.characterCards.forEach((card) => {
           const isSelected = card.dataset.character === state.selectedCharacter;
+          const isP1Selected = card.dataset.character === state.selectedP1Character;
+          const isP2Selected = card.dataset.character === state.selectedP2Character;
           card.classList.toggle("is-selected", isSelected);
+          card.classList.toggle("is-p1-selected", isP1Selected);
+          card.classList.toggle("is-p2-selected", isP2Selected);
           card.setAttribute("aria-pressed", String(isSelected));
           if (isSelected) {
             selectedCard = card;
@@ -6053,13 +6279,21 @@
           el.characterPreviewArt.className = ["character-preview-art", ...characterClasses].join(" ");
         }
 
-        el.characterConfirmButton.disabled = !CHARACTER_CONFIGS[state.selectedCharacter];
+        el.characterConfirmButton.disabled = !CHARACTER_CONFIGS[state.selectedP1Character] || !CHARACTER_CONFIGS[state.selectedP2Character];
       }
 
       function selectCharacter(character) {
         if (!CHARACTER_CONFIGS[character]) {
           playSound("draw");
           return;
+        }
+
+        if (state.nextCharacterSelectionSide === "p1") {
+          state.selectedP1Character = character;
+          state.nextCharacterSelectionSide = "p2";
+        } else {
+          state.selectedP2Character = character;
+          state.nextCharacterSelectionSide = "p1";
         }
 
         state.selectedCharacter = character;
@@ -6072,6 +6306,9 @@
         window.clearInterval(state.timerId);
         state.phase = "character-select";
         state.selectedCharacter = "ninja";
+        state.selectedP1Character = null;
+        state.selectedP2Character = null;
+        state.nextCharacterSelectionSide = "p1";
         el.startScreen.classList.add("is-hidden");
         el.characterSelectScreen.classList.remove("is-hidden");
         el.helpScreen.classList.add("is-hidden");
@@ -6245,7 +6482,12 @@
       }
 
       async function startGameFromSelection() {
-        if (state.startTransitionActive || state.phase !== "character-select" || !CHARACTER_CONFIGS[state.selectedCharacter]) {
+        if (
+          state.startTransitionActive ||
+          state.phase !== "character-select" ||
+          !CHARACTER_CONFIGS[state.selectedP1Character] ||
+          !CHARACTER_CONFIGS[state.selectedP2Character]
+        ) {
           return;
         }
 
@@ -6254,8 +6496,8 @@
         playSound("ui");
 
         try {
-          const characterLoaded = await activateCharacter(state.selectedCharacter);
-          if (!characterLoaded) {
+          const charactersLoaded = await activateSelectedCharacters();
+          if (!charactersLoaded) {
             return;
           }
 
