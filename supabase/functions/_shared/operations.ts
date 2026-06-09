@@ -353,7 +353,7 @@ async function applyUnlocks(db: SupabaseClient, userId: string, points: number) 
   if (rows.length) await db.from("player_unlocked_characters").upsert(rows, { onConflict: "user_id,character_id", ignoreDuplicates: true });
 }
 
-async function updateRankForFinishedMatch(db: SupabaseClient, match: any, winnerId: string | null, loserId: string | null) {
+async function updateRankForFinishedMatch(db: SupabaseClient, match: any, winnerId: string | null, loserId: string | null, loserDelta = -20) {
   if (match.match_type !== "ranked" || !winnerId || !loserId) return {};
   const { data: ranks } = await db.from("player_rank").select("*").in("user_id", [winnerId, loserId]);
   const map = new Map((ranks || []).map((rank: any) => [rank.user_id, rank]));
@@ -361,7 +361,7 @@ async function updateRankForFinishedMatch(db: SupabaseClient, match: any, winner
   const loser = map.get(loserId);
   if (!winner || !loser) return {};
   const winnerPoints = winner.rank_points + 25;
-  const loserPoints = Math.max(0, loser.rank_points - 20);
+  const loserPoints = Math.max(0, loser.rank_points + loserDelta);
   await db.from("player_rank").update({
     rank_points: winnerPoints,
     division: divisionForPoints(winnerPoints),
@@ -376,7 +376,7 @@ async function updateRankForFinishedMatch(db: SupabaseClient, match: any, winner
     streak: 0,
   }).eq("user_id", loserId);
   await applyUnlocks(db, winnerId, winnerPoints);
-  return { [winnerId]: 25, [loserId]: -20 };
+  return { [winnerId]: 25, [loserId]: loserDelta };
 }
 
 async function addHistory(db: SupabaseClient, match: any, winnerId: string | null, delta: Record<string, number>) {
@@ -400,7 +400,7 @@ async function addHistory(db: SupabaseClient, match: any, winnerId: string | nul
 async function finishMatch(db: SupabaseClient, match: any, winnerSide: Side | null, reason: string) {
   const winnerId = winnerSide ? (winnerSide === "p1" ? match.player1_id : match.player2_id) : null;
   const loserId = winnerSide ? (winnerSide === "p1" ? match.player2_id : match.player1_id) : null;
-  const rankDelta = await updateRankForFinishedMatch(db, match, winnerId, loserId);
+  const rankDelta = await updateRankForFinishedMatch(db, match, winnerId, loserId, reason === "forfeit" ? -25 : -20);
   let privateScore: any = null;
   if (match.match_type === "private" && winnerId) {
     const low = match.player1_id < match.player2_id ? match.player1_id : match.player2_id;

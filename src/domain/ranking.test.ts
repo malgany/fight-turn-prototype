@@ -26,4 +26,12 @@ describe("ranking", () => {
     expect(rank.losses).toBe(1);
     expect(rank.streak).toBe(0);
   });
+
+  it("applies forfeit penalty as a loss", () => {
+    const rank = applyRankedResult({ ...createInitialRank("u1"), rankPoints: 30, streak: 2 }, "forfeit");
+
+    expect(rank.rankPoints).toBe(5);
+    expect(rank.losses).toBe(1);
+    expect(rank.streak).toBe(0);
+  });
 });

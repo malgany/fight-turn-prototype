@@ -126,6 +126,14 @@ Configure:
 
 ## Supabase
 
+Projeto remoto configurado:
+
+- Projeto: `Final Genesis`
+- Ref: `xkynbtwnopsbwkoqhadt`
+- URL: `https://xkynbtwnopsbwkoqhadt.supabase.co`
+- Auth: Google OAuth, Anonymous Sign-ins e manual linking habilitados.
+- Redirect principal: `https://final-genesis-web.vercel.app/auth/callback`
+
 Arquivos versionados:
 
 - `supabase/migrations/20260609190000_initial_online_schema.sql`
@@ -141,11 +149,25 @@ Fluxo esperado:
 5. Configurar redirects para localhost, Vercel producao e previews.
 6. Copiar URL e anon key para `.env` local e variaveis da Vercel.
 
+## Deploy
+
+- Producao Vercel: `https://final-genesis-web.vercel.app`
+- Projeto Vercel: `final-genesis-web`
+- Variaveis configuradas em Production e Development:
+  - `VITE_SUPABASE_URL`
+  - `VITE_SUPABASE_ANON_KEY`
+
+Validacoes realizadas no remoto:
+
+- Login convidado anonimo.
+- Vinculo Google a partir de convidado.
+- Lobby online com ranked bloqueado para convidado e liberado para Google.
+- Criacao de sala privada por codigo/link.
+- Ranked com dois usuarios temporarios via Edge Functions: fila, match, acao oculta ate ambos escolherem, revelacao do turno, abandono e atualizacao de ranking.
+
 ## Proximos passos recomendados
 
-1. Criar o projeto Supabase remoto e aplicar migrations/functions.
-2. Configurar Google OAuth no Google Cloud e Supabase Auth.
-3. Criar projeto Vercel e configurar variaveis de ambiente.
-4. Testar duas sessoes reais com contas Google diferentes em ranked.
-5. Testar sala privada por codigo/link entre dois navegadores.
-6. Refinar a cena de batalha visual usando mais animacoes do prototipo legado.
+1. Testar uma partida privada com dois navegadores/dispositivos reais.
+2. Testar ranked com duas contas Google reais simultaneas.
+3. Refinar a cena de batalha visual usando mais animacoes do prototipo legado.
+4. Decidir o pipeline Android/Capacitor quando a versao web estiver estavel.

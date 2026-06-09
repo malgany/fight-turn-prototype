@@ -1,5 +1,20 @@
 project_id = "final-genesis"
 
+[auth]
+enabled = true
+site_url = "https://final-genesis-web.vercel.app"
+additional_redirect_urls = [
+  "http://localhost:5173/auth/callback",
+  "http://127.0.0.1:5173/auth/callback",
+  "http://localhost:5180/auth/callback",
+  "http://127.0.0.1:5180/auth/callback",
+  "https://final-genesis-web.vercel.app/auth/callback",
+  "https://final-genesis-ohn0eyzs9-tonys-projects-8858cd26.vercel.app/auth/callback"
+]
+enable_signup = true
+enable_anonymous_sign_ins = true
+enable_manual_linking = true
+
 [functions.bootstrap-profile]
 verify_jwt = true
 

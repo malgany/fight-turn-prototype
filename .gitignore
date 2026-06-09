@@ -3,6 +3,10 @@ dist/
 .env
 .env.*
 !.env.example
+.supabase-secrets/
+supabase/.temp/
 .DS_Store
 Thumbs.db
 npm-debug.log*
+
+.vercel
