@@ -2,7 +2,7 @@
 
 Prototipo inicial de tela mobile vertical para um jogo de luta por turnos.
 
-O projeto atual tem uma base web Vite + TypeScript para os fluxos online e preserva o prototipo mobile original em `prototype/mobile-layout/`. A referencia visual esta em `assets/reference/concept-battle-mobile.png` e o GDD esta em `GDD_Jogo_Luta_Turnos_Completo.pdf`.
+O projeto atual abre pelo menu visual legado em `/`, preserva o prototipo mobile original em `prototype/mobile-layout/` e usa a base web Vite + TypeScript para os fluxos online em `/online/`. A referencia visual esta em `assets/reference/concept-battle-mobile.png` e o GDD esta em `GDD_Jogo_Luta_Turnos_Completo.pdf`.
 
 ## Resumo do GDD
 
@@ -51,11 +51,13 @@ Outros caminhos possiveis:
 
 ## App web atual
 
-- Tela de login com Google e convidado anonimo.
-- Menu autenticado com perfil, online, ranking, historico indireto pelo menu e prototipo local.
-- Perfil com conta, ranking, streak, personagem selecionado e vinculo Google para convidado.
+- Tela inicial legado como entrada principal do jogo.
+- Botao `ONLINE` no menu legado leva ao app online em `/online/`.
+- Online exige login Google.
+- Menu online autenticado com `Jogar Online`, `Ranking` e `Perfil`.
+- Perfil com conta, ranking, streak e personagem selecionado.
 - Selecao de personagem com bloqueios e requisitos.
-- Lobby online com ranked bloqueado para convidado e partida privada por codigo/link.
+- Lobby online com ranked e partida privada por codigo/link.
 - Batalha online visual com acoes ocultas ate resolucao, timer, HUD, vida, ULTIMATE e resultado de turno.
 - Tela de ranking e historico.
 - Adaptador local demo quando Supabase ainda nao esta configurado.
@@ -106,7 +108,7 @@ Depois acesse:
 http://127.0.0.1:5173
 ```
 
-Sem `.env`, o app roda em modo local demo. Para conectar ao Supabase real:
+Sem `.env`, o app online roda em modo local demo. Para conectar ao Supabase real:
 
 ```bash
 copy .env.example .env
@@ -131,7 +133,7 @@ Projeto remoto configurado:
 - Projeto: `Final Genesis`
 - Ref: `xkynbtwnopsbwkoqhadt`
 - URL: `https://xkynbtwnopsbwkoqhadt.supabase.co`
-- Auth: Google OAuth, Anonymous Sign-ins e manual linking habilitados.
+- Auth: Google OAuth habilitado; Anonymous Sign-ins e manual linking desabilitados.
 - Redirect principal: `https://final-genesis-web.vercel.app/auth/callback`
 
 Arquivos versionados:
@@ -145,13 +147,15 @@ Fluxo esperado:
 1. Criar um projeto Supabase novo dedicado ao jogo.
 2. Aplicar a migration.
 3. Deployar as Edge Functions.
-4. Habilitar Google OAuth e Anonymous Sign-ins.
+4. Habilitar Google OAuth.
 5. Configurar redirects para localhost, Vercel producao e previews.
 6. Copiar URL e anon key para `.env` local e variaveis da Vercel.
 
 ## Deploy
 
 - Producao Vercel: `https://final-genesis-web.vercel.app`
+- Menu legado: `https://final-genesis-web.vercel.app/`
+- Online: `https://final-genesis-web.vercel.app/online/`
 - Projeto Vercel: `final-genesis-web`
 - Variaveis configuradas em Production e Development:
   - `VITE_SUPABASE_URL`
@@ -159,9 +163,8 @@ Fluxo esperado:
 
 Validacoes realizadas no remoto:
 
-- Login convidado anonimo.
-- Vinculo Google a partir de convidado.
-- Lobby online com ranked bloqueado para convidado e liberado para Google.
+- Login Google.
+- Lobby online com ranked e privada para conta Google.
 - Criacao de sala privada por codigo/link.
 - Ranked com dois usuarios temporarios via Edge Functions: fila, match, acao oculta ate ambos escolherem, revelacao do turno, abandono e atualizacao de ranking.
 

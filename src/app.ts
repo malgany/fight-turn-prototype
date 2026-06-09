@@ -14,10 +14,7 @@ type Screen =
   | "battle"
   | "post-match"
   | "ranking"
-  | "history"
-  | "help"
-  | "options"
-  | "local";
+  | "history";
 
 interface AppState {
   screen: Screen;
@@ -48,7 +45,7 @@ function escapeHtml(value: string): string {
 
 function shortAccountLabel(snapshot: AppSnapshot): string {
   if (!snapshot.profile) return "";
-  return snapshot.profile.accountType === "guest" ? "Convidado" : "Google";
+  return "Google";
 }
 
 function formatDate(value: string): string {
@@ -90,6 +87,10 @@ export class App {
     this.bindEvents();
     await this.run("Carregando sessao...", async () => {
       this.state.snapshot = await this.service.getSnapshot();
+      if (this.state.snapshot.profile?.accountType === "guest") {
+        await this.service.signOut();
+        this.state.snapshot = emptySnapshot;
+      }
       this.state.screen = this.state.snapshot.profile ? "menu" : "login";
       await this.bootstrapIfAuthenticated();
     });
@@ -186,20 +187,6 @@ export class App {
       case "google":
         await this.run("Abrindo login Google...", () => this.service.signInWithGoogle());
         break;
-      case "guest":
-        await this.run("Criando convidado...", async () => {
-          await this.service.signInAsGuest();
-          this.state.snapshot = await this.service.bootstrapProfile();
-          this.state.screen = "menu";
-          this.startHeartbeat();
-        });
-        break;
-      case "link-google":
-        await this.run("Vinculando Google...", async () => {
-          await this.service.linkGuestWithGoogle();
-          this.state.snapshot = await this.service.bootstrapProfile();
-        });
-        break;
       case "logout":
         await this.run("Saindo...", async () => {
           this.stopHeartbeat();
@@ -248,11 +235,6 @@ export class App {
   private async joinRanked(): Promise<void> {
     const { profile } = this.state.snapshot;
     if (!profile) return;
-    if (profile.accountType === "guest") {
-      this.state.error = "Ranked exige login com Google. Convidado pode jogar privada.";
-      this.render();
-      return;
-    }
 
     await this.run("Entrando na fila ranked...", async () => {
       await this.service.heartbeat("in_queue");
@@ -451,12 +433,6 @@ export class App {
         return this.renderRanking();
       case "history":
         return this.renderHistory();
-      case "help":
-        return this.renderHelp();
-      case "options":
-        return this.renderOptions();
-      case "local":
-        return this.renderLocal();
       default:
         return this.renderMenu();
     }
@@ -469,9 +445,8 @@ export class App {
           <img src="/assets/ui/menu/logo.webp" alt="Final Genesis" class="login-logo">
           <div class="login-actions">
             <button class="primary-command" data-action="google" type="button">Entrar com Google</button>
-            <button class="secondary-command" data-action="guest" type="button">Jogar como convidado</button>
           </div>
-          <p class="login-note">Conta convidada funciona neste navegador. Se voce perder a sessao local, perde o acesso ao progresso.</p>
+          <p class="login-note">Online exige conta Google.</p>
         </div>
       </section>
     `;
@@ -481,12 +456,9 @@ export class App {
     return `
       <section class="menu-screen">
         <nav class="main-actions" aria-label="Menu principal">
-          <button class="image-command play" data-nav="local" type="button">Jogar Local</button>
           <button class="image-command online" data-nav="online" type="button">Jogar Online</button>
           <button class="image-command ranking" data-nav="ranking" type="button">Ranking</button>
           <button class="image-command profile" data-nav="profile" type="button">Perfil</button>
-          <button class="image-command help" data-nav="help" type="button">Ajuda</button>
-          <button class="image-command options" data-nav="options" type="button">Opcoes</button>
         </nav>
       </section>
     `;
@@ -507,7 +479,7 @@ export class App {
             <img class="profile-avatar" src="${selected.portraitUrl}" alt="">
             <div>
               <h2>${escapeHtml(profile.displayName)}</h2>
-              <p>${profile.accountType === "guest" ? "Conta convidada" : "Conta Google"}</p>
+              <p>Conta Google</p>
               <p>${rank.division} · ${rank.rankPoints} pontos · streak ${rank.streak}</p>
             </div>
           </div>
@@ -519,7 +491,6 @@ export class App {
           </div>
           <div class="button-row">
             <button class="primary-command" data-nav="character-select" type="button">Selecionar personagem</button>
-            ${profile.accountType === "guest" ? `<button class="secondary-command" data-action="link-google" type="button">Vincular Google</button>` : ""}
             <button class="danger-command" data-action="logout" type="button">Sair</button>
           </div>
         </div>
@@ -553,8 +524,6 @@ export class App {
   }
 
   private renderOnlineLobby(): string {
-    const profile = this.state.snapshot.profile;
-    const rankedBlocked = profile?.accountType === "guest";
     return `
       <section class="screen-band">
         <div class="section-heading">
@@ -565,8 +534,7 @@ export class App {
           <article class="mode-panel">
             <h2>Partida Ranked</h2>
             <p>Procura adversario automaticamente, atualiza divisao, pontos e streak.</p>
-            ${rankedBlocked ? `<p class="locked-copy">Ranked exige login com Google.</p>` : ""}
-            <button class="primary-command" data-action="join-ranked" ${rankedBlocked ? "disabled" : ""} type="button">Entrar na fila</button>
+            <button class="primary-command" data-action="join-ranked" type="button">Entrar na fila</button>
           </article>
           <article class="mode-panel">
             <h2>Partida Privada</h2>
@@ -727,42 +695,4 @@ export class App {
     `;
   }
 
-  private renderHelp(): string {
-    return `
-      <section class="screen-band readable">
-        <div class="section-heading">
-          <h1>Ajuda</h1>
-          <button class="ghost-command" data-nav="menu" type="button">Voltar</button>
-        </div>
-        <p>Escolha uma acao por turno. As escolhas ficam ocultas no online ate os dois jogadores agirem ou o tempo acabar.</p>
-        <p>PLUS desempata golpes de velocidade proxima. Golpe garantido reduz o proximo turno para 3 segundos.</p>
-      </section>
-    `;
-  }
-
-  private renderOptions(): string {
-    return `
-      <section class="screen-band readable">
-        <div class="section-heading">
-          <h1>Opcoes</h1>
-          <button class="ghost-command" data-nav="menu" type="button">Voltar</button>
-        </div>
-        <p>Preferencias de audio e acessibilidade serao mantidas no navegador. O prototipo legado ainda tem controles locais avancados.</p>
-        <a class="secondary-command link-command" href="/prototype/mobile-layout/">Abrir prototipo legado</a>
-      </section>
-    `;
-  }
-
-  private renderLocal(): string {
-    return `
-      <section class="screen-band readable">
-        <div class="section-heading">
-          <h1>Jogar Local</h1>
-          <button class="ghost-command" data-nav="menu" type="button">Voltar</button>
-        </div>
-        <p>O modo local completo do prototipo continua disponivel enquanto a nova base online e migrada por etapas.</p>
-        <a class="primary-command link-command" href="/prototype/mobile-layout/">Abrir luta local</a>
-      </section>
-    `;
-  }
 }

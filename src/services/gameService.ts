@@ -18,8 +18,6 @@ export interface GameService {
   readonly mode: "supabase" | "demo";
   getSnapshot(): Promise<AppSnapshot>;
   signInWithGoogle(): Promise<void>;
-  signInAsGuest(): Promise<void>;
-  linkGuestWithGoogle(): Promise<void>;
   signOut(): Promise<void>;
   bootstrapProfile(): Promise<AppSnapshot>;
   selectCharacter(characterId: string): Promise<AppSnapshot>;

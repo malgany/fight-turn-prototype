@@ -12,8 +12,8 @@ additional_redirect_urls = [
   "https://final-genesis-ohn0eyzs9-tonys-projects-8858cd26.vercel.app/auth/callback"
 ]
 enable_signup = true
-enable_anonymous_sign_ins = true
-enable_manual_linking = true
+enable_anonymous_sign_ins = false
+enable_manual_linking = false
 
 [functions.bootstrap-profile]
 verify_jwt = true

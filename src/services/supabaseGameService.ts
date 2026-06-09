@@ -55,20 +55,6 @@ export class SupabaseGameService implements GameService {
     if (error) throw error;
   }
 
-  async signInAsGuest(): Promise<void> {
-    const { error } = await this.client().auth.signInAnonymously();
-    if (error) throw error;
-    await this.bootstrapProfile();
-  }
-
-  async linkGuestWithGoogle(): Promise<void> {
-    const { error } = await this.client().auth.linkIdentity({
-      provider: "google",
-      options: { redirectTo: authRedirectUrl() },
-    });
-    if (error) throw error;
-  }
-
   async signOut(): Promise<void> {
     this.channels.forEach((channel) => this.client().removeChannel(channel));
     this.channels.clear();

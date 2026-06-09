@@ -27,6 +27,7 @@
         --arena-background: url("../../assets/backgrounds/city-street-arena-sunny.webp?v=20260609-sunny");
         --title-screen-art: url("../../assets/backgrounds/title-screen-fighters.webp?v=20260605-1340");
         --menu-button-play: url("../../assets/ui/menu/jogar.webp?v=20260605-1340");
+        --menu-button-online: url("../../assets/ui/menu/online.png?v=20260609-1650");
         --menu-button-help: url("../../assets/ui/menu/ajuda.webp?v=20260605-1340");
         --menu-button-options: url("../../assets/ui/menu/opcoes.webp?v=20260605-1340");
         --menu-button-exit: url("../../assets/ui/menu/sair.webp?v=20260605-1340");
@@ -1723,6 +1724,11 @@
         background-image: var(--menu-button-play);
       }
 
+      #onlineButton {
+        aspect-ratio: 2048 / 913;
+        background-image: var(--menu-button-online);
+      }
+
       #helpButton {
         background-image: var(--menu-button-help);
       }
@@ -2563,6 +2569,7 @@
 
         <nav class="menu-actions" aria-label="Menu principal">
           <button class="menu-button primary" type="button" id="playButton">JOGAR</button>
+          <button class="menu-button" type="button" id="onlineButton">ONLINE</button>
           <button class="menu-button" type="button" id="helpButton">AJUDA</button>
           <button class="menu-button" type="button" id="optionsButton">OPÇÕES</button>
           <button class="menu-button mobile-exit-button" type="button" id="exitFullscreenButton">SAIR</button>
@@ -3280,6 +3287,7 @@
         helpTabs: [...document.querySelectorAll(".help-tab")],
         helpPanels: [...document.querySelectorAll(".help-panel")],
         playButton: document.querySelector("#playButton"),
+        onlineButton: document.querySelector("#onlineButton"),
         helpButton: document.querySelector("#helpButton"),
         optionsButton: document.querySelector("#optionsButton"),
         exitFullscreenButton: document.querySelector("#exitFullscreenButton"),
@@ -6657,6 +6665,11 @@
       });
       el.helpButton.addEventListener("click", () => {
         runUiButtonAction(el.helpButton, showHelpScreen);
+      });
+      el.onlineButton.addEventListener("click", () => {
+        runUiButtonAction(el.onlineButton, () => {
+          window.location.assign("/online/");
+        });
       });
       el.optionsButton.addEventListener("click", () => {
         runUiButtonAction(el.optionsButton, showOptionsScreen);

@@ -25,18 +25,6 @@ interface DemoState {
   privateRoom: PrivateRoom | null;
 }
 
-function makeGuestProfile(): PlayerProfile {
-  const id = `guest-${crypto.randomUUID()}`;
-  return {
-    id,
-    displayName: `Convidado ${id.slice(-4).toUpperCase()}`,
-    avatarUrl: null,
-    accountType: "guest",
-    selectedCharacterId: "ninja",
-    presenceStatus: "online",
-  };
-}
-
 function makeGoogleLikeProfile(): PlayerProfile {
   return {
     id: `google-${crypto.randomUUID()}`,
@@ -162,30 +150,6 @@ export class DemoGameService implements GameService {
     });
   }
 
-  async signInAsGuest(): Promise<void> {
-    const profile = makeGuestProfile();
-    const state = this.state();
-    this.commit({
-      ...state,
-      profile,
-      rank: createInitialRank(profile.id),
-      unlockedCharacterIds: defaultCharacterIds(),
-    });
-  }
-
-  async linkGuestWithGoogle(): Promise<void> {
-    const state = this.state();
-    if (!state.profile) return;
-    this.commit({
-      ...state,
-      profile: {
-        ...state.profile,
-        displayName: "Jogador Demo",
-        accountType: "google",
-      },
-    });
-  }
-
   async signOut(): Promise<void> {
     this.commit({ profile: null, rank: null, unlockedCharacterIds: defaultCharacterIds(), history: [], currentMatch: null, privateRoom: null });
   }
@@ -221,7 +185,6 @@ export class DemoGameService implements GameService {
   async joinRankedQueue(): Promise<QueueResult> {
     const state = this.state();
     if (!state.profile) throw new Error("Entre no jogo antes de jogar ranked.");
-    if (state.profile.accountType === "guest") throw new Error("Ranked exige login com Google.");
     const match = makeMatch(state.profile, "ranked");
     this.commit({ ...state, currentMatch: match, profile: { ...state.profile, presenceStatus: "in_match" } });
     return { status: "matched", match };
