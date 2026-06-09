@@ -353,8 +353,10 @@ export class App {
     this.root.innerHTML = `
       <main class="app-shell">
         ${this.state.snapshot.profile ? this.renderTopBar() : ""}
-        ${this.renderStatus()}
-        ${this.renderScreen()}
+        <div class="app-content">
+          ${this.renderStatus()}
+          ${this.renderScreen()}
+        </div>
       </main>
     `;
     this.bindRenderedControls();
