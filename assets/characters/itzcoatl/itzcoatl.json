@@ -82,13 +82,13 @@
       "frameIntervalMs": 33,
       "scale": 2.624,
       "offsetXPercent": 0,
-      "offsetYPercent": 0,
+      "offsetYPercent": 20,
       "sideOffsets": {
         "p1": {
-          "offsetXPercent": 12
+          "offsetXPercent": 33
         },
         "p2": {
-          "offsetXPercent": -12
+          "offsetXPercent": -33
         }
       }
     },
