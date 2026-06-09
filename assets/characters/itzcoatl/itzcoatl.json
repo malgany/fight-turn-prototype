@@ -76,11 +76,11 @@
     },
     "special": {
       "label": "Special",
-      "framePattern": "../../assets/characters/itzcoatl-special/itzcoatl-special-{frame}.webp",
-      "frameCount": 149,
+      "framePattern": "../../assets/characters/itzcoatl-special/itzcoatl-special-{frame}.webp?v=20260609-refeito-animais",
+      "frameCount": 146,
       "framePad": 3,
       "frameIntervalMs": 33,
-      "scale": 1.64,
+      "scale": 2.624,
       "offsetXPercent": 0,
       "offsetYPercent": 0,
       "sideOffsets": {
