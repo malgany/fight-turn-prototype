@@ -1,0 +1,40 @@
+project_id = "final-genesis"
+
+[functions.bootstrap-profile]
+verify_jwt = true
+
+[functions.select-character]
+verify_jwt = true
+
+[functions.presence-heartbeat]
+verify_jwt = true
+
+[functions.join-ranked-queue]
+verify_jwt = true
+
+[functions.leave-ranked-queue]
+verify_jwt = true
+
+[functions.current-match]
+verify_jwt = true
+
+[functions.create-private-room]
+verify_jwt = true
+
+[functions.join-private-room]
+verify_jwt = true
+
+[functions.private-room]
+verify_jwt = true
+
+[functions.submit-action]
+verify_jwt = true
+
+[functions.resolve-turn]
+verify_jwt = true
+
+[functions.finish-match]
+verify_jwt = true
+
+[functions.forfeit-match]
+verify_jwt = true

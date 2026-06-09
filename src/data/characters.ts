@@ -1,0 +1,52 @@
+import type { CharacterDefinition } from "../types";
+
+export const characters: CharacterDefinition[] = [
+  {
+    id: "ninja",
+    name: "Ninja",
+    portraitUrl: "/assets/ui/character-select/fighter-ninja.webp",
+    enabled: true,
+    isDefault: true,
+    unlockDescription: "Disponivel desde o inicio",
+    requiredPoints: 0,
+    requiredDivision: "Bronze",
+  },
+  {
+    id: "itzcoatl",
+    name: "Itzcoatl",
+    portraitUrl: "/assets/ui/character-select/fighter-shaman.webp",
+    enabled: true,
+    isDefault: true,
+    unlockDescription: "Disponivel desde o inicio",
+    requiredPoints: 0,
+    requiredDivision: "Bronze",
+  },
+  {
+    id: "aton",
+    name: "Aton",
+    portraitUrl: "/assets/ui/character-select/fighter-urban.webp",
+    enabled: true,
+    isDefault: true,
+    unlockDescription: "Disponivel desde o inicio",
+    requiredPoints: 0,
+    requiredDivision: "Bronze",
+  },
+  {
+    id: "coming-soon",
+    name: "Em breve",
+    portraitUrl: "/assets/ui/character-select/fighter-coming-soon-face-question.webp",
+    enabled: false,
+    isDefault: false,
+    unlockDescription: "Personagem futuro por ranking",
+    requiredPoints: 800,
+    requiredDivision: "Gold",
+  },
+];
+
+export function characterById(id: string): CharacterDefinition {
+  return characters.find((character) => character.id === id) || characters[0];
+}
+
+export function defaultCharacterIds(): string[] {
+  return characters.filter((character) => character.enabled && character.isDefault).map((character) => character.id);
+}
