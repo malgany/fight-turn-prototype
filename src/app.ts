@@ -229,6 +229,9 @@ export class App {
         this.state.match = null;
         await this.navigate("online");
         break;
+      case "legacy-menu":
+        window.location.assign("/");
+        break;
     }
   }
 
@@ -461,6 +464,7 @@ export class App {
           <button class="image-command online" data-nav="online" type="button">Jogar Online</button>
           <button class="image-command ranking" data-nav="ranking" type="button">Ranking</button>
           <button class="image-command profile" data-nav="profile" type="button">Perfil</button>
+          <button class="image-command" data-action="legacy-menu" type="button">Voltar</button>
         </nav>
       </section>
     `;
