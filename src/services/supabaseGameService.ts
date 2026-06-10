@@ -1,5 +1,5 @@
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import { authRedirectUrl } from "../lib/config";
+import { authRedirectUrl, supabaseAnonKey, supabaseUrl } from "../lib/config";
 import { supabase } from "../lib/supabase";
 import type {
   Action,
@@ -12,11 +12,6 @@ import type {
 } from "../types";
 import type { GameService, QueueResult } from "./gameService";
 
-type FunctionResponse<T> = {
-  data: T | null;
-  error: { message: string } | null;
-};
-
 export class SupabaseGameService implements GameService {
   readonly mode = "supabase" as const;
   private channels = new Set<RealtimeChannel>();
@@ -28,15 +23,89 @@ export class SupabaseGameService implements GameService {
     return supabase;
   }
 
-  private async invoke<T>(name: string, body?: Record<string, unknown>): Promise<T> {
-    const response = (await this.client().functions.invoke(name, { body })) as FunctionResponse<T>;
-    if (response.error) {
-      throw new Error(response.error.message);
+  private functionUrl(name: string): string {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error("Supabase nao configurado.");
     }
-    if (!response.data) {
+    return `${supabaseUrl}/functions/v1/${encodeURIComponent(name)}`;
+  }
+
+  private extractErrorMessage(payload: unknown): string | null {
+    if (!payload || typeof payload !== "object") return null;
+    const record = payload as Record<string, unknown>;
+    if (typeof record.error === "string") return record.error;
+    if (typeof record.message === "string") return record.message;
+    return null;
+  }
+
+  private containsGameMatch(payload: unknown): boolean {
+    if (!payload || typeof payload !== "object") return false;
+    if (Array.isArray(payload)) return payload.some((item) => this.containsGameMatch(item));
+
+    const record = payload as Record<string, unknown>;
+    if (typeof record.turnDeadlineAt === "string" && typeof record.battleState === "object") return true;
+    return Object.values(record).some((value) => this.containsGameMatch(value));
+  }
+
+  private async serverNow(): Promise<string> {
+    const { data, error } = await this.client().rpc("server_now");
+    if (error || !data) return new Date().toISOString();
+    return new Date(String(data)).toISOString();
+  }
+
+  private attachServerNow<T>(payload: T, serverNow: string): T {
+    const visit = (value: unknown) => {
+      if (!value || typeof value !== "object") return;
+      if (Array.isArray(value)) {
+        value.forEach(visit);
+        return;
+      }
+
+      const record = value as Record<string, unknown>;
+      if (typeof record.turnDeadlineAt === "string" && typeof record.battleState === "object") {
+        record.serverNow = serverNow;
+      }
+
+      Object.values(record).forEach(visit);
+    };
+
+    visit(payload);
+    return payload;
+  }
+
+  private async invoke<T>(name: string, body?: Record<string, unknown>): Promise<T> {
+    const client = this.client();
+    const {
+      data: { session },
+      error: sessionError,
+    } = await client.auth.getSession();
+
+    if (sessionError) throw sessionError;
+    if (!session) throw new Error("Sessao ausente.");
+
+    const response = await fetch(this.functionUrl(name), {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        apikey: supabaseAnonKey!,
+        authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify(body || {}),
+    });
+
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : null;
+    if (!response.ok) {
+      throw new Error(this.extractErrorMessage(data) || `Falha em ${name}.`);
+    }
+    if (!data) {
       throw new Error(`Resposta vazia em ${name}.`);
     }
-    return response.data;
+
+    if (!this.containsGameMatch(data)) return data as T;
+
+    const serverNow = response.headers.get("date") || (await this.serverNow());
+    return this.attachServerNow(data as T, serverNow);
   }
 
   async getSnapshot(): Promise<AppSnapshot> {

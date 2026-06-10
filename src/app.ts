@@ -55,8 +55,9 @@ function formatDate(value: string): string {
   }).format(new Date(value));
 }
 
-function countdown(deadline: string): string {
-  const remaining = Math.max(0, new Date(deadline).getTime() - Date.now());
+function countdown(deadline: string, serverClockOffsetMs = 0): string {
+  const estimatedServerNow = Date.now() - serverClockOffsetMs;
+  const remaining = Math.max(0, new Date(deadline).getTime() - estimatedServerNow);
   return String(Math.ceil(remaining / 1000));
 }
 
@@ -78,6 +79,7 @@ export class App {
   private timerId: number | null = null;
   private unsubscribeMatch: (() => void) | null = null;
   private unsubscribePrivateRoom: (() => void) | null = null;
+  private serverClockOffsetMs = 0;
 
   constructor(
     private readonly root: HTMLElement,
@@ -304,6 +306,9 @@ export class App {
 
   private enterMatch(match: GameMatch): void {
     this.clearPolling();
+    if (match.serverNow) {
+      this.serverClockOffsetMs = Date.now() - new Date(match.serverNow).getTime();
+    }
     this.state.match = match;
     this.state.screen = match.status === "finished" || match.status === "forfeited" ? "post-match" : "battle";
     this.unsubscribeMatch?.();
@@ -441,7 +446,7 @@ export class App {
     this.timerId = window.setInterval(() => {
       const clock = this.root.querySelector<HTMLElement>("[data-turn-clock]");
       if (clock && this.state.match) {
-        clock.textContent = countdown(this.state.match.turnDeadlineAt);
+        clock.textContent = countdown(this.state.match.turnDeadlineAt, this.serverClockOffsetMs);
       }
     }, 250);
   }
@@ -659,7 +664,7 @@ export class App {
       <section class="battle-screen">
         <div class="battle-hud">
           ${this.renderFighterHud(match.p1.displayName, p1Character.portraitUrl, match.battleState.p1.health, match.battleState.p1.super)}
-          <div class="round-clock" data-turn-clock>${countdown(match.turnDeadlineAt)}</div>
+          <div class="round-clock" data-turn-clock>${countdown(match.turnDeadlineAt, this.serverClockOffsetMs)}</div>
           ${this.renderFighterHud(match.p2.displayName, p2Character.portraitUrl, match.battleState.p2.health, match.battleState.p2.super)}
         </div>
         <div class="arena">

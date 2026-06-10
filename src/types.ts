@@ -115,6 +115,7 @@ export interface GameMatch {
   battleState: BattleState;
   currentTurn: number;
   turnDeadlineAt: string;
+  serverNow?: string;
   localAction: Action | null;
   opponentHasAction: boolean;
   lastTurn: TurnResolution | null;

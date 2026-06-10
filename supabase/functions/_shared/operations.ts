@@ -319,6 +319,7 @@ async function toGameMatch(db: SupabaseClient, match: any, userId: string) {
     battleState: match.state,
     currentTurn: match.current_turn,
     turnDeadlineAt: match.turn_deadline_at,
+    serverNow: new Date().toISOString(),
     localAction,
     opponentHasAction,
     lastTurn: match.last_turn,
