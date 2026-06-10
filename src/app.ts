@@ -80,6 +80,7 @@ export class App {
   private unsubscribeMatch: (() => void) | null = null;
   private unsubscribePrivateRoom: (() => void) | null = null;
   private serverClockOffsetMs = 0;
+  private initialBootstrapComplete = false;
 
   constructor(
     private readonly root: HTMLElement,
@@ -97,6 +98,7 @@ export class App {
       this.state.screen = this.state.snapshot.profile ? "menu" : "login";
       await this.bootstrapIfAuthenticated();
     });
+    this.initialBootstrapComplete = true;
     this.render();
   }
 
@@ -418,6 +420,8 @@ export class App {
     const refreshSelector = "meta[data-final-genesis-room-refresh]";
     const existingRefresh = document.head.querySelector<HTMLMetaElement>(refreshSelector);
     const url = new URL(window.location.href);
+
+    if (!this.initialBootstrapComplete && url.searchParams.has("room")) return;
 
     if (this.state.screen === "private-room" && this.state.room?.code) {
       url.pathname = "/online/";
