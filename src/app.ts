@@ -338,13 +338,29 @@ export class App {
 
   private startRoomPolling(code: string): void {
     this.clearPolling();
-    this.pollId = window.setInterval(async () => {
+    const pollRoom = async () => {
       const response = await this.service.getPrivateRoom(code).catch(() => null);
       if (response?.match) {
         this.state.room = response.room;
         this.enterMatch(response.match);
+        return;
       }
-    }, 2_000);
+
+      const currentMatch = await this.service.getCurrentMatch().catch(() => null);
+      if (currentMatch?.matchType === "private" && currentMatch.status === "active") {
+        if (response?.room) this.state.room = response.room;
+        this.enterMatch(currentMatch);
+        return;
+      }
+
+      if (response?.room) {
+        this.state.room = response.room;
+        this.render();
+      }
+    };
+
+    void pollRoom();
+    this.pollId = window.setInterval(pollRoom, 2_000);
   }
 
   private clearPolling(): void {
