@@ -285,12 +285,11 @@ async function snapshot(db: SupabaseClient, userId: string) {
   };
 }
 
-async function validateSelectedCharacter(db: SupabaseClient, userId: string) {
-  const { data: profile, error } = await db.from("profiles").select("selected_character_id").eq("id", userId).single();
-  if (error || !profile) throw new Error("Perfil nao encontrado.");
-  const { data: unlock } = await db.from("player_unlocked_characters").select("character_id").eq("user_id", userId).eq("character_id", profile.selected_character_id).maybeSingle();
-  if (!unlock) throw new Error("Personagem selecionado esta bloqueado.");
-  return profile.selected_character_id;
+async function validateCharacterUnlock(db: SupabaseClient, userId: string, characterId: string) {
+  const { data: character } = await db.from("characters").select("id,enabled").eq("id", characterId).eq("enabled", true).maybeSingle();
+  if (!character) throw new Error("Personagem invalido.");
+  const { data: unlock } = await db.from("player_unlocked_characters").select("character_id").eq("user_id", userId).eq("character_id", characterId).maybeSingle();
+  if (!unlock) throw new Error("Personagem bloqueado.");
 }
 
 async function profileMap(db: SupabaseClient, ids: string[]) {
@@ -334,7 +333,7 @@ async function getCurrentMatch(db: SupabaseClient, userId: string) {
     .from("matches")
     .select("*")
     .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
-    .in("status", ["waiting", "active", "resolving", "finished", "forfeited"])
+    .in("status", ["waiting", "selecting", "active", "resolving", "finished", "forfeited"])
     .order("updated_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -381,6 +380,7 @@ async function updateRankForFinishedMatch(db: SupabaseClient, match: any, winner
 }
 
 async function addHistory(db: SupabaseClient, match: any, winnerId: string | null, delta: Record<string, number>) {
+  if (!match.player1_character_id || !match.player2_character_id) return;
   const rows = [match.player1_id, match.player2_id].map((userId) => {
     const opponentId = userId === match.player1_id ? match.player2_id : match.player1_id;
     const userIsP1 = userId === match.player1_id;
@@ -459,11 +459,11 @@ async function createMatch(db: SupabaseClient, type: "ranked" | "private", p1: a
   const state = initialBattleState();
   const { data, error } = await db.from("matches").insert({
     match_type: type,
-    status: "active",
+    status: "selecting",
     player1_id: p1.id,
     player2_id: p2.id,
-    player1_character_id: p1.selected_character_id,
-    player2_character_id: p2.selected_character_id,
+    player1_character_id: null,
+    player2_character_id: null,
     state,
     current_turn: 1,
     turn_deadline_at: deadlineFromState(state),
@@ -473,6 +473,37 @@ async function createMatch(db: SupabaseClient, type: "ranked" | "private", p1: a
   await updatePresence(db, p1.id, "in_match", data.id);
   await updatePresence(db, p2.id, "in_match", data.id);
   return data;
+}
+
+async function selectMatchCharacter(db: SupabaseClient, matchId: string, userId: string, characterId: string) {
+  await validateCharacterUnlock(db, userId, characterId);
+  const { data: match } = await db.from("matches").select("*").eq("id", matchId).single();
+  if (!match || ![match.player1_id, match.player2_id].includes(userId)) throw new Error("Partida nao encontrada.");
+  if (!["selecting", "active"].includes(match.status)) throw new Error("Partida nao aceita selecao de personagem.");
+
+  const column = match.player1_id === userId ? "player1_character_id" : "player2_character_id";
+  const currentCharacter = match[column];
+  if (currentCharacter && currentCharacter !== characterId) throw new Error("Personagem da partida ja foi escolhido.");
+
+  const { data: selected } = await db.from("matches").update({ [column]: characterId }).eq("id", match.id).select("*").single();
+  if (!selected) throw new Error("Nao foi possivel selecionar personagem.");
+
+  if (selected.status === "selecting" && selected.player1_character_id && selected.player2_character_id) {
+    const state = selected.state || initialBattleState();
+    const { data: active } = await db.from("matches").update({
+      status: "active",
+      state,
+      current_turn: 1,
+      turn_deadline_at: deadlineFromState(state),
+      last_turn: null,
+    }).eq("id", selected.id).select("*").single();
+    await updatePresence(db, selected.player1_id, "in_match", selected.id);
+    await updatePresence(db, selected.player2_id, "in_match", selected.id);
+    return active;
+  }
+
+  await updatePresence(db, userId, "in_match", selected.id);
+  return selected;
 }
 
 async function operation(req: Request, name: string) {
@@ -501,7 +532,6 @@ async function operation(req: Request, name: string) {
   if (name === "join-ranked-queue") {
     const { data: profile } = await db.from("profiles").select("*").eq("id", user.id).single();
     if (profile.account_type === "guest") throw new Error("Ranked exige login com Google.");
-    await validateSelectedCharacter(db, user.id);
     const { data: rank } = await db.from("player_rank").select("rank_points").eq("user_id", user.id).single();
     const { data: opponentQueue } = await db.from("ranked_queue").select("user_id").eq("status", "waiting").neq("user_id", user.id).order("queued_at", { ascending: true }).limit(1).maybeSingle();
     if (opponentQueue) {
@@ -525,12 +555,11 @@ async function operation(req: Request, name: string) {
   if (name === "current-match") return { match: await getCurrentMatch(db, user.id) };
 
   if (name === "create-private-room") {
-    await validateSelectedCharacter(db, user.id);
     const code = randomCode();
     const { data: profile } = await db.from("profiles").select("*").eq("id", user.id).single();
     const { data: room, error } = await db.from("private_rooms").insert({ code, host_id: user.id }).select("*").single();
     if (error) throw error;
-    return { code: room.code, status: room.status, hostName: profile.display_name, guestName: null, matchId: null, inviteUrl: `${req.headers.get("origin") || ""}/?room=${code}` };
+    return { code: room.code, status: room.status, hostName: profile.display_name, guestName: null, matchId: null, inviteUrl: `${req.headers.get("origin") || ""}/online/?room=${code}` };
   }
 
   if (name === "join-private-room") {
@@ -542,12 +571,10 @@ async function operation(req: Request, name: string) {
       db.from("profiles").select("*").eq("id", room.host_id).single(),
       db.from("profiles").select("*").eq("id", user.id).single(),
     ]);
-    await validateSelectedCharacter(db, room.host_id);
-    await validateSelectedCharacter(db, user.id);
     const match = await createMatch(db, "private", host, guest, code);
     await db.from("private_rooms").update({ guest_id: user.id, match_id: match.id, status: "active" }).eq("code", code);
     return {
-      room: { code, status: "active", hostName: host.display_name, guestName: guest.display_name, matchId: match.id, inviteUrl: `${req.headers.get("origin") || ""}/?room=${code}` },
+      room: { code, status: "active", hostName: host.display_name, guestName: guest.display_name, matchId: match.id, inviteUrl: `${req.headers.get("origin") || ""}/online/?room=${code}` },
       match: await toGameMatch(db, match, user.id),
     };
   }
@@ -560,9 +587,17 @@ async function operation(req: Request, name: string) {
     const profiles = await profileMap(db, ids);
     const match = room.match_id ? await db.from("matches").select("*").eq("id", room.match_id).maybeSingle() : { data: null };
     return {
-      room: { code, status: room.status, hostName: profiles.get(room.host_id)?.display_name || "Host", guestName: room.guest_id ? profiles.get(room.guest_id)?.display_name || "Visitante" : null, matchId: room.match_id, inviteUrl: `${req.headers.get("origin") || ""}/?room=${code}` },
+      room: { code, status: room.status, hostName: profiles.get(room.host_id)?.display_name || "Host", guestName: room.guest_id ? profiles.get(room.guest_id)?.display_name || "Visitante" : null, matchId: room.match_id, inviteUrl: `${req.headers.get("origin") || ""}/online/?room=${code}` },
       match: match.data ? await toGameMatch(db, match.data, user.id) : null,
     };
+  }
+
+  if (name === "select-match-character") {
+    const matchId = String(body.matchId || "");
+    const characterId = String(body.characterId || "");
+    if (!matchId || !characterId) throw new Error("Partida e personagem sao obrigatorios.");
+    const match = await selectMatchCharacter(db, matchId, user.id, characterId);
+    return toGameMatch(db, match, user.id);
   }
 
   if (name === "submit-action") {
@@ -587,6 +622,7 @@ async function operation(req: Request, name: string) {
   if (name === "resolve-turn") {
     const { data: match } = await db.from("matches").select("*").eq("id", String(body.matchId || "")).single();
     if (!match || ![match.player1_id, match.player2_id].includes(user.id)) throw new Error("Partida nao encontrada.");
+    if (match.status !== "active") return toGameMatch(db, match, user.id);
     if (new Date(match.turn_deadline_at).getTime() > Date.now()) return toGameMatch(db, match, user.id);
     const updated = await resolveAndPersist(db, match);
     return toGameMatch(db, updated, user.id);

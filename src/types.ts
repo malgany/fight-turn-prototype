@@ -4,7 +4,7 @@ export type Division = "Bronze" | "Silver" | "Gold" | "Platinum" | "Diamond";
 export type Side = "p1" | "p2";
 export type Action = "Poke" | "Combo" | "Grab" | "Special" | "Super" | "Block" | "Crouch" | "Jump";
 export type MatchType = "ranked" | "private" | "casual";
-export type MatchStatus = "waiting" | "active" | "resolving" | "finished" | "forfeited";
+export type MatchStatus = "waiting" | "selecting" | "active" | "resolving" | "finished" | "forfeited";
 export type MatchResult = "win" | "loss" | "draw";
 
 export interface CharacterDefinition {
@@ -102,7 +102,7 @@ export interface MatchPlayer {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
-  characterId: string;
+  characterId: string | null;
 }
 
 export interface GameMatch {

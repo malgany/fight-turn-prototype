@@ -213,7 +213,7 @@ export class SupabaseGameService implements GameService {
 
     if (error || !data?.match_id) return null;
     const match = await this.invoke<GameMatch>("finish-match", { matchId: data.match_id });
-    return match.status === "active" || match.status === "waiting" || match.status === "resolving" ? match : null;
+    return match.status === "selecting" || match.status === "active" || match.status === "waiting" || match.status === "resolving" ? match : null;
   }
 
   createPrivateRoom(): Promise<PrivateRoom> {
@@ -226,6 +226,10 @@ export class SupabaseGameService implements GameService {
 
   getPrivateRoom(code: string): Promise<{ room: PrivateRoom; match: GameMatch | null }> {
     return this.invoke<{ room: PrivateRoom; match: GameMatch | null }>("private-room", { code });
+  }
+
+  selectMatchCharacter(matchId: string, characterId: string): Promise<GameMatch> {
+    return this.invoke<GameMatch>("select-match-character", { matchId, characterId });
   }
 
   submitAction(matchId: string, action: Action): Promise<GameMatch> {

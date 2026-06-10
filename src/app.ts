@@ -11,6 +11,7 @@ type Screen =
   | "online"
   | "ranked-queue"
   | "private-room"
+  | "match-character-select"
   | "battle"
   | "post-match"
   | "ranking"
@@ -59,6 +60,14 @@ function countdown(deadline: string, serverClockOffsetMs = 0): string {
   const estimatedServerNow = Date.now() - serverClockOffsetMs;
   const remaining = Math.max(0, new Date(deadline).getTime() - estimatedServerNow);
   return String(Math.ceil(remaining / 1000));
+}
+
+function oppositeSide(side: "p1" | "p2"): "p1" | "p2" {
+  return side === "p1" ? "p2" : "p1";
+}
+
+function isLiveMatchStatus(status: GameMatch["status"]): boolean {
+  return status === "selecting" || status === "active" || status === "resolving";
 }
 
 export class App {
@@ -137,13 +146,13 @@ export class App {
     this.startHeartbeat();
     await this.service.heartbeat("online").catch(() => undefined);
     const queuedMatch = await this.service.getMatchedQueueMatch().catch(() => null);
-    if (queuedMatch?.status === "active") {
+    if (queuedMatch && isLiveMatchStatus(queuedMatch.status)) {
       this.enterMatch(queuedMatch);
       return;
     }
 
     const match = await this.service.getCurrentMatch().catch(() => null);
-    if (match?.status === "active") {
+    if (match && isLiveMatchStatus(match.status)) {
       this.enterMatch(match);
       return;
     }
@@ -218,6 +227,14 @@ export class App {
           await this.run("Salvando personagem...", async () => {
             this.state.snapshot = await this.service.selectCharacter(characterId);
             this.state.screen = "profile";
+          });
+        }
+        break;
+      case "select-match-character":
+        if (characterId && this.state.match) {
+          await this.run("Confirmando personagem...", async () => {
+            const match = await this.service.selectMatchCharacter(this.state.match!.id, characterId);
+            this.enterMatch(match);
           });
         }
         break;
@@ -318,12 +335,12 @@ export class App {
       this.serverClockOffsetMs = Date.now() - new Date(match.serverNow).getTime();
     }
     this.state.match = match;
-    this.state.screen = match.status === "finished" || match.status === "forfeited" ? "post-match" : "battle";
+    this.state.screen = match.status === "finished" || match.status === "forfeited" ? "post-match" : match.status === "selecting" ? "match-character-select" : "battle";
     this.unsubscribeMatch?.();
     this.unsubscribeMatch = this.service.watchMatch(match.id, () => {
       void this.refreshMatch();
     });
-    if (this.state.screen === "battle") {
+    if (this.state.screen === "battle" || this.state.screen === "match-character-select") {
       this.pollId = window.setInterval(() => {
         void this.refreshMatch().catch(() => undefined);
       }, 1_000);
@@ -342,6 +359,10 @@ export class App {
         if (this.pollId) window.clearInterval(this.pollId);
         this.pollId = null;
         this.state.screen = "post-match";
+      } else if (match.status === "selecting") {
+        this.state.screen = "match-character-select";
+      } else if (match.status === "active" || match.status === "resolving") {
+        this.state.screen = "battle";
       }
       this.render();
     }
@@ -366,7 +387,7 @@ export class App {
   private startHeartbeat(): void {
     this.stopHeartbeat();
     this.heartbeatId = window.setInterval(() => {
-      const status = this.state.screen === "ranked-queue" ? "in_queue" : this.state.screen === "battle" ? "in_match" : "online";
+      const status = this.state.screen === "ranked-queue" ? "in_queue" : this.state.screen === "battle" || this.state.screen === "match-character-select" ? "in_match" : "online";
       void this.service.heartbeat(status, this.state.match?.id).catch(() => undefined);
     }, 30_000);
   }
@@ -392,7 +413,7 @@ export class App {
     this.clearPolling();
     const pollRoom = async () => {
       const currentMatch = await this.service.getCurrentMatch().catch(() => null);
-      if (currentMatch?.matchType === "private" && currentMatch.status === "active") {
+      if (currentMatch?.matchType === "private" && isLiveMatchStatus(currentMatch.status)) {
         this.enterMatch(currentMatch);
       }
     };
@@ -520,6 +541,8 @@ export class App {
         return this.renderRankedQueue();
       case "private-room":
         return this.renderPrivateRoom();
+      case "match-character-select":
+        return this.renderMatchCharacterSelect();
       case "battle":
         return this.renderBattle();
       case "post-match":
@@ -651,7 +674,7 @@ export class App {
       <section class="queue-screen">
         <div class="queue-pulse"></div>
         <h1>Procurando adversario</h1>
-        <p>Seu personagem selecionado sera usado quando a partida for encontrada.</p>
+        <p>Quando a partida for encontrada, os dois jogadores escolhem personagem.</p>
         <button class="danger-command" data-action="cancel-queue" type="button">Cancelar fila</button>
       </section>
     `;
@@ -679,27 +702,83 @@ export class App {
     `;
   }
 
+  private renderMatchCharacterSelect(): string {
+    const match = this.state.match;
+    if (!match) return "";
+
+    const unlocked = new Set(this.state.snapshot.unlockedCharacterIds);
+    const localSide = match.playerSide;
+    const opponentSide = oppositeSide(localSide);
+    const localPlayer = match[localSide];
+    const opponentPlayer = match[opponentSide];
+    const localSelected = localPlayer.characterId !== null;
+    const opponentSelected = opponentPlayer.characterId !== null;
+    const localCharacter = localPlayer.characterId ? characterById(localPlayer.characterId) : null;
+    const opponentCharacter = opponentPlayer.characterId ? characterById(opponentPlayer.characterId) : null;
+
+    return `
+      <section class="match-select-screen">
+        <div class="match-select-header">
+          <img src="/assets/ui/character-select/title.webp" alt="Selecao de personagem">
+          <p>${localSelected ? "Personagem confirmado. Aguardando adversario." : "Escolha seu personagem para esta partida."}</p>
+        </div>
+        <div class="match-select-status">
+          <div class="select-player-chip ready">
+            <span>${escapeHtml(localPlayer.displayName)}</span>
+            <strong>${localCharacter ? escapeHtml(localCharacter.name) : "Escolhendo"}</strong>
+          </div>
+          <div class="select-player-chip ${opponentSelected ? "ready" : ""}">
+            <span>${escapeHtml(opponentPlayer.displayName)}</span>
+            <strong>${opponentCharacter ? escapeHtml(opponentCharacter.name) : "Aguardando"}</strong>
+          </div>
+        </div>
+        <div class="legacy-character-grid">
+          ${characters.map((character) => {
+            const available = character.enabled && unlocked.has(character.id);
+            const selected = localPlayer.characterId === character.id;
+            return `
+              <button class="legacy-character-card ${selected ? "selected" : ""} ${available ? "" : "locked"}" data-action="select-match-character" data-character="${character.id}" ${available && !localSelected ? "" : "disabled"} type="button">
+                <span class="legacy-card-frame"></span>
+                <img src="${character.portraitUrl}" alt="">
+                <span class="legacy-card-name">${escapeHtml(character.name)}</span>
+                <small>${available ? (selected ? "Confirmado" : "Disponivel") : character.unlockDescription}</small>
+              </button>
+            `;
+          }).join("")}
+        </div>
+        <div class="button-row">
+          <button class="danger-command" data-action="forfeit" type="button">Abandonar</button>
+        </div>
+      </section>
+    `;
+  }
+
   private renderBattle(): string {
     const match = this.state.match;
     if (!match) return "";
-    const p1Character = characterById(match.p1.characterId);
-    const p2Character = characterById(match.p2.characterId);
-    const playerState = match.battleState[match.playerSide];
+    const localSide = match.playerSide;
+    const opponentSide = oppositeSide(localSide);
+    const localPlayer = match[localSide];
+    const opponentPlayer = match[opponentSide];
+    const localCharacter = characterById(localPlayer.characterId || "ninja");
+    const opponentCharacter = characterById(opponentPlayer.characterId || "ninja");
+    const playerState = match.battleState[localSide];
+    const opponentState = match.battleState[opponentSide];
     const canAct = match.status === "active" && !match.localAction;
     return `
       <section class="battle-screen">
         <div class="battle-hud">
-          ${this.renderFighterHud(match.p1.displayName, p1Character.portraitUrl, match.battleState.p1.health, match.battleState.p1.super)}
+          ${this.renderFighterHud(localPlayer.displayName, localCharacter.portraitUrl, playerState.health, playerState.super)}
           <div class="round-clock" data-turn-clock>${countdown(match.turnDeadlineAt, this.serverClockOffsetMs)}</div>
-          ${this.renderFighterHud(match.p2.displayName, p2Character.portraitUrl, match.battleState.p2.health, match.battleState.p2.super)}
+          ${this.renderFighterHud(opponentPlayer.displayName, opponentCharacter.portraitUrl, opponentState.health, opponentState.super)}
         </div>
         <div class="arena">
-          <img class="fighter-art left" src="${p1Character.portraitUrl}" alt="">
+          <img class="fighter-art left" src="${localCharacter.portraitUrl}" alt="">
           <div class="versus-column">
             <span>${match.lastTurn ? escapeHtml(match.lastTurn.primary) : "READY"}</span>
             <small>${match.localAction ? "Voce escolheu" : "Escolha sua acao"} · ${match.opponentHasAction ? "adversario escolheu" : "aguardando adversario"}</small>
           </div>
-          <img class="fighter-art right" src="${p2Character.portraitUrl}" alt="">
+          <img class="fighter-art right" src="${opponentCharacter.portraitUrl}" alt="">
         </div>
         <div class="action-grid">
           ${selectableActions.map((action) => {

@@ -59,12 +59,11 @@ function saveState(state: DemoState): void {
 }
 
 function randomOpponent(): MatchPlayer {
-  const character = characters[Math.floor(Math.random() * 3)];
   return {
     userId: `opponent-${crypto.randomUUID()}`,
     displayName: ["Kael", "Maya", "Ryu", "Sombra"][Math.floor(Math.random() * 4)],
     avatarUrl: null,
-    characterId: character.id,
+    characterId: null,
   };
 }
 
@@ -74,14 +73,14 @@ function makeMatch(profile: PlayerProfile, type: "ranked" | "private"): GameMatc
     userId: profile.id,
     displayName: profile.displayName,
     avatarUrl: profile.avatarUrl,
-    characterId: profile.selectedCharacterId,
+    characterId: null,
   };
   const battleState = createInitialBattleState();
 
   return {
     id: crypto.randomUUID(),
     matchType: type,
-    status: "active",
+    status: "selecting",
     playerSide: "p1",
     p1,
     p2: opponent,
@@ -214,7 +213,7 @@ export class DemoGameService implements GameService {
       hostName: state.profile.displayName,
       guestName: null,
       matchId: null,
-      inviteUrl: `${window.location.origin}/?room=${code}`,
+      inviteUrl: `${window.location.origin}/online/?room=${code}`,
     };
     this.commit({ ...state, privateRoom: room });
     return room;
@@ -230,7 +229,7 @@ export class DemoGameService implements GameService {
       hostName: "Host Demo",
       guestName: state.profile.displayName,
       matchId: match.id,
-      inviteUrl: `${window.location.origin}/?room=${code.toUpperCase()}`,
+      inviteUrl: `${window.location.origin}/online/?room=${code.toUpperCase()}`,
     };
     this.commit({ ...state, privateRoom: room, currentMatch: match, profile: { ...state.profile, presenceStatus: "in_match" } });
     return { room, match };
@@ -240,6 +239,25 @@ export class DemoGameService implements GameService {
     const state = this.state();
     if (!state.privateRoom || state.privateRoom.code !== code.toUpperCase()) throw new Error("Sala nao encontrada.");
     return { room: state.privateRoom, match: state.currentMatch };
+  }
+
+  async selectMatchCharacter(matchId: string, characterId: string): Promise<GameMatch> {
+    const state = this.state();
+    const match = state.currentMatch;
+    if (!match || match.id !== matchId) throw new Error("Partida nao encontrada.");
+    if (!state.unlockedCharacterIds.includes(characterId)) throw new Error("Personagem bloqueado.");
+
+    const opponentCharacter = characters.filter((character) => character.enabled)[Math.floor(Math.random() * 3)];
+    const nextMatch: GameMatch = {
+      ...match,
+      status: "active",
+      p1: { ...match.p1, characterId },
+      p2: { ...match.p2, characterId: opponentCharacter.id },
+      turnDeadlineAt: new Date(Date.now() + turnDurationForState(match.battleState)).toISOString(),
+      serverNow: new Date().toISOString(),
+    };
+    this.commit({ ...state, currentMatch: nextMatch });
+    return nextMatch;
   }
 
   async submitAction(matchId: string, action: Action): Promise<GameMatch> {
@@ -287,8 +305,8 @@ export class DemoGameService implements GameService {
           matchId: match.id,
           opponentName: match.p2.displayName,
           matchType: match.matchType,
-          characterId: match.p1.characterId,
-          opponentCharacterId: match.p2.characterId,
+          characterId: match.p1.characterId || "ninja",
+          opponentCharacterId: match.p2.characterId || "ninja",
           result: playerWon ? "win" : "loss",
           rankDelta: nextMatch.rankDelta,
           createdAt: new Date().toISOString(),
@@ -318,8 +336,8 @@ export class DemoGameService implements GameService {
       matchId,
       opponentName: match.p2.displayName,
       matchType: match.matchType,
-      characterId: match.p1.characterId,
-      opponentCharacterId: match.p2.characterId,
+      characterId: match.p1.characterId || "ninja",
+      opponentCharacterId: match.p2.characterId || "ninja",
       result: "loss",
       rankDelta: match.matchType === "ranked" ? -25 : 0,
       createdAt: new Date().toISOString(),
