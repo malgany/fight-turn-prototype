@@ -1738,23 +1738,10 @@
         background-image: var(--menu-button-options);
       }
 
-      #exitFullscreenButton {
-        aspect-ratio: 960 / 237;
-        background-image: var(--menu-button-exit);
-      }
-
       .menu-button:disabled {
         cursor: wait;
         opacity: 0.64;
         filter: grayscale(0.34);
-      }
-
-      .mobile-exit-button {
-        display: none;
-      }
-
-      body.mobile-fullscreen-required.game-session-active .mobile-exit-button {
-        display: block;
       }
 
       .menu-button:focus-visible,
@@ -1802,11 +1789,6 @@
 
         .audio-toggle:hover {
           transform: translateY(-2px) scale(1.02);
-          filter: brightness(1.08);
-        }
-
-        .fullscreen-play-button:hover {
-          transform: translateY(-2px) scale(1.05);
           filter: brightness(1.08);
         }
 
@@ -2482,54 +2464,6 @@
         cursor: pointer;
       }
 
-      .fullscreen-gate {
-        position: fixed;
-        inset: 0;
-        z-index: 400;
-        display: none;
-        place-items: center;
-        background: rgba(0, 0, 0, 0.72);
-        backdrop-filter: brightness(0.62) blur(1px);
-      }
-
-      body.mobile-fullscreen-required:not(.game-session-active) .fullscreen-gate {
-        display: grid;
-      }
-
-      .fullscreen-play-button {
-        width: clamp(98px, 27vw, 148px);
-        aspect-ratio: 1;
-        border: 4px solid #fff0d8;
-        border-radius: 50%;
-        background: linear-gradient(#f05236, #a81818);
-        display: grid;
-        place-items: center;
-        box-shadow:
-          0 12px 0 rgba(0, 0, 0, 0.5),
-          0 0 26px rgba(255, 41, 41, 0.55),
-          inset 0 0 0 5px rgba(255, 255, 255, 0.08);
-        cursor: pointer;
-        transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
-      }
-
-      .fullscreen-play-button:active {
-        transform: translateY(4px);
-        box-shadow:
-          0 7px 0 rgba(0, 0, 0, 0.5),
-          0 0 22px rgba(255, 41, 41, 0.48),
-          inset 0 0 0 5px rgba(255, 255, 255, 0.08);
-      }
-
-      .fullscreen-play-icon {
-        width: 0;
-        height: 0;
-        margin-left: 8%;
-        border-top: clamp(23px, 6.5vw, 36px) solid transparent;
-        border-bottom: clamp(23px, 6.5vw, 36px) solid transparent;
-        border-left: clamp(36px, 10vw, 56px) solid #ffffff;
-        filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.38));
-      }
-
       .iris-transition {
         position: absolute;
         inset: 0;
@@ -2572,7 +2506,6 @@
           <button class="menu-button" type="button" id="onlineButton">ONLINE</button>
           <button class="menu-button" type="button" id="helpButton">AJUDA</button>
           <button class="menu-button" type="button" id="optionsButton">OPÇÕES</button>
-          <button class="menu-button mobile-exit-button" type="button" id="exitFullscreenButton">SAIR</button>
         </nav>
       </section>
 
@@ -2959,12 +2892,6 @@
       </div>
     </main>
 
-    <div class="fullscreen-gate" id="fullscreenGate" aria-label="Entrar em tela cheia">
-      <button class="fullscreen-play-button" type="button" id="fullscreenPlayButton" aria-label="Entrar em tela cheia">
-        <span class="fullscreen-play-icon" aria-hidden="true"></span>
-      </button>
-    </div>
-
     <aside class="debug-panel" id="debugPanel" aria-label="Debug local">
       <h2 class="debug-title">DEBUG LOCAL</h2>
       <div class="debug-status" id="debugStatus">Escolha PLAYER e CPU para resolver.</div>
@@ -3154,7 +3081,6 @@
       const comboHitFrames = buildAnimationFrames(comboHitEffect);
       const LOCAL_DEBUG_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"]);
       const debugAvailable = LOCAL_DEBUG_HOSTS.has(window.location.hostname);
-      const mobileFullscreenRequired = isMobileFullscreenRequired();
       const attackActions = ["Poke", "Combo", "Grab", "Special", "Super"];
       const selectableActions = ["Poke", "Combo", "Grab", "Special", "Super", "Block", "Crouch", "Jump"];
       const comboGuaranteedActions = selectableActions.filter((action) => !["Grab", "Combo"].includes(action));
@@ -3198,8 +3124,6 @@
         debugAvailable,
         debugMode: debugAvailable,
         debugTab: "basic",
-        mobileFullscreenRequired,
-        gameSessionActive: !mobileFullscreenRequired,
         startTransitionActive: false,
         selectedCharacter: "ninja",
         selectedP1Character: null,
@@ -3290,9 +3214,6 @@
         onlineButton: document.querySelector("#onlineButton"),
         helpButton: document.querySelector("#helpButton"),
         optionsButton: document.querySelector("#optionsButton"),
-        exitFullscreenButton: document.querySelector("#exitFullscreenButton"),
-        fullscreenGate: document.querySelector("#fullscreenGate"),
-        fullscreenPlayButton: document.querySelector("#fullscreenPlayButton"),
         backFromHelpButton: document.querySelector("#backFromHelpButton"),
         backFromOptionsButton: document.querySelector("#backFromOptionsButton"),
         audioToggle: document.querySelector("#audioToggle"),
@@ -3337,7 +3258,6 @@
 
       document.body.classList.toggle("debug-mode", state.debugAvailable);
       syncDebugModeUi();
-      syncFullscreenGateUi();
 
       let idleFrameIndex = 0;
       let idleTimerId = null;
@@ -3359,99 +3279,8 @@
         musicSources: {},
       };
 
-      function isMobileFullscreenRequired() {
-        return window.matchMedia("(pointer: coarse) and (max-width: 900px)").matches;
-      }
-
-      function fullscreenElement() {
-        return document.fullscreenElement || document.webkitFullscreenElement || null;
-      }
-
       function canUseGameAudio() {
-        return !state.mobileFullscreenRequired || state.gameSessionActive;
-      }
-
-      function syncFullscreenGateUi() {
-        document.body.classList.toggle("mobile-fullscreen-required", state.mobileFullscreenRequired);
-        document.body.classList.toggle("game-session-active", state.gameSessionActive);
-      }
-
-      function requestGameFullscreen() {
-        const target = document.documentElement;
-
-        if (target.requestFullscreen) {
-          return target.requestFullscreen();
-        }
-
-        if (target.webkitRequestFullscreen) {
-          target.webkitRequestFullscreen();
-          return Promise.resolve();
-        }
-
-        return Promise.reject(new Error("Fullscreen API is not available."));
-      }
-
-      function exitGameFullscreen() {
-        if (document.exitFullscreen) {
-          return document.exitFullscreen();
-        }
-
-        if (document.webkitExitFullscreen) {
-          document.webkitExitFullscreen();
-          return Promise.resolve();
-        }
-
-        return Promise.resolve();
-      }
-
-      function stopAllAudio() {
-        stopMusic();
-
-        if (audioState.context?.state === "running") {
-          audioState.context.suspend().catch(() => {});
-        }
-      }
-
-      async function enterGameSession() {
-        if (!state.mobileFullscreenRequired) {
-          return;
-        }
-
-        try {
-          await requestGameFullscreen();
-        } catch {
-          return;
-        }
-
-        state.gameSessionActive = true;
-        syncFullscreenGateUi();
-        activateAudioFromGesture();
-      }
-
-      function leaveGameSession({ exitFullscreen = true } = {}) {
-        if (!state.mobileFullscreenRequired) {
-          return;
-        }
-
-        state.gameSessionActive = false;
-        window.clearInterval(state.timerId);
-        stopAllAudio();
-        showStartScreen();
-        syncFullscreenGateUi();
-
-        if (exitFullscreen && fullscreenElement()) {
-          exitGameFullscreen().catch(() => {});
-        }
-      }
-
-      function handleFullscreenChange() {
-        if (!state.mobileFullscreenRequired || !state.gameSessionActive) {
-          return;
-        }
-
-        if (!fullscreenElement()) {
-          leaveGameSession({ exitFullscreen: false });
-        }
+        return true;
       }
 
       function readAudioPreference() {
@@ -6674,12 +6503,6 @@
       el.optionsButton.addEventListener("click", () => {
         runUiButtonAction(el.optionsButton, showOptionsScreen);
       });
-      el.exitFullscreenButton.addEventListener("click", () => {
-        leaveGameSession();
-      });
-      el.fullscreenPlayButton.addEventListener("click", () => {
-        enterGameSession();
-      });
       el.helpTabs.forEach((tab) => {
         tab.addEventListener("click", () => {
           runUiButtonAction(tab, () => setHelpTab(tab.dataset.helpTab));
@@ -6721,8 +6544,6 @@
         event.preventDefault();
       });
       document.addEventListener("pointerdown", activateAudioFromGesture, { once: true });
-      document.addEventListener("fullscreenchange", handleFullscreenChange);
-      document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
       window.addEventListener("pointermove", handleAdvancedSelectionPointerMove);
       window.addEventListener("pointerup", handleAdvancedSelectionPointerEnd);
       window.addEventListener("pointercancel", handleAdvancedSelectionPointerEnd);
