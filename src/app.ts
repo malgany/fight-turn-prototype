@@ -315,14 +315,26 @@ export class App {
     this.unsubscribeMatch = this.service.watchMatch(match.id, () => {
       void this.refreshMatch();
     });
+    if (this.state.screen === "battle") {
+      this.pollId = window.setInterval(() => {
+        void this.refreshMatch().catch(() => undefined);
+      }, 1_000);
+    }
     void this.service.heartbeat("in_match", match.id);
   }
 
   private async refreshMatch(): Promise<void> {
     const match = await this.service.getCurrentMatch();
     if (match) {
+      if (match.serverNow) {
+        this.serverClockOffsetMs = Date.now() - new Date(match.serverNow).getTime();
+      }
       this.state.match = match;
-      if (match.status === "finished" || match.status === "forfeited") this.state.screen = "post-match";
+      if (match.status === "finished" || match.status === "forfeited") {
+        if (this.pollId) window.clearInterval(this.pollId);
+        this.pollId = null;
+        this.state.screen = "post-match";
+      }
       this.render();
     }
   }
