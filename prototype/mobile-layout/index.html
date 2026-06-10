@@ -6728,7 +6728,166 @@
       window.addEventListener("pointercancel", handleAdvancedSelectionPointerEnd);
       window.addEventListener("resize", syncAdvancedSelectionFrame);
       syncAudioToggleUi();
-      showStartScreen();
+
+      const onlineBridgeEnabled = new URLSearchParams(window.location.search).get("onlineBridge") === "1";
+      const onlineBridge = {
+        active: false,
+        started: false,
+        matchId: null,
+        lastTurnKey: null,
+        allowLocalResolve: false,
+      };
+      const legacyResolveTurn = resolveTurn;
+
+      if (onlineBridgeEnabled) {
+        resolveTurn = function resolveTurnOnlineBridgeGuard() {
+          if (onlineBridge.active && !onlineBridge.allowLocalResolve) {
+            return;
+          }
+
+          return legacyResolveTurn();
+        };
+      }
+
+      function onlineBridgePost(message) {
+        if (!onlineBridgeEnabled || window.parent === window) {
+          return;
+        }
+
+        window.parent.postMessage({ source: "final-genesis-legacy", ...message }, window.location.origin);
+      }
+
+      function onlineBridgeApplyState(battleState) {
+        if (!battleState) {
+          return;
+        }
+
+        state.p1.health = battleState.p1?.health ?? state.p1.health;
+        state.p1.super = battleState.p1?.super ?? state.p1.super;
+        state.p2.health = battleState.p2?.health ?? state.p2.health;
+        state.p2.super = battleState.p2?.super ?? state.p2.super;
+        state.advantage = battleState.advantage || null;
+        state.activeGuaranteedTurn = battleState.activeGuaranteedTurn || null;
+        state.guaranteedTurn = null;
+        state.turnDuration = state.activeGuaranteedTurn?.durationMs || TURN_DURATION;
+        syncHealthTrailToCurrent();
+        updateHud();
+      }
+
+      function onlineBridgeSetActionLock(locked) {
+        el.actionButtons.forEach((button) => {
+          const action = button.dataset.action;
+          button.disabled = locked || state.phase !== "choosing" || !canUseAction("p1", action);
+        });
+      }
+
+      async function onlineBridgeStart(payload) {
+        if (onlineBridge.started && onlineBridge.matchId === payload.matchId) {
+          return;
+        }
+
+        onlineBridge.active = true;
+        onlineBridge.started = true;
+        onlineBridge.matchId = payload.matchId;
+        onlineBridge.lastTurnKey = null;
+        state.debugAvailable = false;
+        state.debugMode = true;
+        state.selectedP1Character = payload.localCharacterId;
+        state.selectedP2Character = payload.opponentCharacterId;
+        document.body.classList.add("online-bridge-mode");
+
+        const loaded = await activateSelectedCharacters();
+        if (!loaded) {
+          onlineBridgePost({ type: "error", message: "character-load-failed" });
+          return;
+        }
+
+        el.startScreen.classList.add("is-hidden");
+        el.characterSelectScreen.classList.add("is-hidden");
+        el.helpScreen.classList.add("is-hidden");
+        el.optionsScreen.classList.add("is-hidden");
+        applyRandomStageBackground();
+        resetBattle();
+        onlineBridgeApplyState(payload.battleState);
+        el.noticePrimary.textContent = "READY";
+        el.noticeSecondary.textContent = "";
+        onlineBridgeSetActionLock(Boolean(payload.localAction));
+      }
+
+      async function onlineBridgeSync(payload) {
+        if (!payload || payload.type !== "sync" || !payload.localCharacterId || !payload.opponentCharacterId) {
+          return;
+        }
+
+        await onlineBridgeStart(payload);
+        if (payload.status !== "active" && payload.status !== "resolving") {
+          onlineBridgeSetActionLock(true);
+          return;
+        }
+
+        const turnKey = payload.lastTurn
+          ? `${payload.matchId}:${payload.currentTurn}:${payload.lastTurn.primary}:${payload.lastTurn.p1Action || "none"}:${payload.lastTurn.p2Action || "none"}`
+          : null;
+
+        if (payload.lastTurn && onlineBridge.lastTurnKey !== turnKey) {
+          onlineBridge.lastTurnKey = turnKey;
+          onlineBridgeApplyState(payload.lastTurn.before);
+          state.selectedAction = payload.lastTurn.p1Action;
+          state.aiAction = payload.lastTurn.p2Action;
+          onlineBridge.allowLocalResolve = true;
+          legacyResolveTurn();
+          onlineBridge.allowLocalResolve = false;
+          window.setTimeout(() => {
+            onlineBridgeApplyState(payload.battleState);
+            onlineBridgeSetActionLock(Boolean(payload.localAction));
+          }, 1200);
+          return;
+        }
+
+        onlineBridgeApplyState(payload.battleState);
+        state.selectedAction = payload.localAction || null;
+        state.aiAction = null;
+        setTokenDisplay(false);
+        el.noticePrimary.textContent = payload.localAction ? "AGUARDANDO" : "READY";
+        el.noticeSecondary.textContent = payload.opponentHasAction ? "Adversario escolheu" : "";
+        onlineBridgeSetActionLock(Boolean(payload.localAction));
+      }
+
+      if (onlineBridgeEnabled) {
+        document.addEventListener("click", (event) => {
+          const button = event.target.closest?.(".action");
+          if (!button || !onlineBridge.active) {
+            return;
+          }
+
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if (button.disabled || state.phase !== "choosing") {
+            return;
+          }
+
+          const action = button.dataset.action;
+          selectActionForSide("p1", action);
+          onlineBridgeSetActionLock(true);
+          onlineBridgePost({ type: "action", action });
+        }, true);
+
+        el.exitBattleButton.addEventListener("click", () => {
+          onlineBridgePost({ type: "forfeit" });
+        });
+
+        window.addEventListener("message", (event) => {
+          if (event.origin !== window.location.origin) {
+            return;
+          }
+
+          void onlineBridgeSync(event.data);
+        });
+
+        onlineBridgePost({ type: "ready" });
+      } else {
+        showStartScreen();
+      }
     </script>
   </body>
 </html>

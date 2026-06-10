@@ -1,6 +1,6 @@
 import { characterById, characters } from "./data/characters";
 import { selectableActions, turnDurationForState } from "./domain/battle";
-import type { Action, AppSnapshot, GameMatch, LeaderboardEntry, MatchHistoryEntry, PrivateRoom } from "./types";
+import type { Action, AppSnapshot, BattleState, GameMatch, GuaranteedTurn, LeaderboardEntry, MatchHistoryEntry, PrivateRoom, Side, TurnResolution } from "./types";
 import type { GameService } from "./services/gameService";
 
 type Screen =
@@ -90,6 +90,7 @@ export class App {
   private unsubscribePrivateRoom: (() => void) | null = null;
   private serverClockOffsetMs = 0;
   private initialBootstrapComplete = false;
+  private resolvingExpiredTurn = false;
 
   constructor(
     private readonly root: HTMLElement,
@@ -112,6 +113,11 @@ export class App {
   }
 
   private bindEvents(): void {
+    window.addEventListener("message", (event) => {
+      if (event.origin !== window.location.origin) return;
+      void this.handleLegacyBattleMessage(event.data);
+    });
+
     this.root.addEventListener("click", (event) => {
       const target = event.target as HTMLElement;
       const button = target.closest<HTMLElement>("[data-action], [data-nav], [data-match-action]");
@@ -271,6 +277,26 @@ export class App {
     }
   }
 
+  private async handleLegacyBattleMessage(data: unknown): Promise<void> {
+    if (!data || typeof data !== "object") return;
+    const message = data as Record<string, unknown>;
+    if (message.source !== "final-genesis-legacy") return;
+
+    if (message.type === "ready") {
+      this.syncLegacyBattleFrame();
+      return;
+    }
+
+    if (message.type === "action" && typeof message.action === "string") {
+      await this.submitMatchAction(message.action as Action);
+      return;
+    }
+
+    if (message.type === "forfeit") {
+      await this.forfeit();
+    }
+  }
+
   private async joinRanked(): Promise<void> {
     const { profile } = this.state.snapshot;
     if (!profile) return;
@@ -329,6 +355,84 @@ export class App {
     }
   }
 
+  private displaySideFor(match: GameMatch, serverSide: Side | null): Side | null {
+    if (!serverSide) return null;
+    return serverSide === match.playerSide ? "p1" : "p2";
+  }
+
+  private mapGuaranteedTurn(match: GameMatch, guaranteedTurn: GuaranteedTurn | null): GuaranteedTurn | null {
+    if (!guaranteedTurn) return null;
+    return {
+      ...guaranteedTurn,
+      side: this.displaySideFor(match, guaranteedTurn.side) || "p1",
+      allowedActions: [...guaranteedTurn.allowedActions],
+    };
+  }
+
+  private mapBattleStateForLegacy(match: GameMatch, state: BattleState): BattleState {
+    const opponentSide = oppositeSide(match.playerSide);
+    return {
+      p1: { ...state[match.playerSide] },
+      p2: { ...state[opponentSide] },
+      advantage: this.displaySideFor(match, state.advantage),
+      activeGuaranteedTurn: this.mapGuaranteedTurn(match, state.activeGuaranteedTurn),
+      turnNumber: state.turnNumber,
+    };
+  }
+
+  private mapTurnForLegacy(match: GameMatch, turn: TurnResolution | null): TurnResolution | null {
+    if (!turn) return null;
+    const opponentSide = oppositeSide(match.playerSide);
+    const localIsP1 = match.playerSide === "p1";
+    return {
+      ...turn,
+      winner: this.displaySideFor(match, turn.winner),
+      loser: this.displaySideFor(match, turn.loser),
+      damaged: turn.damaged.map((side) => this.displaySideFor(match, side)).filter((side): side is Side => Boolean(side)),
+      knockedDown: turn.knockedDown.map((side) => this.displaySideFor(match, side)).filter((side): side is Side => Boolean(side)),
+      guaranteedTurn: this.mapGuaranteedTurn(match, turn.guaranteedTurn),
+      p1Action: localIsP1 ? turn.p1Action : turn.p2Action,
+      p2Action: localIsP1 ? turn.p2Action : turn.p1Action,
+      before: this.mapBattleStateForLegacy(match, turn.before),
+      after: this.mapBattleStateForLegacy(match, turn.after),
+      matchWinner: this.displaySideFor(match, turn.matchWinner),
+    };
+  }
+
+  private legacyBattlePayload(match: GameMatch): Record<string, unknown> | null {
+    const localCharacterId = match[match.playerSide].characterId;
+    const opponentSide = oppositeSide(match.playerSide);
+    const opponentCharacterId = match[opponentSide].characterId;
+    if (!localCharacterId || !opponentCharacterId) return null;
+
+    return {
+      source: "final-genesis-online",
+      type: "sync",
+      matchId: match.id,
+      status: match.status,
+      localName: match[match.playerSide].displayName,
+      opponentName: match[opponentSide].displayName,
+      localCharacterId,
+      opponentCharacterId,
+      battleState: this.mapBattleStateForLegacy(match, match.battleState),
+      currentTurn: match.currentTurn,
+      turnDeadlineAt: match.turnDeadlineAt,
+      localAction: match.localAction,
+      opponentHasAction: match.opponentHasAction,
+      lastTurn: this.mapTurnForLegacy(match, match.lastTurn),
+      winnerId: match.winnerId,
+    };
+  }
+
+  private syncLegacyBattleFrame(): void {
+    const match = this.state.match;
+    if (!match || this.state.screen !== "battle") return;
+    const frame = this.root.querySelector<HTMLIFrameElement>("[data-legacy-online-battle]");
+    const payload = this.legacyBattlePayload(match);
+    if (!frame?.contentWindow || !payload) return;
+    frame.contentWindow.postMessage(payload, window.location.origin);
+  }
+
   private enterMatch(match: GameMatch): void {
     this.clearPolling();
     if (match.serverNow) {
@@ -351,6 +455,7 @@ export class App {
   private async refreshMatch(): Promise<void> {
     const match = await this.service.getCurrentMatch();
     if (match) {
+      const previousScreen = this.state.screen;
       if (match.serverNow) {
         this.serverClockOffsetMs = Date.now() - new Date(match.serverNow).getTime();
       }
@@ -364,16 +469,24 @@ export class App {
       } else if (match.status === "active" || match.status === "resolving") {
         this.state.screen = "battle";
       }
-      this.render();
+      if (previousScreen === "battle" && this.state.screen === "battle") {
+        this.syncLegacyBattleFrame();
+      } else {
+        this.render();
+      }
     }
   }
 
   private async submitMatchAction(action: Action): Promise<void> {
     if (!this.state.match) return;
-    await this.run("Enviando acao...", async () => {
+    this.state.error = null;
+    try {
       const match = await this.service.submitAction(this.state.match!.id, action);
       this.enterMatch(match);
-    });
+    } catch (error) {
+      this.state.error = error instanceof Error ? error.message : String(error);
+      this.render();
+    }
   }
 
   private async forfeit(): Promise<void> {
@@ -443,6 +556,7 @@ export class App {
       </main>
     `;
     this.bindRenderedControls();
+    this.syncLegacyBattleFrame();
     this.startUiTimer();
     this.syncRouteRefresh();
   }
@@ -478,6 +592,10 @@ export class App {
   }
 
   private bindRenderedControls(): void {
+    this.root.querySelectorAll<HTMLIFrameElement>("[data-legacy-online-battle]").forEach((frame) => {
+      frame.addEventListener("load", () => this.syncLegacyBattleFrame());
+    });
+
     this.root.querySelectorAll<HTMLButtonElement>("[data-match-action]").forEach((button) => {
       button.addEventListener("click", (event) => {
         event.preventDefault();
@@ -495,7 +613,26 @@ export class App {
       if (clock && this.state.match) {
         clock.textContent = countdown(this.state.match.turnDeadlineAt, this.serverClockOffsetMs);
       }
+      if (this.state.screen === "battle" && this.state.match?.status === "active") {
+        const estimatedServerNow = Date.now() - this.serverClockOffsetMs;
+        if (new Date(this.state.match.turnDeadlineAt).getTime() <= estimatedServerNow) {
+          void this.resolveExpiredTurn();
+        }
+      }
     }, 250);
+  }
+
+  private async resolveExpiredTurn(): Promise<void> {
+    if (!this.state.match || this.resolvingExpiredTurn) return;
+    this.resolvingExpiredTurn = true;
+    try {
+      const match = await this.service.resolveTurn(this.state.match.id);
+      this.enterMatch(match);
+    } catch {
+      // Polling will retry; avoid flashing errors for timer-driven resolution.
+    } finally {
+      this.resolvingExpiredTurn = false;
+    }
   }
 
   private renderTopBar(): string {
@@ -756,6 +893,23 @@ export class App {
   private renderBattle(): string {
     const match = this.state.match;
     if (!match) return "";
+    return `
+      <section class="legacy-online-battle-screen">
+        <iframe
+          class="legacy-online-battle-frame"
+          data-legacy-online-battle
+          src="/prototype/mobile-layout/?onlineBridge=1"
+          title="Batalha online Final Genesis"
+        ></iframe>
+        <div class="legacy-online-status" aria-live="polite">
+          <span>${match.localAction ? "Voce escolheu" : "Escolha sua acao"}</span>
+          <span>${match.opponentHasAction ? "adversario escolheu" : "aguardando adversario"}</span>
+        </div>
+      </section>
+    `;
+  }
+
+    /*
     const localSide = match.playerSide;
     const opponentSide = oppositeSide(localSide);
     const localPlayer = match[localSide];
@@ -793,6 +947,7 @@ export class App {
     `;
   }
 
+    */
   private renderFighterHud(name: string, portrait: string, health: number, superValue: number): string {
     return `
       <div class="fighter-hud-app">
