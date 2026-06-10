@@ -163,4 +163,18 @@ export class SupabaseGameService implements GameService {
       void this.client().removeChannel(channel);
     };
   }
+
+  watchPrivateRoom(code: string, onChange: () => void): () => void {
+    const normalizedCode = code.toUpperCase();
+    const channel = this.client()
+      .channel(`private-room:${normalizedCode}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "private_rooms", filter: `code=eq.${normalizedCode}` }, onChange)
+      .subscribe();
+    this.channels.add(channel);
+
+    return () => {
+      this.channels.delete(channel);
+      void this.client().removeChannel(channel);
+    };
+  }
 }

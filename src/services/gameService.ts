@@ -34,4 +34,5 @@ export interface GameService {
   resolveTurn(matchId: string): Promise<GameMatch>;
   forfeitMatch(matchId: string): Promise<GameMatch>;
   watchMatch(matchId: string, onChange: () => void): () => void;
+  watchPrivateRoom(code: string, onChange: () => void): () => void;
 }

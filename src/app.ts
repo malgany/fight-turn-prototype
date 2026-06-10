@@ -77,6 +77,7 @@ export class App {
   private pollId: number | null = null;
   private timerId: number | null = null;
   private unsubscribeMatch: (() => void) | null = null;
+  private unsubscribePrivateRoom: (() => void) | null = null;
 
   constructor(
     private readonly root: HTMLElement,
@@ -359,6 +360,9 @@ export class App {
       }
     };
 
+    this.unsubscribePrivateRoom = this.service.watchPrivateRoom(code, () => {
+      void pollRoom();
+    });
     void pollRoom();
     this.pollId = window.setInterval(pollRoom, 2_000);
   }
@@ -366,6 +370,8 @@ export class App {
   private clearPolling(): void {
     if (this.pollId) window.clearInterval(this.pollId);
     this.pollId = null;
+    this.unsubscribePrivateRoom?.();
+    this.unsubscribePrivateRoom = null;
   }
 
   private render(): void {
