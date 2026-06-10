@@ -132,6 +132,8 @@ export class App {
     if (!this.state.snapshot.profile) return;
     this.startHeartbeat();
     await this.service.heartbeat("online").catch(() => undefined);
+    const match = await this.service.getCurrentMatch().catch(() => null);
+    if (match?.status === "active") this.enterMatch(match);
   }
 
   private async run(label: string, task: () => Promise<void>): Promise<void> {
@@ -340,17 +342,16 @@ export class App {
   private startRoomPolling(code: string): void {
     this.clearPolling();
     const pollRoom = async () => {
+      const currentMatch = await this.service.getCurrentMatch().catch(() => null);
+      if (currentMatch?.matchType === "private" && currentMatch.status === "active") {
+        this.enterMatch(currentMatch);
+        return;
+      }
+
       const response = await this.service.getPrivateRoom(code).catch(() => null);
       if (response?.match) {
         this.state.room = response.room;
         this.enterMatch(response.match);
-        return;
-      }
-
-      const currentMatch = await this.service.getCurrentMatch().catch(() => null);
-      if (currentMatch?.matchType === "private" && currentMatch.status === "active") {
-        if (response?.room) this.state.room = response.room;
-        this.enterMatch(currentMatch);
         return;
       }
 
