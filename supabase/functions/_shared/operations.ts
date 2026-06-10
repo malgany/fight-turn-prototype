@@ -12,6 +12,7 @@ const corsHeaders = {
 const attackActions: Action[] = ["Poke", "Combo", "Grab", "Special", "Super"];
 const selectableActions: Action[] = ["Poke", "Combo", "Grab", "Special", "Super", "Block", "Crouch", "Jump"];
 const comboGuaranteedActions = selectableActions.filter((action) => !["Grab", "Combo"].includes(action));
+const TURN_RESOLUTION_VISUAL_BUFFER_MS = 8000;
 const actionData: Record<Action, { speed?: number; damage?: number }> = {
   Poke: { speed: 1, damage: 4 },
   Combo: { speed: 2, damage: 12 },
@@ -107,6 +108,10 @@ function turnDurationMs(state: any) {
 
 function deadlineFromState(state: any) {
   return new Date(Date.now() + turnDurationMs(state)).toISOString();
+}
+
+function deadlineAfterTurnResolution(state: any) {
+  return new Date(Date.now() + turnDurationMs(state) + TURN_RESOLUTION_VISUAL_BUFFER_MS).toISOString();
 }
 
 function opposite(side: Side): Side {
@@ -325,6 +330,7 @@ async function toGameMatch(db: SupabaseClient, match: any, userId: string) {
     winnerId: match.winner_id,
     rankDelta: delta,
     privateScore,
+    finishedReason: match.finished_reason || null,
   };
 }
 
@@ -431,22 +437,54 @@ async function finishMatch(db: SupabaseClient, match: any, winnerSide: Side | nu
   return updated;
 }
 
+function isInactiveTimeoutResult(result: any) {
+  return result?.primary === "TEMPO ESGOTADO" && !result.p1Action && !result.p2Action;
+}
+
+async function consecutiveInactiveTimeouts(db: SupabaseClient, match: any, result: any) {
+  if (!isInactiveTimeoutResult(result)) return 0;
+
+  const { data: turns } = await db
+    .from("match_turns")
+    .select("turn_number,p1_action,p2_action")
+    .eq("match_id", match.id)
+    .gte("turn_number", match.current_turn - 2)
+    .lte("turn_number", match.current_turn)
+    .order("turn_number", { ascending: false })
+    .limit(3);
+
+  const recentTurns = turns || [];
+  if (recentTurns.length !== 3) return 0;
+  return recentTurns.every((turn: any) => !turn.p1_action && !turn.p2_action) ? 3 : 0;
+}
+
 async function resolveAndPersist(db: SupabaseClient, match: any) {
   const { data: actions } = await db.from("match_actions").select("*").eq("match_id", match.id).eq("turn_number", match.current_turn);
   const p1Action = (actions || []).find((action: any) => action.user_id === match.player1_id)?.action || null;
   const p2Action = (actions || []).find((action: any) => action.user_id === match.player2_id)?.action || null;
   const result = resolveTurn(match.state, p1Action, p2Action);
   await db.from("match_turns").upsert({ match_id: match.id, turn_number: match.current_turn, p1_action: p1Action, p2_action: p2Action, result }, { onConflict: "match_id,turn_number" });
+  if (await consecutiveInactiveTimeouts(db, match, result) >= 3) {
+    const inactivityResult = {
+      ...result,
+      primary: "PARTIDA ENCERRADA",
+      secondary: "Tres turnos sem acao. Empate sem perda de pontos.",
+    };
+    const updatedForState = { ...match, state: result.after, last_turn: inactivityResult };
+    await db.from("matches").update({ state: result.after, last_turn: inactivityResult }).eq("id", match.id);
+    return finishMatch(db, updatedForState, null, "inactivity_draw");
+  }
   if (result.finished) {
     const updatedForState = { ...match, state: result.after, last_turn: result };
     await db.from("matches").update({ state: result.after, last_turn: result }).eq("id", match.id);
     return finishMatch(db, updatedForState, result.matchWinner, "finished");
   }
   const { data: updated } = await db.from("matches").update({
+    status: "active",
     state: result.after,
     last_turn: result,
     current_turn: result.after.turnNumber,
-    turn_deadline_at: deadlineFromState(result.after),
+    turn_deadline_at: deadlineAfterTurnResolution(result.after),
   }).eq("id", match.id).select("*").single();
   return updated;
 }
@@ -622,9 +660,9 @@ async function operation(req: Request, name: string) {
   if (name === "resolve-turn") {
     const { data: match } = await db.from("matches").select("*").eq("id", String(body.matchId || "")).single();
     if (!match || ![match.player1_id, match.player2_id].includes(user.id)) throw new Error("Partida nao encontrada.");
-    if (match.status !== "active") return toGameMatch(db, match, user.id);
-    if (new Date(match.turn_deadline_at).getTime() > Date.now()) return toGameMatch(db, match, user.id);
-    const updated = await resolveAndPersist(db, match);
+    if (!["active", "resolving"].includes(match.status)) return toGameMatch(db, match, user.id);
+    if (match.status === "active" && new Date(match.turn_deadline_at).getTime() > Date.now()) return toGameMatch(db, match, user.id);
+    const updated = await resolveAndPersist(db, { ...match, status: "active" });
     return toGameMatch(db, updated, user.id);
   }
 

@@ -70,6 +70,21 @@ function isLiveMatchStatus(status: GameMatch["status"]): boolean {
   return status === "selecting" || status === "active" || status === "resolving";
 }
 
+function initialScreenForRoute(): Screen {
+  return window.location.pathname.startsWith("/online") || window.location.pathname.startsWith("/auth/callback") ? "online" : "menu";
+}
+
+function usesMobileStage(screen: Screen): boolean {
+  return ["online", "ranked-queue", "private-room", "match-character-select", "battle", "post-match"].includes(screen);
+}
+
+function characterVisualClass(characterId: string): string {
+  if (characterId === "itzcoatl") return "shaman";
+  if (characterId === "aton") return "aton";
+  if (characterId === "coming-soon") return "coming-soon";
+  return "ninja";
+}
+
 export class App {
   private state: AppState = {
     screen: "login",
@@ -87,10 +102,15 @@ export class App {
   private pollId: number | null = null;
   private timerId: number | null = null;
   private unsubscribeMatch: (() => void) | null = null;
+  private unsubscribeRankedQueue: (() => void) | null = null;
   private unsubscribePrivateRoom: (() => void) | null = null;
   private serverClockOffsetMs = 0;
+  private turnClockKey: string | null = null;
+  private localTurnDeadlineMs: number | null = null;
   private initialBootstrapComplete = false;
   private resolvingExpiredTurn = false;
+  private legacyBattleVisualBusyUntilMs = 0;
+  private legacyBattleVisualBusyKey: string | null = null;
 
   constructor(
     private readonly root: HTMLElement,
@@ -105,7 +125,7 @@ export class App {
         await this.service.signOut();
         this.state.snapshot = emptySnapshot;
       }
-      this.state.screen = this.state.snapshot.profile ? "menu" : "login";
+      this.state.screen = this.state.snapshot.profile ? initialScreenForRoute() : "login";
       await this.bootstrapIfAuthenticated();
     });
     this.initialBootstrapComplete = true;
@@ -287,6 +307,16 @@ export class App {
       return;
     }
 
+    if (message.type === "visual-busy") {
+      this.markLegacyBattleVisualBusy(message);
+      return;
+    }
+
+    if (message.type === "visual-ready") {
+      this.markLegacyBattleVisualReady(message);
+      return;
+    }
+
     if (message.type === "action" && typeof message.action === "string") {
       await this.submitMatchAction(message.action as Action);
       return;
@@ -295,6 +325,61 @@ export class App {
     if (message.type === "forfeit") {
       await this.forfeit();
     }
+  }
+
+  private legacyBattleVisualKey(match: GameMatch | null = this.state.match): string | null {
+    return match ? `${match.id}:${match.currentTurn}` : null;
+  }
+
+  private markLegacyBattleVisualBusy(message: Record<string, unknown>): void {
+    const match = this.state.match;
+    if (!match || message.matchId !== match.id || Number(message.currentTurn) !== match.currentTurn) return;
+
+    const durationMs = Number(message.durationMs);
+    const busyMs = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 4_000;
+    const decisionMs = turnDurationForState(match.battleState);
+    this.legacyBattleVisualBusyKey = this.legacyBattleVisualKey(match);
+    this.legacyBattleVisualBusyUntilMs = Date.now() + busyMs + 750;
+    this.localTurnDeadlineMs = Math.max(this.localTurnDeadlineMs ?? 0, Date.now() + busyMs + decisionMs + 750);
+  }
+
+  private markLegacyBattleVisualReady(message: Record<string, unknown>): void {
+    const match = this.state.match;
+    if (!match || message.matchId !== match.id || Number(message.currentTurn) !== match.currentTurn) return;
+
+    const visualKey = this.legacyBattleVisualKey(match);
+    if (this.legacyBattleVisualBusyKey && this.legacyBattleVisualBusyKey !== visualKey) return;
+
+    this.legacyBattleVisualBusyKey = null;
+    this.legacyBattleVisualBusyUntilMs = 0;
+    if (match.status === "active" && !match.localAction) {
+      this.localTurnDeadlineMs = Date.now() + turnDurationForState(match.battleState);
+      this.syncLegacyBattleFrame();
+    }
+  }
+
+  private isLegacyBattleVisualBusy(): boolean {
+    const visualKey = this.legacyBattleVisualKey();
+    return Boolean(visualKey && this.legacyBattleVisualBusyKey === visualKey && this.legacyBattleVisualBusyUntilMs > Date.now());
+  }
+
+  private isInactivityDraw(match: GameMatch): boolean {
+    return match.status === "finished"
+      && !match.winnerId
+      && match.rankDelta === 0
+      && (match.finishedReason === "inactivity_draw" || match.lastTurn?.primary === "PARTIDA ENCERRADA");
+  }
+
+  private returnToLobbyAfterInactivityDraw(match: GameMatch): void {
+    this.clearPolling();
+    this.unsubscribeMatch?.();
+    this.unsubscribeMatch = null;
+    this.state.match = null;
+    this.state.screen = "online";
+    this.state.error = null;
+    this.state.info = "Partida encerrada por inatividade.";
+    void this.service.heartbeat("online").catch(() => undefined);
+    this.render();
   }
 
   private async joinRanked(): Promise<void> {
@@ -405,6 +490,8 @@ export class App {
     const opponentCharacterId = match[opponentSide].characterId;
     if (!localCharacterId || !opponentCharacterId) return null;
 
+    const turnDeadlineAt = this.localTurnDeadlineMs ? new Date(this.localTurnDeadlineMs).toISOString() : match.turnDeadlineAt;
+
     return {
       source: "final-genesis-online",
       type: "sync",
@@ -416,7 +503,8 @@ export class App {
       opponentCharacterId,
       battleState: this.mapBattleStateForLegacy(match, match.battleState),
       currentTurn: match.currentTurn,
-      turnDeadlineAt: match.turnDeadlineAt,
+      turnDeadlineAt,
+      turnDurationMs: turnDurationForState(match.battleState),
       localAction: match.localAction,
       opponentHasAction: match.opponentHasAction,
       lastTurn: this.mapTurnForLegacy(match, match.lastTurn),
@@ -434,10 +522,16 @@ export class App {
   }
 
   private enterMatch(match: GameMatch): void {
+    if (this.isInactivityDraw(match)) {
+      this.returnToLobbyAfterInactivityDraw(match);
+      return;
+    }
+
     this.clearPolling();
     if (match.serverNow) {
       this.serverClockOffsetMs = Date.now() - new Date(match.serverNow).getTime();
     }
+    this.syncLocalTurnClock(match);
     this.state.match = match;
     this.state.screen = match.status === "finished" || match.status === "forfeited" ? "post-match" : match.status === "selecting" ? "match-character-select" : "battle";
     this.unsubscribeMatch?.();
@@ -450,15 +544,25 @@ export class App {
       }, 1_000);
     }
     void this.service.heartbeat("in_match", match.id);
+    if (this.state.screen === "battle") {
+      window.setTimeout(() => this.syncLegacyBattleFrame(), 0);
+    }
+    this.resolveExpiredTurnIfNeeded();
   }
 
   private async refreshMatch(): Promise<void> {
     const match = await this.service.getCurrentMatch();
     if (match) {
+      if (this.isInactivityDraw(match)) {
+        this.returnToLobbyAfterInactivityDraw(match);
+        return;
+      }
+
       const previousScreen = this.state.screen;
       if (match.serverNow) {
         this.serverClockOffsetMs = Date.now() - new Date(match.serverNow).getTime();
       }
+      this.syncLocalTurnClock(match);
       this.state.match = match;
       if (match.status === "finished" || match.status === "forfeited") {
         if (this.pollId) window.clearInterval(this.pollId);
@@ -474,6 +578,7 @@ export class App {
       } else {
         this.render();
       }
+      this.resolveExpiredTurnIfNeeded();
     }
   }
 
@@ -512,12 +617,18 @@ export class App {
 
   private startMatchPolling(): void {
     this.clearPolling();
+    const userId = this.state.snapshot.profile?.id;
     const pollMatch = async () => {
       const queuedMatch = await this.service.getMatchedQueueMatch().catch(() => null);
       const match = queuedMatch || (await this.service.getCurrentMatch().catch(() => null));
-      if (match) this.enterMatch(match);
+      if (match && isLiveMatchStatus(match.status)) this.enterMatch(match);
     };
 
+    if (userId) {
+      this.unsubscribeRankedQueue = this.service.watchRankedQueue(userId, () => {
+        void pollMatch();
+      });
+    }
     void pollMatch();
     this.pollId = window.setInterval(pollMatch, 1_000);
   }
@@ -541,16 +652,24 @@ export class App {
   private clearPolling(): void {
     if (this.pollId) window.clearInterval(this.pollId);
     this.pollId = null;
+    this.unsubscribeRankedQueue?.();
+    this.unsubscribeRankedQueue = null;
     this.unsubscribePrivateRoom?.();
     this.unsubscribePrivateRoom = null;
   }
 
   private render(): void {
+    const shellClasses = [
+      "app-shell",
+      usesMobileStage(this.state.screen) ? "mobile-stage-shell" : "",
+      this.state.screen === "battle" ? "battle-app-shell" : "",
+    ].filter(Boolean).join(" ");
+
     this.root.innerHTML = `
-      <main class="app-shell">
+      <main class="${shellClasses}">
         ${this.state.snapshot.profile ? this.renderTopBar() : ""}
         <div class="app-content">
-          ${this.renderStatus()}
+          ${this.state.screen === "battle" ? "" : this.renderStatus()}
           ${this.renderScreen()}
         </div>
       </main>
@@ -567,6 +686,13 @@ export class App {
     const url = new URL(window.location.href);
 
     if (!this.initialBootstrapComplete && url.searchParams.has("room")) return;
+
+    if (this.state.snapshot.profile && url.pathname.startsWith("/auth/callback")) {
+      url.pathname = "/online/";
+      url.search = "";
+      url.hash = "";
+      window.history.replaceState(null, "", url.href);
+    }
 
     if (this.state.screen === "private-room" && this.state.room?.code) {
       url.pathname = "/online/";
@@ -614,12 +740,35 @@ export class App {
         clock.textContent = countdown(this.state.match.turnDeadlineAt, this.serverClockOffsetMs);
       }
       if (this.state.screen === "battle" && this.state.match?.status === "active") {
-        const estimatedServerNow = Date.now() - this.serverClockOffsetMs;
-        if (new Date(this.state.match.turnDeadlineAt).getTime() <= estimatedServerNow) {
-          void this.resolveExpiredTurn();
-        }
+        this.resolveExpiredTurnIfNeeded();
       }
     }, 250);
+  }
+
+  private resolveExpiredTurnIfNeeded(): void {
+    if (!this.state.match || this.state.screen !== "battle" || !["active", "resolving"].includes(this.state.match.status)) return;
+    if (this.isLegacyBattleVisualBusy()) return;
+    const deadlineMs = this.localTurnDeadlineMs ?? new Date(this.state.match.turnDeadlineAt).getTime();
+    if (this.state.match.status === "resolving" || deadlineMs <= Date.now()) {
+      void this.resolveExpiredTurn();
+    }
+  }
+
+  private syncLocalTurnClock(match: GameMatch): void {
+    const key = `${match.id}:${match.currentTurn}:${match.turnDeadlineAt}:${match.status}`;
+    if (this.turnClockKey === key && this.localTurnDeadlineMs !== null) return;
+
+    this.turnClockKey = key;
+    if (match.status !== "active" && match.status !== "resolving") {
+      this.localTurnDeadlineMs = null;
+      return;
+    }
+
+    const durationMs = turnDurationForState(match.battleState);
+    const estimatedServerNow = Date.now() - this.serverClockOffsetMs;
+    const serverRemainingMs = new Date(match.turnDeadlineAt).getTime() - estimatedServerNow;
+    const localRemainingMs = Math.max(0, Math.min(durationMs, serverRemainingMs));
+    this.localTurnDeadlineMs = Date.now() + localRemainingMs;
   }
 
   private async resolveExpiredTurn(): Promise<void> {
@@ -781,27 +930,31 @@ export class App {
 
   private renderOnlineLobby(): string {
     return `
-      <section class="screen-band">
+      <section class="screen-band online-lobby-screen">
         <div class="section-heading">
           <h1>Online</h1>
-          <button class="ghost-command" data-nav="menu" type="button">Voltar</button>
         </div>
-        <div class="online-grid">
-          <article class="mode-panel">
-            <h2>Partida Ranked</h2>
-            <p>Procura adversario automaticamente, atualiza divisao, pontos e streak.</p>
-            <button class="primary-command" data-action="join-ranked" type="button">Entrar na fila</button>
-          </article>
-          <article class="mode-panel">
-            <h2>Partida Privada</h2>
-            <p>Crie um codigo/link para jogar sem alterar ranking.</p>
-            <button class="secondary-command" data-action="create-private" type="button">Criar sala</button>
-            <form class="join-form" data-form="join-private">
-              <input name="code" inputmode="text" autocomplete="off" placeholder="CODIGO">
-              <button class="secondary-command" type="submit">Entrar</button>
-            </form>
-          </article>
+        <div class="mobile-scroll-body">
+          <div class="online-grid">
+            <article class="mode-panel">
+              <h2>Partida Ranked</h2>
+              <p>Procura adversario automaticamente, atualiza divisao, pontos e streak.</p>
+              <button class="primary-command" data-action="join-ranked" type="button">Entrar na fila</button>
+            </article>
+            <article class="mode-panel">
+              <h2>Partida Privada</h2>
+              <p>Crie um codigo/link para jogar sem alterar ranking.</p>
+              <button class="secondary-command" data-action="create-private" type="button">Criar sala</button>
+              <form class="join-form" data-form="join-private">
+                <input name="code" inputmode="text" autocomplete="off" placeholder="CODIGO">
+                <button class="secondary-command" type="submit">Entrar</button>
+              </form>
+            </article>
+          </div>
         </div>
+        <nav class="mobile-bottom-actions" aria-label="Navegacao">
+          <button class="image-back-command menu-back" data-nav="menu" type="button">Voltar</button>
+        </nav>
       </section>
     `;
   }
@@ -821,20 +974,23 @@ export class App {
     const room = this.state.room;
     if (!room) return "";
     return `
-      <section class="screen-band">
+      <section class="screen-band private-room-screen">
         <div class="section-heading">
           <h1>Sala privada</h1>
-          <button class="ghost-command" data-nav="online" type="button">Voltar</button>
         </div>
+        <div class="mobile-scroll-body">
         <div class="room-panel">
           <span class="room-code">${escapeHtml(room.code)}</span>
           <p>Envie este codigo ou link para o adversario entrar.</p>
           <p>Host: ${escapeHtml(room.hostName)} · Visitante: ${room.guestName ? escapeHtml(room.guestName) : "aguardando"}</p>
           <div class="button-row">
             <button class="secondary-command" data-action="copy-room" type="button">Copiar link</button>
-            <button class="ghost-command" data-nav="online" type="button">Sair da sala</button>
           </div>
         </div>
+        </div>
+        <nav class="mobile-bottom-actions" aria-label="Navegacao">
+          <button class="image-back-command menu-back" data-nav="online" type="button">Voltar</button>
+        </nav>
       </section>
     `;
   }
@@ -852,13 +1008,13 @@ export class App {
     const opponentSelected = opponentPlayer.characterId !== null;
     const localCharacter = localPlayer.characterId ? characterById(localPlayer.characterId) : null;
     const opponentCharacter = opponentPlayer.characterId ? characterById(opponentPlayer.characterId) : null;
+    const previewCharacter = localCharacter || characterById(this.state.snapshot.profile?.selectedCharacterId || "ninja");
+    const previewClass = characterVisualClass(previewCharacter.id);
 
     return `
       <section class="match-select-screen">
-        <div class="match-select-header">
-          <img src="/assets/ui/character-select/title.webp" alt="Selecao de personagem">
-          <p>${localSelected ? "Personagem confirmado. Aguardando adversario." : "Escolha seu personagem para esta partida."}</p>
-        </div>
+        <img class="character-select-title-art" src="/assets/ui/menu/logo.webp" alt="Final Genesis" draggable="false">
+        <img class="character-select-subtitle-art" src="/assets/ui/character-select/subtitle.webp" alt="Escolha seu lutador" draggable="false">
         <div class="match-select-status">
           <div class="select-player-chip ready">
             <span>${escapeHtml(localPlayer.displayName)}</span>
@@ -869,23 +1025,31 @@ export class App {
             <strong>${opponentCharacter ? escapeHtml(opponentCharacter.name) : "Aguardando"}</strong>
           </div>
         </div>
-        <div class="legacy-character-grid">
+        <div class="character-preview-stage" aria-hidden="true">
+          <img class="character-preview-art ${previewClass}" src="${previewCharacter.portraitUrl}" alt="" draggable="false">
+        </div>
+        <div class="character-grid match-character-grid" role="list" aria-label="Lutadores">
           ${characters.map((character) => {
             const available = character.enabled && unlocked.has(character.id);
             const selected = localPlayer.characterId === character.id;
+            const opponentPicked = opponentPlayer.characterId === character.id;
+            const visualClass = characterVisualClass(character.id);
             return `
-              <button class="legacy-character-card ${selected ? "selected" : ""} ${available ? "" : "locked"}" data-action="select-match-character" data-character="${character.id}" ${available && !localSelected ? "" : "disabled"} type="button">
-                <span class="legacy-card-frame"></span>
-                <img src="${character.portraitUrl}" alt="">
-                <span class="legacy-card-name">${escapeHtml(character.name)}</span>
-                <small>${available ? (selected ? "Confirmado" : "Disponivel") : character.unlockDescription}</small>
+              <button class="character-card ${selected ? `is-selected is-${localSide}-selected` : ""} ${opponentPicked ? `is-${opponentSide}-selected` : ""} ${available ? "" : "is-locked"}" data-action="select-match-character" data-character="${character.id}" ${available && !localSelected ? "" : "disabled"} type="button" role="listitem" aria-pressed="${selected ? "true" : "false"}" ${available ? "" : "aria-disabled=\"true\""}>
+                <span class="character-card-frame" aria-hidden="true"></span>
+                <span class="character-selection-badge p1" aria-hidden="true">P1</span>
+                <span class="character-selection-badge p2" aria-hidden="true">P2</span>
+                <span class="character-portrait-window" aria-hidden="true">
+                  <img class="character-art ${visualClass}" src="${character.portraitUrl}" alt="" draggable="false">
+                </span>
+                <span class="character-nameplate"><span>${escapeHtml(character.name)}</span></span>
               </button>
             `;
           }).join("")}
         </div>
-        <div class="button-row">
-          <button class="danger-command" data-action="forfeit" type="button">Abandonar</button>
-        </div>
+        <nav class="character-select-actions" aria-label="Acoes da selecao de personagem">
+          <button class="character-select-button back" data-action="forfeit" type="button">Abandonar</button>
+        </nav>
       </section>
     `;
   }
@@ -898,13 +1062,9 @@ export class App {
         <iframe
           class="legacy-online-battle-frame"
           data-legacy-online-battle
-          src="/prototype/mobile-layout/?onlineBridge=1"
+          src="/prototype/mobile-layout/?onlineBridge=1&v=20260610-bridge-stability-4"
           title="Batalha online Final Genesis"
         ></iframe>
-        <div class="legacy-online-status" aria-live="polite">
-          <span>${match.localAction ? "Voce escolheu" : "Escolha sua acao"}</span>
-          <span>${match.opponentHasAction ? "adversario escolheu" : "aguardando adversario"}</span>
-        </div>
       </section>
     `;
   }

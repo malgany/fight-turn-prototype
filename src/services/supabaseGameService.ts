@@ -63,7 +63,7 @@ export class SupabaseGameService implements GameService {
 
       const record = value as Record<string, unknown>;
       if (typeof record.turnDeadlineAt === "string" && typeof record.battleState === "object") {
-        record.serverNow = serverNow;
+        if (typeof record.serverNow !== "string") record.serverNow = serverNow;
       }
 
       Object.values(record).forEach(visit);
@@ -104,7 +104,7 @@ export class SupabaseGameService implements GameService {
 
     if (!this.containsGameMatch(data)) return data as T;
 
-    const serverNow = response.headers.get("date") || (await this.serverNow());
+    const serverNow = await this.serverNow();
     return this.attachServerNow(data as T, serverNow);
   }
 
@@ -249,6 +249,19 @@ export class SupabaseGameService implements GameService {
       .channel(`match:${matchId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "matches", filter: `id=eq.${matchId}` }, onChange)
       .on("postgres_changes", { event: "*", schema: "public", table: "match_turns", filter: `match_id=eq.${matchId}` }, onChange)
+      .subscribe();
+    this.channels.add(channel);
+
+    return () => {
+      this.channels.delete(channel);
+      void this.client().removeChannel(channel);
+    };
+  }
+
+  watchRankedQueue(userId: string, onChange: () => void): () => void {
+    const channel = this.client()
+      .channel(`ranked-queue:${userId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "ranked_queue", filter: `user_id=eq.${userId}` }, onChange)
       .subscribe();
     this.channels.add(channel);
 

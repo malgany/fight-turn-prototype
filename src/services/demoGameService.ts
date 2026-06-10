@@ -351,6 +351,11 @@ export class DemoGameService implements GameService {
     return () => this.listeners.delete(onChange);
   }
 
+  watchRankedQueue(_userId: string, onChange: () => void): () => void {
+    this.listeners.add(onChange);
+    return () => this.listeners.delete(onChange);
+  }
+
   watchPrivateRoom(_code: string, onChange: () => void): () => void {
     this.listeners.add(onChange);
     return () => this.listeners.delete(onChange);

@@ -122,6 +122,7 @@ export interface GameMatch {
   winnerId: string | null;
   rankDelta: number;
   privateScore: PrivateScore | null;
+  finishedReason?: string | null;
 }
 
 export interface PrivateRoom {
