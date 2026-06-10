@@ -345,19 +345,6 @@ export class App {
       const currentMatch = await this.service.getCurrentMatch().catch(() => null);
       if (currentMatch?.matchType === "private" && currentMatch.status === "active") {
         this.enterMatch(currentMatch);
-        return;
-      }
-
-      const response = await this.service.getPrivateRoom(code).catch(() => null);
-      if (response?.match) {
-        this.state.room = response.room;
-        this.enterMatch(response.match);
-        return;
-      }
-
-      if (response?.room) {
-        this.state.room = response.room;
-        this.render();
       }
     };
 
