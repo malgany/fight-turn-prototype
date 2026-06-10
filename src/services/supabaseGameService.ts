@@ -192,7 +192,27 @@ export class SupabaseGameService implements GameService {
   }
 
   async getCurrentMatch(): Promise<GameMatch | null> {
-    return this.invoke<{ match: GameMatch | null }>("current-match").then((response) => response.match);
+    const response = await this.invoke<{ match: GameMatch | null }>("current-match");
+    if (response.match) return response.match;
+    return this.getMatchedQueueMatch();
+  }
+
+  private async getMatchedQueueMatch(): Promise<GameMatch | null> {
+    const {
+      data: { session },
+      error: sessionError,
+    } = await this.client().auth.getSession();
+    if (sessionError || !session) return null;
+
+    const { data, error } = await this.client()
+      .from("ranked_queue")
+      .select("match_id,status")
+      .eq("user_id", session.user.id)
+      .eq("status", "matched")
+      .maybeSingle();
+
+    if (error || !data?.match_id) return null;
+    return this.invoke<GameMatch>("finish-match", { matchId: data.match_id });
   }
 
   createPrivateRoom(): Promise<PrivateRoom> {
