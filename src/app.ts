@@ -136,6 +136,12 @@ export class App {
     if (!this.state.snapshot.profile) return;
     this.startHeartbeat();
     await this.service.heartbeat("online").catch(() => undefined);
+    const queuedMatch = await this.service.getMatchedQueueMatch().catch(() => null);
+    if (queuedMatch?.status === "active") {
+      this.enterMatch(queuedMatch);
+      return;
+    }
+
     const match = await this.service.getCurrentMatch().catch(() => null);
     if (match?.status === "active") {
       this.enterMatch(match);
@@ -372,10 +378,14 @@ export class App {
 
   private startMatchPolling(): void {
     this.clearPolling();
-    this.pollId = window.setInterval(async () => {
-      const match = await this.service.getCurrentMatch().catch(() => null);
+    const pollMatch = async () => {
+      const queuedMatch = await this.service.getMatchedQueueMatch().catch(() => null);
+      const match = queuedMatch || (await this.service.getCurrentMatch().catch(() => null));
       if (match) this.enterMatch(match);
-    }, 2_000);
+    };
+
+    void pollMatch();
+    this.pollId = window.setInterval(pollMatch, 1_000);
   }
 
   private startRoomPolling(code: string): void {

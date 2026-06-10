@@ -27,6 +27,7 @@ export interface GameService {
   joinRankedQueue(): Promise<QueueResult>;
   leaveRankedQueue(): Promise<void>;
   getCurrentMatch(): Promise<GameMatch | null>;
+  getMatchedQueueMatch(): Promise<GameMatch | null>;
   createPrivateRoom(): Promise<PrivateRoom>;
   joinPrivateRoom(code: string): Promise<{ room: PrivateRoom; match: GameMatch | null }>;
   getPrivateRoom(code: string): Promise<{ room: PrivateRoom; match: GameMatch | null }>;

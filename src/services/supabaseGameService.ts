@@ -197,7 +197,7 @@ export class SupabaseGameService implements GameService {
     return this.getMatchedQueueMatch();
   }
 
-  private async getMatchedQueueMatch(): Promise<GameMatch | null> {
+  async getMatchedQueueMatch(): Promise<GameMatch | null> {
     const {
       data: { session },
       error: sessionError,
@@ -212,7 +212,8 @@ export class SupabaseGameService implements GameService {
       .maybeSingle();
 
     if (error || !data?.match_id) return null;
-    return this.invoke<GameMatch>("finish-match", { matchId: data.match_id });
+    const match = await this.invoke<GameMatch>("finish-match", { matchId: data.match_id });
+    return match.status === "active" || match.status === "waiting" || match.status === "resolving" ? match : null;
   }
 
   createPrivateRoom(): Promise<PrivateRoom> {

@@ -200,6 +200,10 @@ export class DemoGameService implements GameService {
     return this.state().currentMatch;
   }
 
+  async getMatchedQueueMatch(): Promise<GameMatch | null> {
+    return this.state().currentMatch;
+  }
+
   async createPrivateRoom(): Promise<PrivateRoom> {
     const state = this.state();
     if (!state.profile) throw new Error("Entre no jogo antes de criar sala.");
