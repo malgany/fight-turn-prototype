@@ -527,7 +527,7 @@ export class App {
 
   private syncLegacyBattleFrame(): void {
     const match = this.state.match;
-    if (!match || this.state.screen !== "battle") return;
+    if (!match || (this.state.screen !== "battle" && this.state.screen !== "post-match")) return;
     const frame = this.root.querySelector<HTMLIFrameElement>("[data-legacy-online-battle]");
     const payload = this.legacyBattlePayload(match);
     if (!frame?.contentWindow || !payload) return;
@@ -681,18 +681,18 @@ export class App {
   }
 
   private render(): void {
-    const isBattleScreen = this.state.screen === "battle";
+    const usesBattleStage = this.state.screen === "battle" || this.state.screen === "post-match";
     const shellClasses = [
       "app-shell",
       usesMobileStage(this.state.screen) ? "mobile-stage-shell" : "",
-      isBattleScreen ? "battle-app-shell" : "",
+      usesBattleStage ? "battle-app-shell" : "",
     ].filter(Boolean).join(" ");
 
     this.root.innerHTML = `
       <main class="${shellClasses}">
-        ${this.state.snapshot.profile && !isBattleScreen ? this.renderTopBar() : ""}
+        ${this.state.snapshot.profile && !usesBattleStage ? this.renderTopBar() : ""}
         <div class="app-content">
-          ${isBattleScreen ? "" : this.renderStatus()}
+          ${usesBattleStage ? "" : this.renderStatus()}
           ${this.renderScreen()}
         </div>
       </main>
@@ -855,7 +855,7 @@ export class App {
       case "battle":
         return this.renderBattle();
       case "post-match":
-        return this.renderPostMatch();
+        return this.renderPostMatchBattle();
       case "ranking":
         return this.renderRanking();
       case "history":
@@ -1082,13 +1082,19 @@ export class App {
     if (!match) return "";
     return `
       <section class="legacy-online-battle-screen">
-        <iframe
-          class="legacy-online-battle-frame"
-          data-legacy-online-battle
-          src="/prototype/mobile-layout/?onlineBridge=1&v=20260610-bridge-startup-1"
-          title="Batalha online Final Genesis"
-        ></iframe>
+        ${this.renderLegacyBattleFrame()}
       </section>
+    `;
+  }
+
+  private renderLegacyBattleFrame(): string {
+    return `
+      <iframe
+        class="legacy-online-battle-frame"
+        data-legacy-online-battle
+        src="/prototype/mobile-layout/?onlineBridge=1&v=20260611-post-match-stage-1"
+        title="Batalha online Final Genesis"
+      ></iframe>
     `;
   }
 
@@ -1141,6 +1147,36 @@ export class App {
           <small>HP ${health}% · ULT ${superValue}/3</small>
         </div>
       </div>
+    `;
+  }
+
+  private renderPostMatchBattle(): string {
+    const match = this.state.match;
+    const profile = this.state.snapshot.profile;
+    if (!match || !profile) return "";
+
+    const playerWon = match.winnerId === profile.id;
+    const privateScore = match.privateScore;
+    const title = playerWon ? "VOCE VENCEU" : match.winnerId ? "VOCE PERDEU" : "EMPATE";
+    const rankDelta = match.rankDelta >= 0 ? `+${match.rankDelta}` : String(match.rankDelta);
+
+    return `
+      <section class="legacy-online-battle-screen post-match-battle-screen">
+        ${this.renderLegacyBattleFrame()}
+        <div class="post-match-scrim" aria-hidden="true"></div>
+        <div class="post-match-result" role="status" aria-live="polite">
+          <h1>${title}</h1>
+          <div class="post-match-summary">
+            ${match.matchType === "ranked" ? `<p>${rankDelta} pontos</p><span>Streak atualizado</span>` : ""}
+            ${privateScore ? `<p>Placar privado ${privateScore.playerWins} x ${privateScore.opponentWins}</p>` : ""}
+          </div>
+          <nav class="post-match-actions" aria-label="Acoes da partida">
+            <button class="primary-command" data-action="play-again" type="button">Jogar novamente</button>
+            <button class="secondary-command" data-nav="online" type="button">Voltar ao lobby</button>
+            <button class="ghost-command" data-nav="menu" type="button">Voltar ao menu</button>
+          </nav>
+        </div>
+      </section>
     `;
   }
 

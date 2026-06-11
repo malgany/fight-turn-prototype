@@ -4074,6 +4074,16 @@
         });
       }
 
+      function holdKnockdownPose(side) {
+        const loadout = characterLoadoutForSide(side);
+        clearSpriteAnimation(side);
+        applySpriteDisplay(side, loadout.getUpAnimation);
+        if (loadout.getUpFrames.length) {
+          fighterSprite(side).src = loadout.getUpFrames[0];
+        }
+        spriteAnimations[side] = { frameIndex: 1, timerId: null };
+      }
+
       function playCrouchAnimation(sides) {
         sides.forEach((side) => {
           const loadout = characterLoadoutForSide(side);
@@ -6137,6 +6147,11 @@
           playSound(playerWon ? "win" : "lose");
         }
 
+        if (onlineBridgeEnabled && onlineBridge.active) {
+          el.battleOver.classList.remove("show");
+          return;
+        }
+
         el.battleOver.classList.add("show");
       }
 
@@ -7030,6 +7045,48 @@
         return true;
       }
 
+      function onlineBridgeWinnerSide(payload) {
+        const winner = payload.lastTurn?.matchWinner;
+        return winner === "p1" || winner === "p2" ? winner : null;
+      }
+
+      function onlineBridgeHoldFinishedState(payload) {
+        onlineBridgeStopClock();
+        onlineBridgeStopResolutionTimer();
+        window.clearInterval(state.timerId);
+        state.timerId = null;
+        state.phase = "over";
+        onlineBridgeApplyState(payload.lastTurn?.after || payload.battleState);
+        clearBlockShieldEffects();
+        clearComboHitEffects();
+        clearUltimateCinematic();
+        clearGuaranteedCountdown();
+        clearStatePopups();
+        el.resolution.classList.remove("show");
+        el.battleOver.classList.remove("show");
+        el.turnMeterFill.style.width = "0%";
+        el.roundClock.textContent = "0";
+
+        const winner = onlineBridgeWinnerSide(payload);
+        if (winner) {
+          const loser = winner === "p1" ? "p2" : "p1";
+          const winnerLoadout = characterLoadoutForSide(winner);
+          clearSpecialLunges();
+          clearSpriteAnimation(winner);
+          if (winnerLoadout.idleFrames.length) {
+            fighterSprite(winner).src = winnerLoadout.idleFrames[0];
+          }
+          holdKnockdownPose(loser);
+        } else {
+          clearSpriteAnimations();
+          syncCharacterSpritesToIdle();
+        }
+
+        setTokenDisplay(false);
+        updateHud();
+        onlineBridgeSetActionLock(true);
+      }
+
       function onlineBridgePrepareTurn(payload, options = {}) {
         const payloadKey = options.payloadKey || onlineBridgePayloadKey(payload);
         if (!options.force && onlineBridge.lastPayloadKey === payloadKey) {
@@ -7182,6 +7239,11 @@
         }
 
         await onlineBridgeStart(payload);
+        if (payload.status === "finished" || payload.status === "forfeited") {
+          onlineBridgeHoldFinishedState(payload);
+          return;
+        }
+
         if (payload.status !== "active" && payload.status !== "resolving") {
           onlineBridgeSetActionLock(true);
           return;
