@@ -75,7 +75,20 @@ function initialScreenForRoute(): Screen {
 }
 
 function usesMobileStage(screen: Screen): boolean {
-  return ["online", "ranked-queue", "private-room", "match-character-select", "battle", "post-match"].includes(screen);
+  return [
+    "login",
+    "menu",
+    "profile",
+    "character-select",
+    "online",
+    "ranked-queue",
+    "private-room",
+    "match-character-select",
+    "battle",
+    "post-match",
+    "ranking",
+    "history",
+  ].includes(screen);
 }
 
 function characterVisualClass(characterId: string): string {
@@ -1143,22 +1156,50 @@ export class App {
 
   private renderRanking(): string {
     return `
-      <section class="screen-band">
+      <section class="screen-band ranking-screen">
         <div class="section-heading">
           <h1>Ranking</h1>
-          <button class="ghost-command" data-nav="menu" type="button">Voltar</button>
         </div>
-        <div class="table-list">
-          ${this.state.leaderboard.length ? this.state.leaderboard.map((entry) => `
-            <div class="table-row ${entry.userId === this.state.snapshot.profile?.id ? "current" : ""}">
-              <strong>#${entry.position} ${escapeHtml(entry.displayName)}</strong>
-              <span>${entry.division}</span>
-              <span>${entry.rankPoints} pts</span>
-              <span>${entry.wins}V/${entry.losses}D</span>
-              <span>Streak ${entry.streak}</span>
-            </div>
-          `).join("") : `<p class="empty-state">Ranking vazio.</p>`}
+        <div class="mobile-scroll-body ranking-scroll">
+          ${this.state.leaderboard.length ? `
+            <table class="ranking-table">
+              <caption>Classificacao ranked</caption>
+              <colgroup>
+                <col class="ranking-player-col">
+                <col class="ranking-points-col">
+                <col class="ranking-record-col">
+                <col class="ranking-streak-col">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th scope="col">Jogador</th>
+                  <th scope="col">Pts</th>
+                  <th scope="col">V/D</th>
+                  <th scope="col">Seq</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${this.state.leaderboard.map((entry) => `
+                  <tr class="${entry.userId === this.state.snapshot.profile?.id ? "current" : ""}">
+                    <th scope="row">
+                      <span class="ranking-player">
+                        <span class="ranking-position">#${entry.position}</span>
+                        <span class="ranking-name">${escapeHtml(entry.displayName)}</span>
+                        <small>${entry.division}</small>
+                      </span>
+                    </th>
+                    <td><strong>${entry.rankPoints}</strong><small>pts</small></td>
+                    <td><strong>${entry.wins}/${entry.losses}</strong><small>V/D</small></td>
+                    <td><strong>${entry.streak}</strong><small>seq</small></td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          ` : `<p class="empty-state">Ranking vazio.</p>`}
         </div>
+        <nav class="mobile-bottom-actions" aria-label="Navegacao">
+          <button class="image-back-command menu-back" data-nav="menu" type="button">Voltar</button>
+        </nav>
       </section>
     `;
   }

@@ -1244,6 +1244,143 @@ p {
   border-color: var(--gold);
 }
 
+.ranking-screen {
+  background:
+    linear-gradient(180deg, rgba(5, 8, 12, 0.72), rgba(5, 8, 12, 0.9)),
+    url("/assets/backgrounds/title-screen-fighters.webp") center / cover no-repeat;
+}
+
+.ranking-scroll {
+  padding-right: 0;
+}
+
+.ranking-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 7px;
+  table-layout: fixed;
+  color: var(--text);
+}
+
+.ranking-table caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.ranking-player-col {
+  width: 46%;
+}
+
+.ranking-points-col {
+  width: 18%;
+}
+
+.ranking-record-col {
+  width: 18%;
+}
+
+.ranking-streak-col {
+  width: 18%;
+}
+
+.ranking-table thead th {
+  padding: 0 8px 3px;
+  color: #d8e5f7;
+  font-size: clamp(0.5rem, 2.1cqw, 0.64rem);
+  font-weight: 900;
+  line-height: 1;
+  text-align: left;
+  text-shadow: 1px 1px 0 #000;
+  text-transform: uppercase;
+}
+
+.ranking-table thead th:not(:first-child),
+.ranking-table td {
+  text-align: center;
+}
+
+.ranking-table tbody th,
+.ranking-table td {
+  padding: clamp(7px, 2.2cqw, 10px) 8px;
+  background: rgba(28, 39, 55, 0.9);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.ranking-table tbody th {
+  border-left: 1px solid var(--line);
+  border-radius: 8px 0 0 8px;
+  text-align: left;
+}
+
+.ranking-table td:last-child {
+  border-right: 1px solid var(--line);
+  border-radius: 0 8px 8px 0;
+}
+
+.ranking-table tr.current th,
+.ranking-table tr.current td {
+  border-color: rgba(242, 182, 51, 0.92);
+  background:
+    linear-gradient(90deg, rgba(242, 182, 51, 0.14), rgba(28, 39, 55, 0.92) 38%),
+    rgba(28, 39, 55, 0.92);
+}
+
+.ranking-player {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 5px;
+  row-gap: 2px;
+  align-items: baseline;
+}
+
+.ranking-position {
+  color: var(--gold);
+  font-size: clamp(0.68rem, 3.1cqw, 0.9rem);
+  line-height: 1;
+}
+
+.ranking-name {
+  min-width: 0;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: clamp(0.62rem, 2.7cqw, 0.86rem);
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-shadow: 1px 1px 0 #000;
+  white-space: nowrap;
+}
+
+.ranking-player small {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: clamp(0.44rem, 1.85cqw, 0.58rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.ranking-table td strong {
+  display: block;
+  font-size: clamp(0.62rem, 2.75cqw, 0.84rem);
+  line-height: 1;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.ranking-table td small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: clamp(0.4rem, 1.7cqw, 0.54rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
 .readable {
   line-height: 1.6;
 }
