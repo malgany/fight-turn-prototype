@@ -540,6 +540,7 @@ export class App {
       return;
     }
 
+    const previousBattleMatchId = this.state.screen === "battle" ? this.state.match?.id : null;
     this.clearPolling();
     if (match.serverNow) {
       this.serverClockOffsetMs = Date.now() - new Date(match.serverNow).getTime();
@@ -558,6 +559,14 @@ export class App {
     }
     void this.service.heartbeat("in_match", match.id);
     if (this.state.screen === "battle") {
+      if (previousBattleMatchId !== match.id) {
+        this.legacyBattleVisualBusyKey = this.legacyBattleVisualKey(match);
+        this.legacyBattleVisualBusyUntilMs = Date.now() + 10_000;
+        this.localTurnDeadlineMs = Math.max(
+          this.localTurnDeadlineMs ?? 0,
+          Date.now() + turnDurationForState(match.battleState) + 10_000,
+        );
+      }
       window.setTimeout(() => this.syncLegacyBattleFrame(), 0);
     }
     this.resolveExpiredTurnIfNeeded();
@@ -672,17 +681,18 @@ export class App {
   }
 
   private render(): void {
+    const isBattleScreen = this.state.screen === "battle";
     const shellClasses = [
       "app-shell",
       usesMobileStage(this.state.screen) ? "mobile-stage-shell" : "",
-      this.state.screen === "battle" ? "battle-app-shell" : "",
+      isBattleScreen ? "battle-app-shell" : "",
     ].filter(Boolean).join(" ");
 
     this.root.innerHTML = `
       <main class="${shellClasses}">
-        ${this.state.snapshot.profile ? this.renderTopBar() : ""}
+        ${this.state.snapshot.profile && !isBattleScreen ? this.renderTopBar() : ""}
         <div class="app-content">
-          ${this.state.screen === "battle" ? "" : this.renderStatus()}
+          ${isBattleScreen ? "" : this.renderStatus()}
           ${this.renderScreen()}
         </div>
       </main>
@@ -1075,7 +1085,7 @@ export class App {
         <iframe
           class="legacy-online-battle-frame"
           data-legacy-online-battle
-          src="/prototype/mobile-layout/?onlineBridge=1&v=20260610-bridge-stability-4"
+          src="/prototype/mobile-layout/?onlineBridge=1&v=20260610-bridge-startup-1"
           title="Batalha online Final Genesis"
         ></iframe>
       </section>

@@ -1079,6 +1079,36 @@
         pointer-events: none;
       }
 
+      .online-bridge-start-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 112;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at 50% 46%, rgba(5, 9, 18, 0.08), rgba(5, 9, 18, 0.58) 72%),
+          rgba(5, 9, 18, 0.18);
+        pointer-events: none;
+      }
+
+      .online-bridge-start-layer.is-hidden {
+        display: none;
+      }
+
+      .online-bridge-start-text {
+        padding: 8px 18px;
+        color: #f2f6ff;
+        font-family: "Anime Ace BB", Arial, sans-serif;
+        font-size: clamp(28px, 10cqw, 56px);
+        line-height: 1;
+        text-align: center;
+        text-shadow:
+          0 3px 0 #000,
+          0 0 16px rgba(99, 215, 255, 0.86),
+          0 0 28px rgba(228, 38, 45, 0.54);
+        transform: skewX(-8deg);
+      }
+
       .advanced-debug-selection {
         position: absolute;
         z-index: 118;
@@ -2835,6 +2865,10 @@
 
       <section class="state-popup-layer" id="statePopupLayer" aria-hidden="true"></section>
 
+      <section class="online-bridge-start-layer is-hidden" id="onlineBridgeStartLayer" aria-hidden="true">
+        <div class="online-bridge-start-text" id="onlineBridgeStartText">CARREGANDO</div>
+      </section>
+
       <div class="advanced-debug-selection" id="advancedDebugSelection" aria-hidden="true">
         <div class="advanced-debug-resize-handle" id="advancedDebugResizeHandle"></div>
       </div>
@@ -3187,6 +3221,8 @@
         p1GuaranteedCountdown: document.querySelector("#p1GuaranteedCountdown"),
         p2GuaranteedCountdown: document.querySelector("#p2GuaranteedCountdown"),
         statePopupLayer: document.querySelector("#statePopupLayer"),
+        onlineBridgeStartLayer: document.querySelector("#onlineBridgeStartLayer"),
+        onlineBridgeStartText: document.querySelector("#onlineBridgeStartText"),
         advancedDebugSelection: document.querySelector("#advancedDebugSelection"),
         advancedDebugResizeHandle: document.querySelector("#advancedDebugResizeHandle"),
         advancedDebugToast: document.querySelector("#advancedDebugToast"),
@@ -6615,10 +6651,19 @@
       const onlineBridgeEnabled = new URLSearchParams(window.location.search).get("onlineBridge") === "1";
       const ONLINE_BRIDGE_PRELOAD_TIMEOUT_MS = 2200;
       const ONLINE_BRIDGE_PRELOAD_GRACE_MS = 2500;
+      const ONLINE_BRIDGE_STARTUP_PRELOAD_TIMEOUT_MS = 5500;
+      const ONLINE_BRIDGE_READY_TEXT_MS = 1600;
+      const ONLINE_BRIDGE_FIGHT_TEXT_MS = 900;
+      const ONLINE_BRIDGE_STARTUP_BUSY_MS = ONLINE_BRIDGE_STARTUP_PRELOAD_TIMEOUT_MS
+        + ONLINE_BRIDGE_READY_TEXT_MS
+        + ONLINE_BRIDGE_FIGHT_TEXT_MS
+        + 900;
       const onlineBridge = {
         active: false,
         started: false,
         matchId: null,
+        startupPromise: null,
+        startupReady: false,
         lastTurnKey: null,
         lastPayloadKey: null,
         allowLocalResolve: false,
@@ -6686,6 +6731,17 @@
         });
       }
 
+      function onlineBridgeShowStartText(text) {
+        el.onlineBridgeStartText.textContent = text;
+        el.onlineBridgeStartLayer.classList.remove("is-hidden");
+        el.onlineBridgeStartLayer.setAttribute("aria-hidden", "false");
+      }
+
+      function onlineBridgeHideStartText() {
+        el.onlineBridgeStartLayer.classList.add("is-hidden");
+        el.onlineBridgeStartLayer.setAttribute("aria-hidden", "true");
+      }
+
       function onlineBridgeApplyState(battleState) {
         if (!battleState) {
           return;
@@ -6724,6 +6780,14 @@
         }
 
         return payload.battleState?.activeGuaranteedTurn?.durationMs || TURN_DURATION;
+      }
+
+      function onlineBridgePauseClockDisplay(payload) {
+        onlineBridgeStopClock();
+        clearGuaranteedCountdown();
+        const duration = onlineBridgeTurnDuration(payload);
+        el.roundClock.textContent = String(Math.ceil(duration / 1000));
+        el.turnMeterFill.style.width = "100%";
       }
 
       function onlineBridgeStartClock(payload, options = {}) {
@@ -6884,6 +6948,25 @@
         return [...frameSet];
       }
 
+      function onlineBridgeStartupFrames() {
+        const frameSet = new Set(comboHitFrames);
+        ["p1", "p2"].forEach((side) => {
+          const loadout = characterLoadoutForSide(side);
+          onlineBridgeAddFrames(frameSet, loadout.idleFrames);
+          onlineBridgeAddFrames(frameSet, loadout.getUpFrames);
+          onlineBridgeAddFrames(frameSet, loadout.crouchFrames);
+          onlineBridgeAddFrames(frameSet, loadout.jumpFrames);
+          onlineBridgeAddFrames(frameSet, loadout.specialFrames);
+          onlineBridgeAddFrames(frameSet, loadout.ultimateFrames);
+        });
+
+        [el.p1Sprite.src, el.p2Sprite.src, el.p1PortraitArt.src, el.p2PortraitArt.src, el.ultimateFrame.src]
+          .filter(Boolean)
+          .forEach((frame) => frameSet.add(frame));
+
+        return [...frameSet];
+      }
+
       function onlineBridgeWarmActionFrames(side, action) {
         const loadout = characterLoadoutForSide(side);
         if (action === "Crouch") {
@@ -6903,10 +6986,48 @@
         return waitForDecodedFrames(onlineBridgeTurnFrames(turn), ONLINE_BRIDGE_PRELOAD_TIMEOUT_MS);
       }
 
+      async function onlineBridgePreloadStartupVisuals() {
+        preloadActiveCharacterFrames();
+        preloadFrames(comboHitFrames);
+        await waitForDecodedFrames(onlineBridgeStartupFrames(), ONLINE_BRIDGE_STARTUP_PRELOAD_TIMEOUT_MS);
+        syncCharacterSpritesToIdle();
+        updateHud();
+      }
+
+      async function onlineBridgePlayStartupSequence(payload) {
+        const shouldGateTurn = payload.status === "active" || payload.status === "resolving";
+        if (!shouldGateTurn) {
+          onlineBridgeHideStartText();
+          return true;
+        }
+
+        onlineBridgePostVisualBusy(payload, ONLINE_BRIDGE_STARTUP_BUSY_MS);
+        onlineBridgeShowStartText("CARREGANDO");
+        await onlineBridgePreloadStartupVisuals();
+        if (onlineBridge.matchId !== payload.matchId) {
+          return false;
+        }
+
+        onlineBridgeShowStartText("PREPARAR");
+        await wait(ONLINE_BRIDGE_READY_TEXT_MS);
+        if (onlineBridge.matchId !== payload.matchId) {
+          return false;
+        }
+
+        onlineBridgeShowStartText("LUTAR");
+        await wait(ONLINE_BRIDGE_FIGHT_TEXT_MS);
+        if (onlineBridge.matchId !== payload.matchId) {
+          return false;
+        }
+
+        onlineBridgeHideStartText();
+        return true;
+      }
+
       function onlineBridgePrepareTurn(payload, options = {}) {
         const payloadKey = options.payloadKey || onlineBridgePayloadKey(payload);
         if (!options.force && onlineBridge.lastPayloadKey === payloadKey) {
-          onlineBridgeSetActionLock(Boolean(payload.localAction) || payload.status !== "active");
+          onlineBridgeSetActionLock(Boolean(payload.localAction) || payload.status !== "active" || Boolean(options.pauseClock));
           return;
         }
 
@@ -6932,9 +7053,13 @@
         }
 
         setTokenDisplay(false);
-        onlineBridgeStartClock(payload, { restartFromNow: Boolean(options.restartClock) });
+        if (options.pauseClock) {
+          onlineBridgePauseClockDisplay(payload);
+        } else {
+          onlineBridgeStartClock(payload, { restartFromNow: Boolean(options.restartClock) });
+        }
         updateHud();
-        onlineBridgeSetActionLock(Boolean(payload.localAction) || payload.status !== "active");
+        onlineBridgeSetActionLock(Boolean(payload.localAction) || payload.status !== "active" || Boolean(options.pauseClock));
         syncMusicForPhase();
       }
 
@@ -6975,12 +7100,16 @@
 
       async function onlineBridgeStart(payload) {
         if (onlineBridge.started && onlineBridge.matchId === payload.matchId) {
+          if (onlineBridge.startupPromise) {
+            await onlineBridge.startupPromise;
+          }
           return;
         }
 
         onlineBridge.active = true;
         onlineBridge.started = true;
         onlineBridge.matchId = payload.matchId;
+        onlineBridge.startupReady = false;
         onlineBridge.lastTurnKey = null;
         onlineBridge.lastPayloadKey = null;
         onlineBridge.isAnimatingTurn = false;
@@ -6993,22 +7122,51 @@
         state.selectedP2Character = payload.opponentCharacterId;
         document.body.classList.add("online-bridge-mode");
 
-        const loaded = await activateSelectedCharacters();
-        if (!loaded) {
-          onlineBridgePost({ type: "error", message: "character-load-failed" });
-          return;
-        }
+        onlineBridge.startupPromise = (async () => {
+          onlineBridgeShowStartText("CARREGANDO");
+          if (payload.status === "active" || payload.status === "resolving") {
+            onlineBridgePostVisualBusy(payload, ONLINE_BRIDGE_STARTUP_BUSY_MS + 3000);
+          }
+          const loaded = await activateSelectedCharacters();
+          if (!loaded) {
+            onlineBridgeHideStartText();
+            onlineBridgePost({ type: "error", message: "character-load-failed" });
+            return;
+          }
 
-        el.startScreen.classList.add("is-hidden");
-        el.characterSelectScreen.classList.add("is-hidden");
-        el.helpScreen.classList.add("is-hidden");
-        el.optionsScreen.classList.add("is-hidden");
-        applyRandomStageBackground();
-        resetBattle();
-        onlineBridgePrepareTurn(payload, { force: true });
-        if (payload.status === "active" && payload.lastTurn) {
-          onlineBridge.lastTurnKey = onlineBridgeTurnKey(payload);
-          onlineBridgePostVisualReady(payload);
+          if (onlineBridge.matchId !== payload.matchId) {
+            return;
+          }
+
+          el.startScreen.classList.add("is-hidden");
+          el.characterSelectScreen.classList.add("is-hidden");
+          el.helpScreen.classList.add("is-hidden");
+          el.optionsScreen.classList.add("is-hidden");
+          applyRandomStageBackground();
+          resetBattle();
+          onlineBridgePrepareTurn(payload, { force: true, pauseClock: true });
+
+          const startupFinished = await onlineBridgePlayStartupSequence(payload);
+          if (!startupFinished || onlineBridge.matchId !== payload.matchId) {
+            return;
+          }
+
+          if (payload.status === "active" && payload.lastTurn) {
+            onlineBridge.lastTurnKey = onlineBridgeTurnKey(payload);
+          }
+          onlineBridgePrepareTurn(payload, { force: true, restartClock: payload.status === "active" });
+          if (payload.status === "active") {
+            onlineBridgePostVisualReady(payload);
+          }
+          onlineBridge.startupReady = true;
+        })();
+
+        try {
+          await onlineBridge.startupPromise;
+        } finally {
+          if (onlineBridge.matchId === payload.matchId) {
+            onlineBridge.startupPromise = null;
+          }
         }
       }
 
