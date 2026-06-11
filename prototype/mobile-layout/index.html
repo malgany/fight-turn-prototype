@@ -1091,6 +1091,10 @@
         pointer-events: none;
       }
 
+      .online-bridge-start-layer.is-loading {
+        background: #000;
+      }
+
       .online-bridge-start-layer.is-hidden {
         display: none;
       }
@@ -6731,13 +6735,15 @@
         });
       }
 
-      function onlineBridgeShowStartText(text) {
+      function onlineBridgeShowStartText(text, options = {}) {
         el.onlineBridgeStartText.textContent = text;
+        el.onlineBridgeStartLayer.classList.toggle("is-loading", Boolean(options.loading));
         el.onlineBridgeStartLayer.classList.remove("is-hidden");
         el.onlineBridgeStartLayer.setAttribute("aria-hidden", "false");
       }
 
       function onlineBridgeHideStartText() {
+        el.onlineBridgeStartLayer.classList.remove("is-loading");
         el.onlineBridgeStartLayer.classList.add("is-hidden");
         el.onlineBridgeStartLayer.setAttribute("aria-hidden", "true");
       }
@@ -7002,7 +7008,7 @@
         }
 
         onlineBridgePostVisualBusy(payload, ONLINE_BRIDGE_STARTUP_BUSY_MS);
-        onlineBridgeShowStartText("CARREGANDO");
+        onlineBridgeShowStartText("CARREGANDO", { loading: true });
         await onlineBridgePreloadStartupVisuals();
         if (onlineBridge.matchId !== payload.matchId) {
           return false;
@@ -7123,7 +7129,7 @@
         document.body.classList.add("online-bridge-mode");
 
         onlineBridge.startupPromise = (async () => {
-          onlineBridgeShowStartText("CARREGANDO");
+          onlineBridgeShowStartText("CARREGANDO", { loading: true });
           if (payload.status === "active" || payload.status === "resolving") {
             onlineBridgePostVisualBusy(payload, ONLINE_BRIDGE_STARTUP_BUSY_MS + 3000);
           }
