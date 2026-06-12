@@ -173,7 +173,7 @@ Estado da Play Console:
 - App criado: `Final Genesis`
 - Package: `com.malganiplay.finalgenesis`
 - Status: teste interno ativo
-- Teste interno: versao `1.0.0`, codigo `1`, disponivel para testadores internos
+- Teste interno: versao `1.0.1`, codigo `2`, disponivel para testadores internos
 - Lista de testadores: `Final Genesis - teste interno`
 - Testadores: `yopsadida@gmail.com`, `thiagoleite1993@gmail.com`
 - Link de participacao: `https://play.google.com/apps/internaltest/4700337006519489256`
