@@ -1,5 +1,6 @@
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import { authRedirectUrl, supabaseAnonKey, supabaseUrl } from "../lib/config";
+import { authRedirectUrl, isNativeMobileApp, supabaseAnonKey, supabaseUrl } from "../lib/config";
+import { signInWithGoogleOnMobile } from "../lib/mobileAuth";
 import { supabase } from "../lib/supabase";
 import type {
   Action,
@@ -117,6 +118,11 @@ export class SupabaseGameService implements GameService {
   }
 
   async signInWithGoogle(): Promise<void> {
+    if (isNativeMobileApp()) {
+      await signInWithGoogleOnMobile(this.client(), authRedirectUrl());
+      return;
+    }
+
     const { error } = await this.client().auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: authRedirectUrl() },

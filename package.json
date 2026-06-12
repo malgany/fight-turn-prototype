@@ -9,12 +9,21 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prototype": "node tools/serve-prototype.mjs"
+    "prototype": "node tools/serve-prototype.mjs",
+    "android:sync": "npm run build && cap sync android",
+    "android:open": "cap open android",
+    "android:apk": "npm run android:sync && cd android && gradlew assembleDebug",
+    "android:aab": "npm run android:sync && cd android && gradlew bundleRelease"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/browser": "^8.0.3",
+    "@capacitor/core": "^8.4.0",
     "@supabase/supabase-js": "^2.108.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.4.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.16",
     "vitest": "^4.1.8"

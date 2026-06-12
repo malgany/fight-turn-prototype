@@ -125,6 +125,60 @@ Configure:
 - `npm run build`: TypeScript + build de producao.
 - `npm test`: testes unitarios.
 - `npm run prototype`: servidor do prototipo legado.
+- `npm run android:sync`: build web e sincronizacao do Capacitor Android.
+- `npm run android:apk`: gera APK debug em `android/app/build/outputs/apk/debug/app-debug.apk`.
+- `npm run android:aab`: gera AAB release assinado em `android/app/build/outputs/bundle/release/app-release.aab`.
+
+## Android
+
+O projeto Android usa Capacitor com:
+
+- App ID: `com.malganiplay.finalgenesis`
+- Nome: `Final Genesis`
+- Web dir: `dist`
+- Target SDK: Android 36
+- Orientacao: portrait
+- Redirect nativo de Auth: `com.malganiplay.finalgenesis://auth/callback`
+
+Requisito local para build Android: JDK 21 e Android SDK instalado.
+
+No Windows, antes de gerar APK/AAB nesta maquina:
+
+```powershell
+$env:JAVA_HOME='C:\Program Files\Microsoft\jdk-21.0.11.10-hotspot'
+$env:Path="$env:JAVA_HOME\bin;$env:Path"
+```
+
+Comandos principais:
+
+```bash
+npm run android:sync
+npm run android:apk
+npm run android:aab
+```
+
+Arquivos gerados:
+
+- APK debug: `android/app/build/outputs/apk/debug/app-debug.apk`
+- AAB release: `android/app/build/outputs/bundle/release/app-release.aab`
+- Icone Play 512x512: `assets/store/final-genesis-icon-512.png`
+
+A chave de upload local fica fora do Git em `android/keystores/` e `android/release-signing.properties`. Faca backup seguro desses arquivos, porque a Play Console vai depender dessa chave para novos envios.
+
+Para o login Google funcionar no APK, o redirect `com.malganiplay.finalgenesis://auth/callback` tambem esta liberado no painel remoto do Supabase Auth.
+
+Estado da Play Console:
+
+- Conta: `MALGANY PLAY©`
+- App criado: `Final Genesis`
+- Package: `com.malganiplay.finalgenesis`
+- Status: teste interno ativo
+- Teste interno: versao `1.0.0`, codigo `1`, disponivel para testadores internos
+- Lista de testadores: `Final Genesis - teste interno`
+- Testadores: `yopsadida@gmail.com`, `thiagoleite1993@gmail.com`
+- Link de participacao: `https://play.google.com/apps/internaltest/4700337006519489256`
+
+Observacao: ate a revisao completa do app, os testadores podem ver o nome temporario `com.malganiplay.finalgenesis (unreviewed)` na Google Play.
 
 ## Supabase
 
@@ -170,7 +224,8 @@ Validacoes realizadas no remoto:
 
 ## Proximos passos recomendados
 
-1. Testar uma partida privada com dois navegadores/dispositivos reais.
-2. Testar ranked com duas contas Google reais simultaneas.
-3. Refinar a cena de batalha visual usando mais animacoes do prototipo legado.
-4. Decidir o pipeline Android/Capacitor quando a versao web estiver estavel.
+1. Instalar pelo link de teste interno em um aparelho Android real e testar login.
+2. Testar lobby e uma partida privada com as duas contas de teste.
+3. Testar ranked com duas contas Google reais simultaneas.
+4. Preencher a ficha completa da Play Console para remover o nome temporario e preparar revisao.
+5. Refinar a cena de batalha visual usando mais animacoes do prototipo legado.

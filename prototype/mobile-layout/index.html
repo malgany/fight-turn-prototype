@@ -3075,6 +3075,12 @@
       const MOBILE_UI_ACTION_DELAY = 650;
       const characterConfigCache = new Map();
 
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").catch(() => {});
+        });
+      }
+
       let activeStageBackground = null;
 
       function randomStageBackground() {
@@ -3118,7 +3124,13 @@
       };
       const comboHitFrames = buildAnimationFrames(comboHitEffect);
       const LOCAL_DEBUG_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"]);
-      const debugAvailable = LOCAL_DEBUG_HOSTS.has(window.location.hostname);
+      const capacitorBridge = window.Capacitor;
+      const isNativeShell = Boolean(
+        capacitorBridge?.isNativePlatform?.() ||
+          capacitorBridge?.getPlatform?.() === "android" ||
+          window.location.protocol === "capacitor:"
+      );
+      const debugAvailable = LOCAL_DEBUG_HOSTS.has(window.location.hostname) && !isNativeShell;
       const attackActions = ["Poke", "Combo", "Grab", "Special", "Super"];
       const selectableActions = ["Poke", "Combo", "Grab", "Special", "Super", "Block", "Crouch", "Jump"];
       const comboGuaranteedActions = selectableActions.filter((action) => !["Grab", "Combo"].includes(action));
@@ -3792,7 +3804,7 @@
       }
 
       async function loadCharacterConfig(path) {
-        const response = await fetch(path, { cache: "no-store" });
+        const response = await fetch(path, { cache: "force-cache" });
         if (!response.ok) {
           throw new Error(`Could not load character config: ${path}`);
         }
@@ -3948,9 +3960,6 @@
       function preloadActiveCharacterFrames() {
         new Set(Object.values(characterLoadouts).filter(Boolean)).forEach(preloadCharacterLoadout);
       }
-
-      preloadActiveCharacterFrames();
-      preloadFrames(comboHitFrames);
 
       function fighterSprite(side) {
         return side === "p1" ? el.p1Sprite : el.p2Sprite;
@@ -6226,7 +6235,6 @@
         characterLoadouts.p2 = createCharacterLoadout(p2Character, p2Config);
         syncGlobalCharacterAssets(characterLoadouts.p1);
         clearDecodedFrameCache();
-        preloadActiveCharacterFrames();
         clearSpriteAnimations();
         clearUltimateCinematic();
         syncCharacterSpritesToIdle();
@@ -6970,15 +6978,12 @@
       }
 
       function onlineBridgeStartupFrames() {
-        const frameSet = new Set(comboHitFrames);
+        const frameSet = new Set();
         ["p1", "p2"].forEach((side) => {
           const loadout = characterLoadoutForSide(side);
-          onlineBridgeAddFrames(frameSet, loadout.idleFrames);
-          onlineBridgeAddFrames(frameSet, loadout.getUpFrames);
-          onlineBridgeAddFrames(frameSet, loadout.crouchFrames);
-          onlineBridgeAddFrames(frameSet, loadout.jumpFrames);
-          onlineBridgeAddFrames(frameSet, loadout.specialFrames);
-          onlineBridgeAddFrames(frameSet, loadout.ultimateFrames);
+          if (loadout.idleFrames[0]) {
+            frameSet.add(loadout.idleFrames[0]);
+          }
         });
 
         [el.p1Sprite.src, el.p2Sprite.src, el.p1PortraitArt.src, el.p2PortraitArt.src, el.ultimateFrame.src]
@@ -7008,8 +7013,6 @@
       }
 
       async function onlineBridgePreloadStartupVisuals() {
-        preloadActiveCharacterFrames();
-        preloadFrames(comboHitFrames);
         await waitForDecodedFrames(onlineBridgeStartupFrames(), ONLINE_BRIDGE_STARTUP_PRELOAD_TIMEOUT_MS);
         syncCharacterSpritesToIdle();
         updateHud();

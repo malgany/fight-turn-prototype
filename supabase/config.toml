@@ -8,6 +8,7 @@ additional_redirect_urls = [
   "http://127.0.0.1:5173/auth/callback",
   "http://localhost:5180/auth/callback",
   "http://127.0.0.1:5180/auth/callback",
+  "com.malganiplay.finalgenesis://auth/callback",
   "https://final-genesis-web.vercel.app/auth/callback",
   "https://final-genesis-ohn0eyzs9-tonys-projects-8858cd26.vercel.app/auth/callback"
 ]
