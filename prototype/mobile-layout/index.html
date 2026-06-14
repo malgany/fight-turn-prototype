@@ -6626,7 +6626,7 @@
           : window.location.pathname.includes("/prototype/mobile-layout/")
             ? new URL("../../", window.location.href)
             : new URL("./", window.location.href);
-        const target = new URL("online/", base);
+        const target = new URL("online/index.html", base);
         window.location.assign(target.href);
       }
 

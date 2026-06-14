@@ -35,7 +35,7 @@ async function finishMobileAuth(url: string): Promise<void> {
     if (error) throw error;
   }
 
-  window.location.replace(appRouteUrl("online/"));
+  window.location.replace(appRouteUrl("online/index.html"));
 }
 
 export function setupMobileAuthRedirect(): void {
@@ -45,7 +45,7 @@ export function setupMobileAuthRedirect(): void {
     void Browser.close().catch(() => {});
     void finishMobileAuth(event.url).catch((error) => {
       console.error("Mobile auth callback failed", error);
-      window.location.replace(appRouteUrl("online/"));
+      window.location.replace(appRouteUrl("online/index.html"));
     });
   });
 }

@@ -712,14 +712,14 @@ export class App {
     if (!this.initialBootstrapComplete && url.searchParams.has("room")) return;
 
     if (this.state.snapshot.profile && url.pathname.startsWith("/auth/callback")) {
-      url.pathname = "/online/";
+      url.pathname = "/online/index.html";
       url.search = "";
       url.hash = "";
       window.history.replaceState(null, "", url.href);
     }
 
     if (this.state.screen === "private-room" && this.state.room?.code) {
-      url.pathname = "/online/";
+      url.pathname = "/online/index.html";
       url.search = "";
       url.searchParams.set("room", this.state.room.code);
       if (window.location.href !== url.href) window.history.replaceState(null, "", url.href);
