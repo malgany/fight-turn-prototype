@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
-import { isNativeMobileApp, mobileAuthRedirectUrl } from "./config";
+import { appRouteUrl, isNativeMobileApp, mobileAuthRedirectUrl } from "./config";
 import { supabase } from "./supabase";
 
 function paramsFromUrl(url: string): URLSearchParams {
@@ -35,7 +35,7 @@ async function finishMobileAuth(url: string): Promise<void> {
     if (error) throw error;
   }
 
-  window.location.replace("/online/");
+  window.location.replace(appRouteUrl("online/"));
 }
 
 export function setupMobileAuthRedirect(): void {
@@ -45,7 +45,7 @@ export function setupMobileAuthRedirect(): void {
     void Browser.close().catch(() => {});
     void finishMobileAuth(event.url).catch((error) => {
       console.error("Mobile auth callback failed", error);
-      window.location.replace("/online/");
+      window.location.replace(appRouteUrl("online/"));
     });
   });
 }

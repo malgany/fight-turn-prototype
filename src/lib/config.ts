@@ -14,3 +14,18 @@ export function authRedirectUrl(): string {
   if (isNativeMobileApp()) return mobileAuthRedirectUrl;
   return `${window.location.origin}/auth/callback`;
 }
+
+export function appRouteUrl(path: string): string {
+  const normalizedPath = path.replace(/^\/+/, "");
+  const origin = window.location.origin;
+  if (origin && origin !== "null") {
+    return new URL(normalizedPath, `${origin}/`).href;
+  }
+  const pathname = window.location.pathname.replace(/\\/g, "/");
+  const base = pathname.includes("/online/")
+    ? new URL("../", window.location.href)
+    : pathname.includes("/auth/callback/")
+      ? new URL("../../", window.location.href)
+      : new URL("./", window.location.href);
+  return new URL(normalizedPath || "index.html", base).href;
+}

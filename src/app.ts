@@ -1,5 +1,6 @@
 import { characterById, characters } from "./data/characters";
 import { selectableActions, turnDurationForState } from "./domain/battle";
+import { appRouteUrl } from "./lib/config";
 import type { Action, AppSnapshot, BattleState, GameMatch, GuaranteedTurn, LeaderboardEntry, MatchHistoryEntry, PrivateRoom, Side, TurnResolution } from "./types";
 import type { GameService } from "./services/gameService";
 
@@ -305,7 +306,7 @@ export class App {
         await this.navigate("online");
         break;
       case "legacy-menu":
-        window.location.assign("/");
+        window.location.assign(appRouteUrl(""));
         break;
     }
   }
@@ -1092,7 +1093,7 @@ export class App {
       <iframe
         class="legacy-online-battle-frame"
         data-legacy-online-battle
-        src="/prototype/mobile-layout/?onlineBridge=1&v=20260611-post-match-stage-1"
+        src="${appRouteUrl("prototype/mobile-layout/?onlineBridge=1&v=20260611-post-match-stage-1")}"
         title="Batalha online Final Genesis"
       ></iframe>
     `;

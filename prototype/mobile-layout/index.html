@@ -6620,9 +6620,19 @@
       el.helpButton.addEventListener("click", () => {
         runUiButtonAction(el.helpButton, showHelpScreen);
       });
+      function navigateToOnlineApp() {
+        const base = window.location.origin && window.location.origin !== "null"
+          ? new URL("./", `${window.location.origin}/`)
+          : window.location.pathname.includes("/prototype/mobile-layout/")
+            ? new URL("../../", window.location.href)
+            : new URL("./", window.location.href);
+        const target = new URL("online/", base);
+        window.location.assign(target.href);
+      }
+
       el.onlineButton.addEventListener("click", () => {
         runUiButtonAction(el.onlineButton, () => {
-          window.location.assign("/online/");
+          navigateToOnlineApp();
         });
       });
       el.optionsButton.addEventListener("click", () => {
