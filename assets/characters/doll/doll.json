@@ -4,7 +4,7 @@
     "animations":  {
                        "idle":  {
                                     "label":  "Idle",
-                                    "framePattern":  "../../assets/characters/doll-idle/doll-idle-{frame}.webp",
+                                    "framePattern":  "../../game-assets/characters/doll-idle/doll-idle-{frame}.webp",
                                     "frameCount":  113,
                                     "framePad":  3,
                                     "frameIntervalMs":  33,
@@ -26,7 +26,7 @@
                                 },
                        "getUp":  {
                                      "label":  "Get Up",
-                                     "framePattern":  "../../assets/characters/doll-get-up/doll-get-up-{frame}.webp",
+                                     "framePattern":  "../../game-assets/characters/doll-get-up/doll-get-up-{frame}.webp",
                                      "frameCount":  169,
                                      "framePad":  3,
                                      "frameIntervalMs":  16,
@@ -44,7 +44,7 @@
                                  },
                        "crouch":  {
                                       "label":  "Crouch",
-                                      "framePattern":  "../../assets/characters/doll-crouch/doll-crouch-{frame}.webp",
+                                      "framePattern":  "../../game-assets/characters/doll-crouch/doll-crouch-{frame}.webp",
                                       "frameCount":  356,
                                       "framePad":  3,
                                       "frameIntervalMs":  8,
@@ -62,7 +62,7 @@
                                   },
                        "jump":  {
                                     "label":  "Jump",
-                                    "framePattern":  "../../assets/characters/doll-jump/doll-jump-{frame}.webp",
+                                    "framePattern":  "../../game-assets/characters/doll-jump/doll-jump-{frame}.webp",
                                     "frameCount":  113,
                                     "framePad":  3,
                                     "frameIntervalMs":  18,
@@ -80,7 +80,7 @@
                                 },
                        "special":  {
                                        "label":  "Special",
-                                       "framePattern":  "../../assets/characters/doll-special/doll-special-{frame}.webp",
+                                       "framePattern":  "../../game-assets/characters/doll-special/doll-special-{frame}.webp",
                                        "frameCount":  176,
                                        "framePad":  3,
                                        "frameIntervalMs":  12,
@@ -106,7 +106,7 @@
                                    },
                        "ultimate":  {
                                         "label":  "Ultimate",
-                                        "framePattern":  "../../assets/characters/doll-ultimate/doll-ultimate-{frame}.webp",
+                                        "framePattern":  "../../game-assets/characters/doll-ultimate/doll-ultimate-{frame}.webp",
                                         "frameCount":  126,
                                         "framePad":  3,
                                         "frameIntervalMs":  33,

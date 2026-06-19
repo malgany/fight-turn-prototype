@@ -4,7 +4,7 @@
   "animations": {
     "idle": {
       "label": "Idle",
-      "framePattern": "../../assets/characters/itzcoatl-idle/itzcoatl-idle-{frame}.webp",
+      "framePattern": "../../game-assets/characters/itzcoatl-idle/itzcoatl-idle-{frame}.webp",
       "frameCount": 59,
       "framePad": 3,
       "frameIntervalMs": 33,
@@ -22,7 +22,7 @@
     },
     "getUp": {
       "label": "Get Up",
-      "framePattern": "../../assets/characters/itzcoatl-get-up/itzcoatl-get-up-{frame}.webp?v=20260608-get-up",
+      "framePattern": "../../game-assets/characters/itzcoatl-get-up/itzcoatl-get-up-{frame}.webp?v=20260608-get-up",
       "frameCount": 105,
       "framePad": 3,
       "frameIntervalMs": 33,
@@ -40,7 +40,7 @@
     },
     "crouch": {
       "label": "Crouch",
-      "framePattern": "../../assets/characters/itzcoatl-crouch/itzcoatl-crouch-{frame}.webp",
+      "framePattern": "../../game-assets/characters/itzcoatl-crouch/itzcoatl-crouch-{frame}.webp",
       "frameCount": 140,
       "framePad": 3,
       "frameIntervalMs": 33,
@@ -58,7 +58,7 @@
     },
     "jump": {
       "label": "Jump",
-      "framePattern": "../../assets/characters/itzcoatl-jump/itzcoatl-jump-{frame}.webp",
+      "framePattern": "../../game-assets/characters/itzcoatl-jump/itzcoatl-jump-{frame}.webp",
       "frameCount": 64,
       "framePad": 3,
       "frameIntervalMs": 33,
@@ -76,7 +76,7 @@
     },
     "special": {
       "label": "Special",
-      "framePattern": "../../assets/characters/itzcoatl-special/itzcoatl-special-{frame}.webp?v=20260609-refeito-animais",
+      "framePattern": "../../game-assets/characters/itzcoatl-special/itzcoatl-special-{frame}.webp?v=20260609-refeito-animais",
       "frameCount": 146,
       "framePad": 3,
       "frameIntervalMs": 33,
@@ -94,7 +94,7 @@
     },
     "ultimate": {
       "label": "Ultimate",
-      "framePattern": "../../assets/characters/itzcoatl-ultimate/itzcoatl-ultimate-{frame}.webp",
+      "framePattern": "../../game-assets/characters/itzcoatl-ultimate/itzcoatl-ultimate-{frame}.webp",
       "frameCount": 176,
       "framePad": 3,
       "frameIntervalMs": 33

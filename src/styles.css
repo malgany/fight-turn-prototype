@@ -1,12 +1,12 @@
 @font-face {
   font-family: "Anime Ace BB";
-  src: url("/assets/fonts/animeace2_reg.ttf") format("truetype");
+  src: url("/game-assets/fonts/animeace2_reg.ttf") format("truetype");
   font-display: swap;
 }
 
 @font-face {
   font-family: "Anime Ace BB";
-  src: url("/assets/fonts/animeace2_bld.ttf") format("truetype");
+  src: url("/game-assets/fonts/animeace2_bld.ttf") format("truetype");
   font-weight: 900;
   font-display: swap;
 }
@@ -74,7 +74,7 @@ button:disabled {
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(8, 11, 16, 0.2), rgba(8, 11, 16, 0.95)),
-    url("/assets/backgrounds/title-screen-fighters.webp") center / cover no-repeat;
+    url("/game-assets/backgrounds/title-screen-fighters.webp") center / cover no-repeat;
   padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
 }
 
@@ -245,7 +245,7 @@ button:disabled {
 }
 
 .image-back-command.menu-back {
-  background-image: url("/assets/ui/menu/voltar.webp");
+  background-image: url("/game-assets/ui/menu/voltar.webp");
 }
 
 .image-back-command:active,
@@ -536,7 +536,7 @@ p {
   border-radius: 8px;
   background:
     linear-gradient(180deg, rgba(2, 5, 8, 0.1), rgba(2, 5, 8, 0.82)),
-    url("/assets/ui/character-select/background.webp") center / cover no-repeat;
+    url("/game-assets/ui/character-select/background.webp") center / cover no-repeat;
 }
 
 .match-select-header {
@@ -616,7 +616,7 @@ p {
 .legacy-card-frame {
   position: absolute;
   inset: 0;
-  background: url("/assets/ui/character-select/card-frame.webp") center / 100% 100% no-repeat;
+  background: url("/game-assets/ui/character-select/card-frame.webp") center / 100% 100% no-repeat;
   pointer-events: none;
 }
 
@@ -667,7 +667,7 @@ p {
   border-radius: 0;
   background:
     linear-gradient(to bottom, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.42) 78%, rgba(0, 0, 0, 0.54)),
-    url("/assets/ui/character-select/background.webp") center / cover no-repeat;
+    url("/game-assets/ui/character-select/background.webp") center / cover no-repeat;
 }
 
 .match-select-screen .character-select-title-art,
@@ -847,7 +847,7 @@ p {
   z-index: 2;
   width: 100%;
   height: 100%;
-  background: url("/assets/ui/character-select/card-frame.webp") center / 100% 100% no-repeat;
+  background: url("/game-assets/ui/character-select/card-frame.webp") center / 100% 100% no-repeat;
   filter: drop-shadow(0 6px 4px rgba(0, 0, 0, 0.58));
   pointer-events: none;
 }
@@ -991,7 +991,7 @@ p {
 }
 
 .match-select-screen .character-select-button.back {
-  background-image: url("/assets/ui/character-select/back.webp");
+  background-image: url("/game-assets/ui/character-select/back.webp");
 }
 
 .online-grid {
@@ -1288,7 +1288,7 @@ p {
   min-height: 300px;
   background:
     linear-gradient(180deg, rgba(14, 17, 23, 0.08), rgba(10, 12, 18, 0.6)),
-    url("/assets/backgrounds/stage-training-zone.png") center / cover;
+    url("/game-assets/backgrounds/stage-training-zone.png") center / cover;
   border: 1px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
@@ -1362,35 +1362,35 @@ p {
 }
 
 .action-button:nth-child(1) {
-  --button-image: url("/assets/ui/action-panel/buttons/poke.png");
+  --button-image: url("/game-assets/ui/action-panel/buttons/poke.png");
 }
 
 .action-button:nth-child(2) {
-  --button-image: url("/assets/ui/action-panel/buttons/combo.png");
+  --button-image: url("/game-assets/ui/action-panel/buttons/combo.png");
 }
 
 .action-button:nth-child(3) {
-  --button-image: url("/assets/ui/action-panel/buttons/grab.png");
+  --button-image: url("/game-assets/ui/action-panel/buttons/grab.png");
 }
 
 .action-button:nth-child(4) {
-  --button-image: url("/assets/ui/action-panel/buttons/special.png");
+  --button-image: url("/game-assets/ui/action-panel/buttons/special.png");
 }
 
 .action-button:nth-child(5) {
-  --button-image: url("/assets/ui/action-panel/buttons/super.png");
+  --button-image: url("/game-assets/ui/action-panel/buttons/super.png");
 }
 
 .action-button:nth-child(6) {
-  --button-image: url("/assets/ui/action-panel/buttons/block.png");
+  --button-image: url("/game-assets/ui/action-panel/buttons/block.png");
 }
 
 .action-button:nth-child(7) {
-  --button-image: url("/assets/ui/action-panel/buttons/crouch.png");
+  --button-image: url("/game-assets/ui/action-panel/buttons/crouch.png");
 }
 
 .action-button:nth-child(8) {
-  --button-image: url("/assets/ui/action-panel/buttons/jump.png");
+  --button-image: url("/game-assets/ui/action-panel/buttons/jump.png");
 }
 
 .action-button:disabled {
@@ -1442,7 +1442,7 @@ p {
 .ranking-screen {
   background:
     linear-gradient(180deg, rgba(5, 8, 12, 0.72), rgba(5, 8, 12, 0.9)),
-    url("/assets/backgrounds/title-screen-fighters.webp") center / cover no-repeat;
+    url("/game-assets/backgrounds/title-screen-fighters.webp") center / cover no-repeat;
 }
 
 .ranking-scroll {

@@ -1,5 +1,5 @@
-const STATIC_CACHE = "fight-turn-static-v4";
-const STATIC_PATHS = ["/assets/", "/prototype/"];
+const STATIC_CACHE = "fight-turn-static-v5";
+const STATIC_PATHS = ["/assets/", "/game-assets/", "/prototype/"];
 
 self.addEventListener("install", () => {
   self.skipWaiting();

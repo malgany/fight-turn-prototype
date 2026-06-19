@@ -923,7 +923,7 @@ export class App {
     return `
       <header class="top-bar">
         <button class="brand-button" data-nav="menu" type="button">
-          <img src="/assets/ui/menu/logo.webp" alt="Final Genesis">
+          <img src="/game-assets/ui/menu/logo.webp" alt="Final Genesis">
         </button>
         <div class="player-chip">
           <span class="presence-dot ${profile.presenceStatus}"></span>
@@ -979,7 +979,7 @@ export class App {
     return `
       <section class="login-screen">
         <div class="login-hero">
-          <img src="/assets/ui/menu/logo.webp" alt="Final Genesis" class="login-logo">
+          <img src="/game-assets/ui/menu/logo.webp" alt="Final Genesis" class="login-logo">
           <div class="login-actions">
             <button class="primary-command" data-action="google" type="button">Entrar com Google</button>
           </div>
@@ -1146,8 +1146,8 @@ export class App {
 
     return `
       <section class="match-select-screen">
-        <img class="character-select-title-art" src="/assets/ui/menu/logo.webp" alt="Final Genesis" draggable="false">
-        <img class="character-select-subtitle-art" src="/assets/ui/character-select/subtitle.webp" alt="Escolha seu lutador" draggable="false">
+        <img class="character-select-title-art" src="/game-assets/ui/menu/logo.webp" alt="Final Genesis" draggable="false">
+        <img class="character-select-subtitle-art" src="/game-assets/ui/character-select/subtitle.webp" alt="Escolha seu lutador" draggable="false">
         <div class="match-select-status">
           <div class="select-player-chip ready">
             <span>${escapeHtml(localPlayer.displayName)}</span>

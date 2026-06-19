@@ -4,7 +4,7 @@
   "animations": {
     "idle": {
       "label": "Idle",
-      "framePattern": "../../assets/characters/ninja-idle/ninja-idle-{frame}.webp",
+      "framePattern": "../../game-assets/characters/ninja-idle/ninja-idle-{frame}.webp",
       "frameCount": 45,
       "framePad": 3,
       "frameIntervalMs": 42,
@@ -14,7 +14,7 @@
     },
     "getUp": {
       "label": "Get Up",
-      "framePattern": "../../assets/characters/ninja-get-up/ninja-get-up-{frame}.webp",
+      "framePattern": "../../game-assets/characters/ninja-get-up/ninja-get-up-{frame}.webp",
       "frameCount": 65,
       "framePad": 3,
       "frameIntervalMs": 54,
@@ -24,7 +24,7 @@
     },
     "crouch": {
       "label": "Crouch",
-      "framePattern": "../../assets/characters/ninja-crouch/ninja-crouch-{frame}.webp",
+      "framePattern": "../../game-assets/characters/ninja-crouch/ninja-crouch-{frame}.webp",
       "frameCount": 106,
       "framePad": 3,
       "frameIntervalMs": 37,
@@ -34,7 +34,7 @@
     },
     "jump": {
       "label": "Jump",
-      "framePattern": "../../assets/characters/ninja-jump/ninja-jump-{frame}.webp",
+      "framePattern": "../../game-assets/characters/ninja-jump/ninja-jump-{frame}.webp",
       "frameCount": 34,
       "framePad": 3,
       "frameIntervalMs": 56,
@@ -61,7 +61,7 @@
     },
     "special": {
       "label": "Special",
-      "framePattern": "../../assets/characters/ninja-special/ninja-special-{frame}.webp?v=20260608-refeito-special",
+      "framePattern": "../../game-assets/characters/ninja-special/ninja-special-{frame}.webp?v=20260608-refeito-special",
       "frameCount": 107,
       "framePad": 3,
       "frameIntervalMs": 33,
@@ -80,7 +80,7 @@
     },
     "ultimate": {
       "label": "Ultimate",
-      "framePattern": "../../assets/characters/ninja-ultimate/ninja-ultimate-{frame}.webp",
+      "framePattern": "../../game-assets/characters/ninja-ultimate/ninja-ultimate-{frame}.webp",
       "frameCount": 234,
       "framePad": 3,
       "frameIntervalMs": 33

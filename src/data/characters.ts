@@ -4,7 +4,7 @@ export const characters: CharacterDefinition[] = [
   {
     id: "ninja",
     name: "Ninja",
-    portraitUrl: "/assets/ui/character-select/fighter-ninja.webp",
+    portraitUrl: "/game-assets/ui/character-select/fighter-ninja.webp",
     enabled: true,
     isDefault: true,
     unlockDescription: "Disponivel desde o inicio",
@@ -14,7 +14,7 @@ export const characters: CharacterDefinition[] = [
   {
     id: "itzcoatl",
     name: "Itzcoatl",
-    portraitUrl: "/assets/ui/character-select/fighter-shaman.webp",
+    portraitUrl: "/game-assets/ui/character-select/fighter-shaman.webp",
     enabled: true,
     isDefault: true,
     unlockDescription: "Disponivel desde o inicio",
@@ -24,7 +24,7 @@ export const characters: CharacterDefinition[] = [
   {
     id: "aton",
     name: "Aton",
-    portraitUrl: "/assets/ui/character-select/fighter-urban.webp",
+    portraitUrl: "/game-assets/ui/character-select/fighter-urban.webp",
     enabled: true,
     isDefault: true,
     unlockDescription: "Disponivel desde o inicio",
@@ -34,7 +34,7 @@ export const characters: CharacterDefinition[] = [
   {
     id: "doll",
     name: "Doll.exe",
-    portraitUrl: "/assets/ui/character-select/fighter-doll.png",
+    portraitUrl: "/game-assets/ui/character-select/fighter-doll.png",
     enabled: true,
     isDefault: true,
     unlockDescription: "Disponivel desde o inicio",
@@ -44,7 +44,7 @@ export const characters: CharacterDefinition[] = [
   {
     id: "coming-soon",
     name: "Em breve",
-    portraitUrl: "/assets/ui/character-select/fighter-coming-soon-face-question.webp",
+    portraitUrl: "/game-assets/ui/character-select/fighter-coming-soon-face-question.webp",
     enabled: false,
     isDefault: false,
     unlockDescription: "Personagem futuro por ranking",
