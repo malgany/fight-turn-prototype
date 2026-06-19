@@ -104,6 +104,17 @@ describe("resolveBattleTurn", () => {
     expect(result.healed).toEqual([]);
   });
 
+  it("knocks down when Doll ultimate hits for damage", () => {
+    const state = createInitialBattleState();
+    state.p1.super = 3;
+    const result = resolveBattleTurn(state, "Super", null, { p1CharacterId: "doll", p2CharacterId: "doll" });
+
+    expect(result.type).toBe("hit");
+    expect(result.winner).toBe("p1");
+    expect(result.after.p2.health).toBe(75);
+    expect(result.knockedDown).toEqual(["p2"]);
+  });
+
   it("keeps non-Doll special and ultimate behavior unchanged", () => {
     const special = resolveBattleTurn(createInitialBattleState(), "Special", "Jump", { p1CharacterId: "ninja", p2CharacterId: "doll" });
     const ultimateState = createInitialBattleState();

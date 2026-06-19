@@ -10,10 +10,27 @@ const corsHeaders = {
   "access-control-allow-methods": "POST, OPTIONS",
 };
 
+const defaultCharacterRows = [
+  { id: "ninja", name: "Ninja", portrait_url: "/assets/ui/character-select/fighter-ninja.webp", enabled: true, is_default: true, sort_order: 10 },
+  { id: "itzcoatl", name: "Itzcoatl", portrait_url: "/assets/ui/character-select/fighter-shaman.webp", enabled: true, is_default: true, sort_order: 20 },
+  { id: "aton", name: "Aton", portrait_url: "/assets/ui/character-select/fighter-urban.webp", enabled: true, is_default: true, sort_order: 30 },
+  { id: "doll", name: "Doll.exe", portrait_url: "/assets/ui/character-select/fighter-doll.png", enabled: true, is_default: true, sort_order: 40 },
+  { id: "coming-soon", name: "Em breve", portrait_url: "/assets/ui/character-select/fighter-coming-soon-face-question.webp", enabled: false, is_default: false, sort_order: 90 },
+];
+
+const defaultCharacterUnlockRules = [
+  { character_id: "ninja", required_division: "Bronze", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "itzcoatl", required_division: "Bronze", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "aton", required_division: "Bronze", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "doll", required_division: "Bronze", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "coming-soon", required_division: "Gold", required_points: 800, description: "Personagem futuro por ranking" },
+];
+
 const attackActions: Action[] = ["Poke", "Combo", "Grab", "Special", "Super"];
 const selectableActions: Action[] = ["Poke", "Combo", "Grab", "Special", "Super", "Block", "Crouch", "Jump"];
 const comboGuaranteedActions = selectableActions.filter((action) => !["Grab", "Combo"].includes(action));
 const TURN_RESOLUTION_VISUAL_BUFFER_MS = 8000;
+const ACTION_SUBMIT_GRACE_MS = 1200;
 const actionData: Record<Action, { speed?: number; damage?: number }> = {
   Poke: { speed: 1, damage: 4 },
   Combo: { speed: 2, damage: 12 },
@@ -160,7 +177,6 @@ function isDollUltimate(side: Side, action: Action | "Wait" | null, context: any
 }
 
 function causesKnockdown(action: Action | "Wait", targetAction: Action | "Wait", winner: Side, context: any) {
-  if (isDollUltimate(winner, action, context)) return false;
   return action === "Grab" || action === "Special" || action === "Super" || (action === "Combo" && targetAction === "Jump");
 }
 
@@ -300,6 +316,8 @@ function canUseAction(state: any, side: Side, action: Action) {
 }
 
 async function ensureProfile(db: SupabaseClient, user: User) {
+  await ensureDefaultCharacters(db);
+
   const accountType = accountTypeForUser(user);
   const profile = {
     id: user.id,
@@ -322,6 +340,11 @@ async function ensureProfile(db: SupabaseClient, user: User) {
   }
 
   return snapshot(db, user.id);
+}
+
+async function ensureDefaultCharacters(db: SupabaseClient) {
+  await db.from("characters").upsert(defaultCharacterRows, { onConflict: "id" });
+  await db.from("character_unlock_rules").upsert(defaultCharacterUnlockRules, { onConflict: "character_id" });
 }
 
 async function snapshot(db: SupabaseClient, userId: string) {
@@ -418,7 +441,7 @@ async function getCurrentMatch(db: SupabaseClient, userId: string) {
     .order("updated_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (liveMatch) return toGameMatch(db, liveMatch, userId);
+  if (liveMatch) return toGameMatch(db, await activateMatchIfReady(db, liveMatch), userId);
 
   const { data: finishedMatch } = await baseQuery()
     .in("status", ["finished", "forfeited"])
@@ -426,6 +449,24 @@ async function getCurrentMatch(db: SupabaseClient, userId: string) {
     .limit(1)
     .maybeSingle();
   return finishedMatch ? toGameMatch(db, finishedMatch, userId) : null;
+}
+
+async function activateMatchIfReady(db: SupabaseClient, match: any) {
+  if (match.status !== "selecting" || !match.player1_character_id || !match.player2_character_id) return match;
+
+  const state = match.state || initialBattleState();
+  const { data: active } = await db.from("matches").update({
+    status: "active",
+    state,
+    current_turn: 1,
+    turn_deadline_at: deadlineAfterTurnResolution(state),
+    last_turn: null,
+  }).eq("id", match.id).eq("status", "selecting").select("*").maybeSingle();
+
+  if (!active) return match;
+  await updatePresence(db, active.player1_id, "in_match", active.id);
+  await updatePresence(db, active.player2_id, "in_match", active.id);
+  return active;
 }
 
 async function updatePresence(db: SupabaseClient, userId: string, status: string, matchId?: string) {
@@ -586,7 +627,7 @@ async function createMatch(db: SupabaseClient, type: "ranked" | "private", p1: a
     player2_character_id: null,
     state,
     current_turn: 1,
-    turn_deadline_at: deadlineFromState(state),
+    turn_deadline_at: deadlineAfterTurnResolution(state),
     room_code: roomCode || null,
   }).select("*").single();
   if (error) throw error;
@@ -607,7 +648,7 @@ async function createRematch(db: SupabaseClient, previousMatch: any, nextMatchId
     player2_character_id: previousMatch.player2_character_id,
     state,
     current_turn: 1,
-    turn_deadline_at: deadlineFromState(state),
+    turn_deadline_at: deadlineAfterTurnResolution(state),
     last_turn: null,
     room_code: previousMatch.room_code || null,
   }).select("*").single();
@@ -682,19 +723,8 @@ async function selectMatchCharacter(db: SupabaseClient, matchId: string, userId:
   const { data: selected } = await db.from("matches").update({ [column]: characterId }).eq("id", match.id).select("*").single();
   if (!selected) throw new Error("Nao foi possivel selecionar personagem.");
 
-  if (selected.status === "selecting" && selected.player1_character_id && selected.player2_character_id) {
-    const state = selected.state || initialBattleState();
-    const { data: active } = await db.from("matches").update({
-      status: "active",
-      state,
-      current_turn: 1,
-      turn_deadline_at: deadlineFromState(state),
-      last_turn: null,
-    }).eq("id", selected.id).select("*").single();
-    await updatePresence(db, selected.player1_id, "in_match", selected.id);
-    await updatePresence(db, selected.player2_id, "in_match", selected.id);
-    return active;
-  }
+  const active = await activateMatchIfReady(db, selected);
+  if (active.status === "active") return active;
 
   await updatePresence(db, userId, "in_match", selected.id);
   return selected;
@@ -803,7 +833,7 @@ async function operation(req: Request, name: string) {
     if (match.status !== "active") return toGameMatch(db, match, user.id);
     const side: Side = match.player1_id === user.id ? "p1" : "p2";
     if (!canUseAction(match.state, side, action)) throw new Error("Acao nao permitida neste turno.");
-    if (new Date(match.turn_deadline_at).getTime() < Date.now()) {
+    if (new Date(match.turn_deadline_at).getTime() + ACTION_SUBMIT_GRACE_MS < Date.now()) {
       const updated = await resolveAndPersist(db, match);
       return toGameMatch(db, updated, user.id);
     }
@@ -817,7 +847,7 @@ async function operation(req: Request, name: string) {
     const { data: match } = await db.from("matches").select("*").eq("id", String(body.matchId || "")).single();
     if (!match || ![match.player1_id, match.player2_id].includes(user.id)) throw new Error("Partida nao encontrada.");
     if (!["active", "resolving"].includes(match.status)) return toGameMatch(db, match, user.id);
-    if (match.status === "active" && new Date(match.turn_deadline_at).getTime() > Date.now()) return toGameMatch(db, match, user.id);
+    if (match.status === "active" && new Date(match.turn_deadline_at).getTime() + ACTION_SUBMIT_GRACE_MS > Date.now()) return toGameMatch(db, match, user.id);
     const updated = await resolveAndPersist(db, { ...match, status: "active" });
     return toGameMatch(db, updated, user.id);
   }

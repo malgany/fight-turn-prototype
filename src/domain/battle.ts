@@ -126,7 +126,6 @@ function isDollUltimate(side: Side, action: Action | "Wait" | null, context: Bat
 }
 
 function causesKnockdown(action: Action | "Wait", targetAction: Action | "Wait", winner: Side, context: BattleCharacterContext): boolean {
-  if (isDollUltimate(winner, action, context)) return false;
   if (action === "Grab" || action === "Special" || action === "Super") return true;
   return action === "Combo" && targetAction === "Jump";
 }

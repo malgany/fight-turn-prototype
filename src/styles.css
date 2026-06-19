@@ -105,11 +105,10 @@ button:disabled {
   top: 50%;
   left: 50%;
   container-type: inline-size;
-  width: min(100vw, 540px, 56.25vh);
-  width: min(100vw, 540px, 56.25dvh);
+  width: min(100vw, 540px);
   min-height: 0;
-  height: auto;
-  aspect-ratio: 9 / 16;
+  height: 100vh;
+  height: 100dvh;
   padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
   border: 3px solid #2b3445;
   overflow: hidden;
@@ -1289,7 +1288,7 @@ p {
   min-height: 300px;
   background:
     linear-gradient(180deg, rgba(14, 17, 23, 0.08), rgba(10, 12, 18, 0.6)),
-    url("/assets/backgrounds/city-street-arena-sunny.webp") center / cover;
+    url("/assets/backgrounds/stage-training-zone.png") center / cover;
   border: 1px solid var(--line);
   border-radius: 8px;
   overflow: hidden;

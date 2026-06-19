@@ -4,6 +4,9 @@ import { appRouteUrl } from "./lib/config";
 import type { Action, AppSnapshot, BattleState, GameMatch, GuaranteedTurn, LeaderboardEntry, MatchHistoryEntry, PrivateRoom, RematchChoice, Side, TurnResolution } from "./types";
 import type { GameService } from "./services/gameService";
 
+const ACTION_SUBMIT_GRACE_MS = 1200;
+const POST_MATCH_REVEAL_DELAY_MS = 10_000;
+
 type Screen =
   | "login"
   | "menu"
@@ -126,6 +129,9 @@ export class App {
   private resolvingExpiredTurn = false;
   private legacyBattleVisualBusyUntilMs = 0;
   private legacyBattleVisualBusyKey: string | null = null;
+  private postMatchRevealTimerId: number | null = null;
+  private postMatchRevealKey: string | null = null;
+  private postMatchOverlayVisibleKey: string | null = null;
 
   constructor(
     private readonly root: HTMLElement,
@@ -220,6 +226,7 @@ export class App {
 
   private async navigate(screen: Screen): Promise<void> {
     this.clearPolling();
+    this.clearPostMatchOverlayState();
     this.state.error = null;
     this.state.info = null;
 
@@ -326,7 +333,7 @@ export class App {
     if (message.source !== "final-genesis-legacy") return;
 
     if (message.type === "ready") {
-      this.syncLegacyBattleFrame();
+      this.syncLegacyBattleFrameBurst();
       return;
     }
 
@@ -360,10 +367,8 @@ export class App {
 
     const durationMs = Number(message.durationMs);
     const busyMs = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 4_000;
-    const decisionMs = turnDurationForState(match.battleState);
     this.legacyBattleVisualBusyKey = this.legacyBattleVisualKey(match);
     this.legacyBattleVisualBusyUntilMs = Date.now() + busyMs + 750;
-    this.localTurnDeadlineMs = Math.max(this.localTurnDeadlineMs ?? 0, Date.now() + busyMs + decisionMs + 750);
   }
 
   private markLegacyBattleVisualReady(message: Record<string, unknown>): void {
@@ -391,6 +396,54 @@ export class App {
       && !match.winnerId
       && match.rankDelta === 0
       && (match.finishedReason === "inactivity_draw" || match.lastTurn?.primary === "PARTIDA ENCERRADA");
+  }
+
+  private isFinishedMatch(match: GameMatch): boolean {
+    return match.status === "finished" || match.status === "forfeited";
+  }
+
+  private postMatchKey(match: GameMatch): string {
+    return `${match.id}:${match.currentTurn}:${match.status}:${match.winnerId || "draw"}`;
+  }
+
+  private clearPostMatchRevealTimer(): void {
+    if (this.postMatchRevealTimerId) window.clearTimeout(this.postMatchRevealTimerId);
+    this.postMatchRevealTimerId = null;
+    this.postMatchRevealKey = null;
+  }
+
+  private clearPostMatchOverlayState(): void {
+    this.clearPostMatchRevealTimer();
+    this.postMatchOverlayVisibleKey = null;
+  }
+
+  private schedulePostMatchReveal(match: GameMatch): void {
+    const revealKey = this.postMatchKey(match);
+    if (this.postMatchOverlayVisibleKey === revealKey) {
+      this.mountPostMatchOverlay();
+      return;
+    }
+
+    if (this.postMatchRevealKey && this.postMatchRevealKey !== revealKey) {
+      this.clearPostMatchRevealTimer();
+    }
+
+    this.postMatchRevealKey = revealKey;
+    if (this.postMatchRevealTimerId) return;
+
+    this.postMatchRevealTimerId = window.setTimeout(() => {
+      this.postMatchRevealTimerId = null;
+      const currentMatch = this.state.match;
+      if (!currentMatch || !this.isFinishedMatch(currentMatch) || this.postMatchKey(currentMatch) !== revealKey) return;
+      this.postMatchOverlayVisibleKey = revealKey;
+      this.mountPostMatchOverlay();
+    }, POST_MATCH_REVEAL_DELAY_MS);
+  }
+
+  private shouldDelayPostMatchReveal(match: GameMatch, previousScreen: Screen): boolean {
+    return this.isFinishedMatch(match)
+      && Boolean(match.lastTurn)
+      && (previousScreen === "battle" || this.postMatchRevealKey === this.postMatchKey(match) || this.postMatchOverlayVisibleKey === this.postMatchKey(match));
   }
 
   private returnToLobbyAfterInactivityDraw(match: GameMatch): void {
@@ -518,8 +571,12 @@ export class App {
     const opponentSide = oppositeSide(match.playerSide);
     const opponentCharacterId = match[opponentSide].characterId;
     if (!localCharacterId || !opponentCharacterId) return null;
-
-    const turnDeadlineAt = this.localTurnDeadlineMs ? new Date(this.localTurnDeadlineMs).toISOString() : match.turnDeadlineAt;
+    const localTurnDeadlineMs = this.localTurnDeadlineMs;
+    const usesLocalDeadline = localTurnDeadlineMs !== null;
+    const turnDeadlineAt = usesLocalDeadline
+      ? new Date(localTurnDeadlineMs).toISOString()
+      : match.turnDeadlineAt;
+    const serverNow = usesLocalDeadline ? new Date().toISOString() : match.serverNow;
 
     return {
       source: "final-genesis-online",
@@ -533,6 +590,7 @@ export class App {
       battleState: this.mapBattleStateForLegacy(match, match.battleState),
       currentTurn: match.currentTurn,
       turnDeadlineAt,
+      serverNow,
       turnDurationMs: turnDurationForState(match.battleState),
       localAction: match.localAction,
       opponentHasAction: match.opponentHasAction,
@@ -550,20 +608,35 @@ export class App {
     frame.contentWindow.postMessage(payload, window.location.origin);
   }
 
+  private syncLegacyBattleFrameBurst(): void {
+    [0, 100, 300, 700, 1_200, 2_000].forEach((delayMs) => {
+      window.setTimeout(() => this.syncLegacyBattleFrame(), delayMs);
+    });
+  }
+
   private enterMatch(match: GameMatch): void {
     if (this.isInactivityDraw(match)) {
       this.returnToLobbyAfterInactivityDraw(match);
       return;
     }
 
-    const previousBattleMatchId = this.state.screen === "battle" ? this.state.match?.id : null;
+    const previousScreen = this.state.screen;
+    const previousBattleMatchId = previousScreen === "battle" ? this.state.match?.id : null;
     this.clearPolling();
     if (match.serverNow) {
       this.serverClockOffsetMs = Date.now() - new Date(match.serverNow).getTime();
     }
     this.syncLocalTurnClock(match);
     this.state.match = match;
-    this.state.screen = match.status === "finished" || match.status === "forfeited" ? "post-match" : match.status === "selecting" ? "match-character-select" : "battle";
+    if (!this.isFinishedMatch(match)) {
+      this.clearPostMatchOverlayState();
+    }
+    if (this.shouldDelayPostMatchReveal(match, previousScreen)) {
+      this.state.screen = "battle";
+      this.schedulePostMatchReveal(match);
+    } else {
+      this.state.screen = this.isFinishedMatch(match) ? "post-match" : match.status === "selecting" ? "match-character-select" : "battle";
+    }
     this.unsubscribeMatch?.();
     this.unsubscribeMatch = this.service.watchMatch(match.id, () => {
       void this.refreshMatch();
@@ -578,12 +651,9 @@ export class App {
       if (previousBattleMatchId !== match.id) {
         this.legacyBattleVisualBusyKey = this.legacyBattleVisualKey(match);
         this.legacyBattleVisualBusyUntilMs = Date.now() + 10_000;
-        this.localTurnDeadlineMs = Math.max(
-          this.localTurnDeadlineMs ?? 0,
-          Date.now() + turnDurationForState(match.battleState) + 10_000,
-        );
+        this.localTurnDeadlineMs = Date.now() + turnDurationForState(match.battleState);
       }
-      window.setTimeout(() => this.syncLegacyBattleFrame(), 0);
+      this.syncLegacyBattleFrameBurst();
     }
     this.resolveExpiredTurnIfNeeded();
   }
@@ -602,13 +672,20 @@ export class App {
       }
       this.syncLocalTurnClock(match);
       this.state.match = match;
-      if (match.status === "finished" || match.status === "forfeited") {
-        if (this.pollId) window.clearInterval(this.pollId);
-        this.pollId = null;
-        this.state.screen = "post-match";
+      if (this.isFinishedMatch(match)) {
+        if (this.shouldDelayPostMatchReveal(match, previousScreen)) {
+          this.state.screen = "battle";
+          this.schedulePostMatchReveal(match);
+        } else {
+          if (this.pollId) window.clearInterval(this.pollId);
+          this.pollId = null;
+          this.state.screen = "post-match";
+        }
       } else if (match.status === "selecting") {
+        this.clearPostMatchOverlayState();
         this.state.screen = "match-character-select";
       } else if (match.status === "active" || match.status === "resolving") {
+        this.clearPostMatchOverlayState();
         this.state.screen = "battle";
       }
       if (previousScreen === "battle" && this.state.screen === "battle") {
@@ -774,7 +851,7 @@ export class App {
 
   private bindRenderedControls(): void {
     this.root.querySelectorAll<HTMLIFrameElement>("[data-legacy-online-battle]").forEach((frame) => {
-      frame.addEventListener("load", () => this.syncLegacyBattleFrame());
+      frame.addEventListener("load", () => this.syncLegacyBattleFrameBurst());
     });
 
     this.root.querySelectorAll<HTMLButtonElement>("[data-match-action]").forEach((button) => {
@@ -803,7 +880,8 @@ export class App {
   private resolveExpiredTurnIfNeeded(): void {
     if (!this.state.match || this.state.screen !== "battle" || !["active", "resolving"].includes(this.state.match.status)) return;
     if (this.isLegacyBattleVisualBusy()) return;
-    const deadlineMs = this.localTurnDeadlineMs ?? new Date(this.state.match.turnDeadlineAt).getTime();
+    const serverDeadlineMs = new Date(this.state.match.turnDeadlineAt).getTime() + this.serverClockOffsetMs + ACTION_SUBMIT_GRACE_MS;
+    const deadlineMs = Math.max(serverDeadlineMs, this.localTurnDeadlineMs ?? 0);
     if (this.state.match.status === "resolving" || deadlineMs <= Date.now()) {
       void this.resolveExpiredTurn();
     }
@@ -968,7 +1046,7 @@ export class App {
           <button class="ghost-command" data-nav="profile" type="button">Voltar</button>
         </div>
         <div class="character-grid-app">
-          ${characters.map((character) => {
+          ${characters.filter((character) => character.enabled).map((character) => {
             const available = character.enabled && unlocked.has(character.id);
             return `
               <button class="fighter-card ${selectedId === character.id ? "selected" : ""} ${available ? "" : "locked"}" data-action="select-character" data-character="${character.id}" ${available ? "" : "disabled"} type="button">
@@ -1084,7 +1162,7 @@ export class App {
           <img class="character-preview-art ${previewClass}" src="${previewCharacter.portraitUrl}" alt="" draggable="false">
         </div>
         <div class="character-grid match-character-grid" role="list" aria-label="Lutadores">
-          ${characters.map((character) => {
+          ${characters.filter((character) => character.enabled).map((character) => {
             const available = character.enabled && unlocked.has(character.id);
             const selected = localPlayer.characterId === character.id;
             const opponentPicked = opponentPlayer.characterId === character.id;
@@ -1124,7 +1202,7 @@ export class App {
       <iframe
         class="legacy-online-battle-frame"
         data-legacy-online-battle
-        src="${appRouteUrl("prototype/mobile-layout/?onlineBridge=1&v=20260618-skip-startup-after-turn")}"
+        src="${appRouteUrl("prototype/mobile-layout/?onlineBridge=1&v=20260619-end-fight-reveal-v1")}"
         title="Batalha online Final Genesis"
       ></iframe>
     `;
@@ -1207,7 +1285,21 @@ export class App {
     `;
   }
 
-  private renderPostMatchBattle(): string {
+  private mountPostMatchOverlay(): void {
+    const match = this.state.match;
+    if (!match || !this.state.snapshot.profile) return;
+    const battleScreen = this.root.querySelector<HTMLElement>(".legacy-online-battle-screen");
+    if (!battleScreen) {
+      this.render();
+      return;
+    }
+
+    battleScreen.classList.add("post-match-battle-screen");
+    battleScreen.querySelectorAll(".post-match-scrim, .post-match-result").forEach((element) => element.remove());
+    battleScreen.insertAdjacentHTML("beforeend", this.renderPostMatchOverlay());
+  }
+
+  private renderPostMatchOverlay(): string {
     const match = this.state.match;
     const profile = this.state.snapshot.profile;
     if (!match || !profile) return "";
@@ -1218,8 +1310,6 @@ export class App {
     const rankDelta = match.rankDelta >= 0 ? `+${match.rankDelta}` : String(match.rankDelta);
 
     return `
-      <section class="legacy-online-battle-screen post-match-battle-screen">
-        ${this.renderLegacyBattleFrame()}
         <div class="post-match-scrim" aria-hidden="true"></div>
         <div class="post-match-result" role="status" aria-live="polite">
           <h1>${title}</h1>
@@ -1233,6 +1323,14 @@ export class App {
             <button class="ghost-command" data-action="post-match-menu" type="button">Voltar ao menu</button>
           </nav>
         </div>
+    `;
+  }
+
+  private renderPostMatchBattle(): string {
+    return `
+      <section class="legacy-online-battle-screen post-match-battle-screen">
+        ${this.renderLegacyBattleFrame()}
+        ${this.renderPostMatchOverlay()}
       </section>
     `;
   }

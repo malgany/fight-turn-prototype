@@ -24,7 +24,7 @@
       :root {
         --action-panel-backplate: url("../../assets/ui/action-panel/backplate.webp?v=20260605-1642");
         --health-frame: url("../../assets/ui/hud/health-frame.webp?v=20260605-health-frame");
-        --arena-background: url("../../assets/backgrounds/city-street-arena-sunny.webp?v=20260609-sunny");
+        --arena-background: url("../../assets/backgrounds/stage-training-zone.png?v=20260619-stages");
         --title-screen-art: url("../../assets/backgrounds/title-screen-fighters.webp?v=20260605-1340");
         --menu-button-play: url("../../assets/ui/menu/jogar.webp?v=20260605-1340");
         --menu-button-online: url("../../assets/ui/menu/online.png?v=20260609-1714");
@@ -71,6 +71,9 @@
       body {
         margin: 0;
         min-height: 100vh;
+        min-height: 100dvh;
+        height: 100vh;
+        height: 100dvh;
         display: grid;
         place-items: center;
         background: #0a0d12;
@@ -107,9 +110,20 @@
         display: grid;
       }
 
+      body.debug-mode.debug-minimized .debug-panel {
+        display: none;
+      }
+
       html.online-bridge-mode body.debug-mode .debug-panel,
       body.online-bridge-mode.debug-mode .debug-panel {
         display: none !important;
+      }
+
+      .debug-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
       }
 
       .debug-title {
@@ -117,6 +131,54 @@
         color: #63d7ff;
         font-size: 15px;
         line-height: 1;
+      }
+
+      .debug-minimize,
+      .debug-restore {
+        border: 1px solid #526078;
+        background: rgba(18, 28, 44, 0.94);
+        color: #f2f6ff;
+        font: inherit;
+        line-height: 1;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
+      }
+
+      .debug-minimize {
+        min-width: 34px;
+        min-height: 28px;
+        padding: 0 8px;
+        color: #63d7ff;
+      }
+
+      .debug-restore {
+        position: fixed;
+        top: 16px;
+        right: 0;
+        z-index: 121;
+        display: none;
+        width: 34px;
+        min-height: 58px;
+        padding: 0;
+        border-right: 0;
+        border-radius: 8px 0 0 8px;
+        color: #63d7ff;
+      }
+
+      body.debug-mode.debug-minimized .debug-restore {
+        display: block;
+      }
+
+      html.online-bridge-mode body.debug-mode .debug-restore,
+      body.online-bridge-mode.debug-mode .debug-restore {
+        display: none !important;
+      }
+
+      .debug-minimize:hover,
+      .debug-restore:hover {
+        border-color: #63d7ff;
+        background: #164766;
+        color: #ffffff;
       }
 
       .debug-status {
@@ -361,8 +423,9 @@
       .phone {
         position: relative;
         container-type: inline-size;
-        width: min(100vw, 540px, 56.25vh);
-        aspect-ratio: 9 / 16;
+        width: min(100vw, 540px);
+        height: 100vh;
+        height: 100dvh;
         overflow: hidden;
         border: 3px solid #2b3445;
         background: #050912;
@@ -1707,6 +1770,65 @@
         display: none;
       }
 
+      .exit-confirm {
+        position: absolute;
+        inset: 0;
+        z-index: 390;
+        display: none;
+        place-items: center;
+        padding: 8%;
+        background: rgba(3, 6, 11, 0.78);
+      }
+
+      .exit-confirm.show {
+        display: grid;
+      }
+
+      .exit-confirm-panel {
+        width: min(92%, 410px);
+        display: grid;
+        justify-items: center;
+        gap: clamp(10px, 3.2cqw, 18px);
+        padding: clamp(20px, 6cqw, 30px);
+        border: 2px solid #516276;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 30%),
+          rgba(9, 14, 22, 0.95);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.58);
+        text-align: center;
+      }
+
+      .exit-confirm-title {
+        margin: 0;
+        color: #f2f6ff;
+        font-size: clamp(18px, 6cqw, 30px);
+        line-height: 1.05;
+        text-shadow: 0 3px 0 #000;
+      }
+
+      .exit-confirm-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: clamp(8px, 2.6cqw, 14px);
+      }
+
+      .exit-confirm-action {
+        min-height: clamp(42px, 12cqw, 54px);
+        border: 1px solid #526078;
+        background: #172235;
+        color: #f2f6ff;
+        font: inherit;
+        font-size: clamp(10px, 3.4cqw, 15px);
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .exit-confirm-action.danger {
+        border-color: #ff5959;
+        background: linear-gradient(#d42020, #891111);
+      }
+
       .start-screen {
         grid-template-rows: auto auto;
         align-content: center;
@@ -1777,6 +1899,11 @@
         background-image: var(--menu-button-options);
       }
 
+      #exitAppButton {
+        aspect-ratio: 960 / 237;
+        background-image: var(--menu-button-exit);
+      }
+
       .menu-button:disabled {
         cursor: wait;
         opacity: 0.64;
@@ -1789,6 +1916,7 @@
       .help-tab:focus-visible,
       .help-back:focus-visible,
       .battle-over-button:focus-visible,
+      .exit-confirm-action:focus-visible,
       .audio-toggle:focus-within {
         outline: 3px solid #ffffff;
         outline-offset: 5px;
@@ -1806,7 +1934,8 @@
         .menu-button:hover:not(:disabled),
         .character-select-button:hover:not(:disabled),
         .help-back:hover:not(:disabled),
-        .battle-over-button:hover:not(:disabled) {
+        .battle-over-button:hover:not(:disabled),
+        .exit-confirm-action:hover:not(:disabled) {
           transform: translateY(-2px) scale(1.045);
           filter: brightness(1.08) drop-shadow(0 14px 10px rgba(0, 0, 0, 0.54));
         }
@@ -2586,7 +2715,18 @@
           <button class="menu-button" type="button" id="onlineButton">ONLINE</button>
           <button class="menu-button" type="button" id="helpButton">AJUDA</button>
           <button class="menu-button" type="button" id="optionsButton">OPÇÕES</button>
+          <button class="menu-button" type="button" id="exitAppButton">SAIR</button>
         </nav>
+      </section>
+
+      <section class="exit-confirm" id="exitConfirm" aria-label="Confirmar saída" aria-modal="true" role="dialog" aria-hidden="true">
+        <div class="exit-confirm-panel">
+          <h2 class="exit-confirm-title">Deseja sair do jogo?</h2>
+          <div class="exit-confirm-actions">
+            <button class="exit-confirm-action" type="button" id="cancelExitButton">Cancelar</button>
+            <button class="exit-confirm-action danger" type="button" id="confirmExitButton">Sair</button>
+          </div>
+        </div>
       </section>
 
       <section class="screen character-select-screen is-hidden" id="characterSelectScreen" aria-label="Seleção de personagem">
@@ -2979,7 +3119,10 @@
     </main>
 
     <aside class="debug-panel" id="debugPanel" aria-label="Debug local">
-      <h2 class="debug-title">DEBUG LOCAL</h2>
+      <div class="debug-header">
+        <h2 class="debug-title">DEBUG LOCAL</h2>
+        <button class="debug-minimize" id="debugMinimizeButton" type="button" aria-label="Minimizar debug">›</button>
+      </div>
       <div class="debug-status" id="debugStatus">Escolha PLAYER e CPU para resolver.</div>
       <label class="debug-toggle">
         <span>DEBUG ATIVO</span>
@@ -3077,6 +3220,7 @@
         </section>
       </div>
     </aside>
+    <button class="debug-restore" id="debugRestoreButton" type="button" aria-label="Restaurar debug">‹</button>
 
     <script type="module">
       const TURN_DURATION = 5000;
@@ -3085,17 +3229,28 @@
       const RESULT_REVEAL_DELAY = 720;
       const HEALTH_TRAIL_DELAY = 3000;
       const GET_UP_FIRST_FRAME_HOLD = 1000;
-      const STAGE_BACKGROUNDS = [
-        "../../assets/backgrounds/city-street-arena-sunny.webp?v=20260609-sunny",
-        "../../assets/backgrounds/city-street-arena-sunset.webp?v=20260609-sunset",
-        "../../assets/backgrounds/city-street-arena-rainy-night.webp?v=20260609-rainy-night",
-        "../../assets/backgrounds/city-street-arena.webp?v=20260609-night",
+      const STAGES = [
+        {
+          id: "training-zone",
+          backgrounds: ["../../assets/backgrounds/stage-training-zone.png?v=20260619-stages"],
+        },
+        {
+          id: "ravenfall-shore",
+          backgrounds: [
+            "../../assets/backgrounds/stage-ravenfall-day.png?v=20260619-stages",
+            "../../assets/backgrounds/stage-ravenfall-night.png?v=20260619-stages",
+          ],
+        },
+        {
+          id: "black-forest-cellar",
+          backgrounds: ["../../assets/backgrounds/stage-black-forest-cellar.png?v=20260619-stages"],
+        },
       ];
       const CHARACTER_CONFIGS = {
         ninja: "../../assets/characters/ninja/ninja.json?v=20260608-special-position-plus",
         itzcoatl: "../../assets/characters/itzcoatl/itzcoatl.json?v=20260609-special-offset",
         aton: "../../assets/characters/urban/urban.json?v=20260608-aton-position-plus",
-        doll: "../../assets/characters/doll/doll.json?v=20260618-doll-special-scale-v3",
+        doll: "../../assets/characters/doll/doll.json?v=20260619-doll-get-up",
       };
       const CHARACTER_PORTRAITS = {
         ninja: {
@@ -3135,18 +3290,25 @@
       }
 
       let activeStageBackground = null;
+      let activeStageId = null;
 
-      function randomStageBackground() {
-        if (STAGE_BACKGROUNDS.length <= 1) {
-          return STAGE_BACKGROUNDS[0];
+      function randomArrayItem(items) {
+        return items[Math.floor(Math.random() * items.length)];
+      }
+
+      function randomStage() {
+        if (STAGES.length <= 1) {
+          return STAGES[0];
         }
 
-        const availableBackgrounds = STAGE_BACKGROUNDS.filter((background) => background !== activeStageBackground);
-        return availableBackgrounds[Math.floor(Math.random() * availableBackgrounds.length)];
+        const availableStages = STAGES.filter((stage) => stage.id !== activeStageId);
+        return randomArrayItem(availableStages);
       }
 
       function applyRandomStageBackground() {
-        activeStageBackground = randomStageBackground();
+        const stage = randomStage();
+        activeStageId = stage.id;
+        activeStageBackground = randomArrayItem(stage.backgrounds);
         document.documentElement.style.setProperty("--arena-background", `url("${activeStageBackground}")`);
       }
 
@@ -3227,6 +3389,7 @@
         phase: "choosing",
         debugAvailable,
         debugMode: debugAvailable,
+        debugMinimized: false,
         debugTab: "basic",
         startTransitionActive: false,
         selectedCharacter: "ninja",
@@ -3320,6 +3483,10 @@
         onlineButton: document.querySelector("#onlineButton"),
         helpButton: document.querySelector("#helpButton"),
         optionsButton: document.querySelector("#optionsButton"),
+        exitAppButton: document.querySelector("#exitAppButton"),
+        exitConfirm: document.querySelector("#exitConfirm"),
+        cancelExitButton: document.querySelector("#cancelExitButton"),
+        confirmExitButton: document.querySelector("#confirmExitButton"),
         backFromHelpButton: document.querySelector("#backFromHelpButton"),
         backFromOptionsButton: document.querySelector("#backFromOptionsButton"),
         audioToggle: document.querySelector("#audioToggle"),
@@ -3337,6 +3504,8 @@
         irisTransition: document.querySelector("#irisTransition"),
         irisTransitionHole: document.querySelector("#irisTransitionHole"),
         debugPanel: document.querySelector("#debugPanel"),
+        debugMinimizeButton: document.querySelector("#debugMinimizeButton"),
+        debugRestoreButton: document.querySelector("#debugRestoreButton"),
         debugToggle: document.querySelector("#debugToggle"),
         debugTabButtons: [...document.querySelectorAll(".debug-tab")],
         debugTabPanels: [...document.querySelectorAll(".debug-tab-panel")],
@@ -4151,6 +4320,15 @@
         spriteAnimations[side] = { frameIndex: 1, timerId: null };
       }
 
+      function defeatedSidesFromHealth() {
+        return ["p1", "p2"].filter((side) => state[side].health <= 0);
+      }
+
+      function holdDefeatedFightersPose(sides = defeatedSidesFromHealth()) {
+        clearSpecialLunges();
+        sides.forEach((side) => holdKnockdownPose(side));
+      }
+
       function playCrouchAnimation(sides) {
         sides.forEach((side) => {
           const loadout = characterLoadoutForSide(side);
@@ -4724,8 +4902,18 @@
         }
 
         document.body.classList.toggle("debug-controls-off", !state.debugMode);
+        document.body.classList.toggle("debug-minimized", state.debugMinimized);
         el.debugToggle.checked = state.debugMode;
         syncDebugTabsUi();
+      }
+
+      function setDebugMinimized(minimized) {
+        if (!state.debugAvailable) {
+          return;
+        }
+
+        state.debugMinimized = minimized;
+        syncDebugModeUi();
       }
 
       function handleDebugToggle() {
@@ -4940,6 +5128,14 @@
         el.advancedInspectorStatus.textContent = `Selecionado: ${advancedDebugState.selectedLabel}`;
       }
 
+      function advancedSelectionRectTarget(target = advancedDebugState.selectedTarget) {
+        if (target === el.p1Fighter && advancedAnimationDefinition(advancedDebugState.selectedAnimation)) {
+          return el.p1Sprite;
+        }
+
+        return target;
+      }
+
       function syncAdvancedSelectionFrame() {
         const target = advancedDebugState.selectedTarget;
         if (!isAdvancedDebugActive() || !target || !target.isConnected) {
@@ -4947,7 +5143,8 @@
           return;
         }
 
-        const targetRect = target.getBoundingClientRect();
+        const rectTarget = advancedSelectionRectTarget(target);
+        const targetRect = rectTarget.getBoundingClientRect();
         const phoneRect = el.phone.getBoundingClientRect();
 
         if (targetRect.width <= 0 || targetRect.height <= 0) {
@@ -5000,12 +5197,36 @@
         }, 1300);
       }
 
+      function advancedAnimationConfigLines() {
+        const definition = advancedAnimationDefinition(advancedDebugState.selectedAnimation);
+        if (!definition) {
+          return [];
+        }
+
+        const animation = definition.animation;
+        const loadout = characterLoadoutForSide("p1");
+        const sideDisplay = animation.sideOffsets?.p1 ?? {};
+        const configOffsetXPercent = sideDisplay.offsetXPercent ?? animation.offsetXPercent ?? 0;
+        const battleOffsetX = animation === loadout.ultimateAnimation || loadout.id === "ninja" ? 0 : 20;
+
+        return [
+          `configScale: ${sideDisplay.scale ?? animation.scale ?? 1}`,
+          `configOffsetXPercent: ${configOffsetXPercent}`,
+          `configOffsetYPercent: ${sideDisplay.offsetYPercent ?? animation.offsetYPercent ?? 0}`,
+          `configFighterOffsetX: ${sideDisplay.fighterOffsetX ?? animation.fighterOffsetX ?? 0}px`,
+          `configFighterOffsetY: ${sideDisplay.fighterOffsetY ?? animation.fighterOffsetY ?? 0}px`,
+          `configFighterScale: ${sideDisplay.fighterScale ?? animation.fighterScale ?? 1}`,
+          `appliedSpriteOffsetXPercent: ${configOffsetXPercent + battleOffsetX}`,
+        ];
+      }
+
       function copyAdvancedTargetProperties(target = advancedDebugState.selectedTarget) {
         if (!target || !target.isConnected) {
           return;
         }
 
-        const targetRect = target.getBoundingClientRect();
+        const rectTarget = advancedSelectionRectTarget(target);
+        const targetRect = rectTarget.getBoundingClientRect();
         const phoneRect = el.phone.getBoundingClientRect();
         const computed = window.getComputedStyle(target);
         const transform = advancedTargetTransform(target);
@@ -5021,6 +5242,7 @@
           `zIndex: ${computed.zIndex}`,
           `animation: ${advancedDebugState.selectedAnimation}`,
           `frame: ${advancedDebugState.currentFrame + 1}`,
+          ...advancedAnimationConfigLines(),
         ];
 
         copyTextToClipboard(lines.join("\n"))
@@ -5034,7 +5256,7 @@
         }
 
         const transform = advancedTargetTransform(advancedDebugState.selectedTarget);
-        const rect = advancedDebugState.selectedTarget.getBoundingClientRect();
+        const rect = advancedSelectionRectTarget(advancedDebugState.selectedTarget).getBoundingClientRect();
         advancedDebugState.drag = {
           mode,
           pointerId: event.pointerId,
@@ -5917,10 +6139,6 @@
       }
 
       function causesKnockdown(action, targetAction, winner) {
-        if (isDollUltimate(winner, action)) {
-          return false;
-        }
-
         if (action === "Grab" || action === "Special" || action === "Super") {
           return true;
         }
@@ -6236,6 +6454,7 @@
                 return;
               }
 
+              holdDefeatedFightersPose();
               if (!gameOverQueued) {
                 window.setTimeout(showGameOver, 900);
               }
@@ -6322,6 +6541,7 @@
         state.phase = "over";
         window.clearInterval(state.timerId);
         stopMusic();
+        holdDefeatedFightersPose();
         updateHud();
 
         if (state.p1.health <= 0 && state.p2.health <= 0) {
@@ -6382,12 +6602,43 @@
         window.clearInterval(state.timerId);
         clearUltimateCinematic();
         state.phase = "menu";
+        hideExitConfirm();
         el.startScreen.classList.remove("is-hidden");
         el.characterSelectScreen.classList.add("is-hidden");
         el.helpScreen.classList.add("is-hidden");
         el.optionsScreen.classList.add("is-hidden");
         syncMusicForPhase();
         updateDebugPanel();
+      }
+
+      function showExitConfirm() {
+        el.exitConfirm.classList.add("show");
+        el.exitConfirm.setAttribute("aria-hidden", "false");
+      }
+
+      function hideExitConfirm() {
+        el.exitConfirm.classList.remove("show");
+        el.exitConfirm.setAttribute("aria-hidden", "true");
+      }
+
+      async function closeNativeApp() {
+        const appPlugin = capacitorBridge?.Plugins?.App || window.Capacitor?.Plugins?.App;
+        if (appPlugin?.exitApp) {
+          await appPlugin.exitApp();
+          return;
+        }
+
+        if (window.navigator?.app?.exitApp) {
+          window.navigator.app.exitApp();
+          return;
+        }
+
+        window.close();
+      }
+
+      function confirmExitApp() {
+        hideExitConfirm();
+        void closeNativeApp();
       }
 
       async function activateSelectedCharacters() {
@@ -6724,6 +6975,14 @@
         playSound("ui");
         handleDebugToggle();
       });
+      el.debugMinimizeButton.addEventListener("click", () => {
+        playSound("ui");
+        setDebugMinimized(true);
+      });
+      el.debugRestoreButton.addEventListener("click", () => {
+        playSound("ui");
+        setDebugMinimized(false);
+      });
       el.debugTabButtons.forEach((button) => {
         button.addEventListener("click", () => {
           playSound("ui");
@@ -6816,6 +7075,17 @@
       el.optionsButton.addEventListener("click", () => {
         runUiButtonAction(el.optionsButton, showOptionsScreen);
       });
+      el.exitAppButton.addEventListener("click", () => {
+        runUiButtonAction(el.exitAppButton, showExitConfirm);
+      });
+      el.cancelExitButton.addEventListener("click", () => {
+        playSound("ui");
+        hideExitConfirm();
+      });
+      el.confirmExitButton.addEventListener("click", () => {
+        playSound("ui");
+        confirmExitApp();
+      });
       el.helpTabs.forEach((tab) => {
         tab.addEventListener("click", () => {
           runUiButtonAction(tab, () => setHelpTab(tab.dataset.helpTab));
@@ -6887,6 +7157,8 @@
         clockId: null,
         resolutionTimerId: null,
         visualBusyKey: null,
+        turnDeadlineKey: null,
+        turnDeadlineMs: null,
       };
       const legacyResolveTurn = resolveTurn;
       const legacyStartTurn = startTurn;
@@ -7011,9 +7283,21 @@
         const serverNowMs = payload.serverNow ? new Date(payload.serverNow).getTime() : Date.now();
         const duration = onlineBridgeTurnDuration(payload);
         const parsedDeadlineMs = payload.turnDeadlineAt ? new Date(payload.turnDeadlineAt).getTime() : NaN;
-        const deadlineMs = options.restartFromNow
+        const deadlineKey = `${payload.matchId}:${payload.currentTurn}`;
+        if (onlineBridge.turnDeadlineKey !== deadlineKey) {
+          onlineBridge.turnDeadlineKey = deadlineKey;
+          onlineBridge.turnDeadlineMs = null;
+        }
+        const candidateDeadlineMs = options.restartFromNow
           ? Date.now() + duration
           : Number.isFinite(parsedDeadlineMs) ? parsedDeadlineMs : serverNowMs + duration;
+        const shouldKeepTurnOpen = payload.status === "active" && !payload.localAction;
+        const deadlineMs = shouldKeepTurnOpen
+          ? Math.max(candidateDeadlineMs, onlineBridge.turnDeadlineMs || 0)
+          : candidateDeadlineMs;
+        if (shouldKeepTurnOpen) {
+          onlineBridge.turnDeadlineMs = deadlineMs;
+        }
         const serverClockOffsetMs = Date.now() - serverNowMs;
         const isGuaranteedTurn = Boolean(payload.battleState?.activeGuaranteedTurn);
 
@@ -7030,6 +7314,9 @@
           }
 
           el.turnMeterFill.style.width = `${ratio * 100}%`;
+          if (remaining <= 0 && payload.status === "active" && !payload.localAction) {
+            onlineBridgeSetActionLock(true);
+          }
         };
 
         renderClock();
@@ -7270,10 +7557,15 @@
           if (winnerLoadout.idleFrames.length) {
             fighterSprite(winner).src = winnerLoadout.idleFrames[0];
           }
-          holdKnockdownPose(loser);
+          holdDefeatedFightersPose([loser]);
         } else {
-          clearSpriteAnimations();
-          syncCharacterSpritesToIdle();
+          const defeatedSides = defeatedSidesFromHealth();
+          if (defeatedSides.length) {
+            holdDefeatedFightersPose(defeatedSides);
+          } else {
+            clearSpriteAnimations();
+            syncCharacterSpritesToIdle();
+          }
         }
 
         setTokenDisplay(false);
@@ -7316,7 +7608,15 @@
           onlineBridgeStartClock(payload, { restartFromNow: Boolean(options.restartClock) });
         }
         updateHud();
-        onlineBridgeSetActionLock(Boolean(payload.localAction) || payload.status !== "active" || Boolean(options.pauseClock));
+        const parsedDeadlineMs = payload.turnDeadlineAt ? new Date(payload.turnDeadlineAt).getTime() : NaN;
+        const parsedServerNowMs = payload.serverNow ? new Date(payload.serverNow).getTime() : Date.now();
+        const hasTurnTime = !Number.isFinite(parsedDeadlineMs) || parsedDeadlineMs > parsedServerNowMs;
+        onlineBridgeSetActionLock(
+          Boolean(payload.localAction)
+            || payload.status !== "active"
+            || Boolean(options.pauseClock)
+            || !hasTurnTime
+        );
         syncMusicForPhase();
       }
 
@@ -7337,6 +7637,9 @@
           if (pendingPayload.status === "active") {
             onlineBridgePostVisualReady(pendingPayload);
           }
+        } else if (pendingPayload.status === "finished" || pendingPayload.status === "forfeited") {
+          onlineBridgeHoldFinishedState(pendingPayload);
+          onlineBridgePostVisualReady(pendingPayload);
         } else {
           onlineBridgeSetActionLock(true);
         }
@@ -7356,11 +7659,19 @@
       }
 
       function onlineBridgeShouldPlayStartupSequence(payload) {
+        const parsedDeadlineMs = payload.turnDeadlineAt ? new Date(payload.turnDeadlineAt).getTime() : NaN;
+        const parsedServerNowMs = payload.serverNow ? new Date(payload.serverNow).getTime() : Date.now();
+        const remainingMs = Number.isFinite(parsedDeadlineMs)
+          ? parsedDeadlineMs - parsedServerNowMs
+          : 0;
+        const startupBudgetMs = ONLINE_BRIDGE_STARTUP_BUSY_MS + 1500;
+
         return payload.status === "active"
           && !payload.lastTurn
           && !payload.localAction
           && !payload.opponentHasAction
-          && Number(payload.currentTurn || 0) <= 1;
+          && Number(payload.currentTurn || 0) <= 1
+          && remainingMs >= startupBudgetMs;
       }
 
       async function onlineBridgeStart(payload) {
@@ -7457,15 +7768,6 @@
         }
 
         await onlineBridgeStart(payload);
-        if (payload.status === "finished" || payload.status === "forfeited") {
-          onlineBridgeHoldFinishedState(payload);
-          return;
-        }
-
-        if (payload.status !== "active" && payload.status !== "resolving") {
-          onlineBridgeSetActionLock(true);
-          return;
-        }
 
         if (onlineBridge.isAnimatingTurn) {
           onlineBridge.pendingPayload = payload;
@@ -7500,6 +7802,17 @@
           onlineBridge.resolutionTimerId = window.setTimeout(() => {
             onlineBridgeFinishResolution(payload);
           }, resolutionDelay);
+          return;
+        }
+
+        if (payload.status === "finished" || payload.status === "forfeited") {
+          onlineBridgeHoldFinishedState(payload);
+          onlineBridgePostVisualReady(payload);
+          return;
+        }
+
+        if (payload.status !== "active" && payload.status !== "resolving") {
+          onlineBridgeSetActionLock(true);
           return;
         }
 

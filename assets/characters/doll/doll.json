@@ -1,4 +1,4 @@
-﻿{
+{
     "id":  "doll",
     "name":  "Doll",
     "animations":  {
@@ -8,25 +8,29 @@
                                     "frameCount":  113,
                                     "framePad":  3,
                                     "frameIntervalMs":  33,
-                                    "scale":  1.35,
+                                    "scale":  1.18,
                                     "offsetXPercent":  0,
                                     "offsetYPercent":  0,
                                     "sideOffsets":  {
                                                         "p1":  {
-                                                                   "offsetXPercent":  -8
+                                                                   "offsetXPercent":  -8,
+                                                                   "fighterOffsetX":  -15,
+                                                                   "fighterOffsetY":  -6
                                                                },
                                                         "p2":  {
-                                                                   "offsetXPercent":  8
+                                                                   "offsetXPercent":  8,
+                                                                   "fighterOffsetX":  15,
+                                                                   "fighterOffsetY":  -6
                                                                }
                                                     }
                                 },
                        "getUp":  {
                                      "label":  "Get Up",
-                                     "framePattern":  "../../assets/characters/doll-idle/doll-idle-{frame}.webp",
-                                     "frameCount":  113,
+                                     "framePattern":  "../../assets/characters/doll-get-up/doll-get-up-{frame}.webp",
+                                     "frameCount":  169,
                                      "framePad":  3,
-                                     "frameIntervalMs":  33,
-                                     "scale":  1.35,
+                                     "frameIntervalMs":  16,
+                                     "scale":  1.2,
                                      "offsetXPercent":  0,
                                      "offsetYPercent":  0,
                                      "sideOffsets":  {
@@ -43,8 +47,8 @@
                                       "framePattern":  "../../assets/characters/doll-crouch/doll-crouch-{frame}.webp",
                                       "frameCount":  356,
                                       "framePad":  3,
-                                      "frameIntervalMs":  33,
-                                      "scale":  1.35,
+                                      "frameIntervalMs":  8,
+                                      "scale":  1.18,
                                       "offsetXPercent":  0,
                                       "offsetYPercent":  0,
                                       "sideOffsets":  {
@@ -61,8 +65,8 @@
                                     "framePattern":  "../../assets/characters/doll-jump/doll-jump-{frame}.webp",
                                     "frameCount":  113,
                                     "framePad":  3,
-                                    "frameIntervalMs":  33,
-                                    "scale":  1.35,
+                                    "frameIntervalMs":  18,
+                                    "scale":  1.18,
                                     "offsetXPercent":  0,
                                     "offsetYPercent":  0,
                                     "sideOffsets":  {
@@ -79,19 +83,23 @@
                                        "framePattern":  "../../assets/characters/doll-special/doll-special-{frame}.webp",
                                        "frameCount":  176,
                                        "framePad":  3,
-                                       "frameIntervalMs":  16.5,
-                                       "scale":  3.132,
+                                       "frameIntervalMs":  12,
+                                       "scale":  2.64,
                                        "offsetXPercent":  0,
                                        "offsetYPercent":  0,
                                        "sideOffsets":  {
                                                            "p1":  {
-                                                                      "fighterOffsetX":  93,
-                                                                      "fighterOffsetY":  60,
+                                                                      "offsetXPercent":  2,
+                                                                      "offsetYPercent":  -1,
+                                                                      "fighterOffsetX":  108,
+                                                                      "fighterOffsetY":  45,
                                                                       "fighterScale":  1
                                                                   },
                                                            "p2":  {
-                                                                      "fighterOffsetX":  -93,
-                                                                      "fighterOffsetY":  60,
+                                                                      "offsetXPercent":  -2,
+                                                                      "offsetYPercent":  -1,
+                                                                      "fighterOffsetX":  -108,
+                                                                      "fighterOffsetY":  45,
                                                                       "fighterScale":  1
                                                                   }
                                                        }

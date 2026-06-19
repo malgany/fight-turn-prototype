@@ -10,5 +10,7 @@ Thumbs.db
 npm-debug.log*
 .codex-vite-*.log
 .codex-vite-*.err.log
+.codex-vite.log
+.codex-vite.err.log
 
 .vercel

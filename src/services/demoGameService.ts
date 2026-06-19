@@ -249,7 +249,8 @@ export class DemoGameService implements GameService {
     if (!match || match.id !== matchId) throw new Error("Partida nao encontrada.");
     if (!state.unlockedCharacterIds.includes(characterId)) throw new Error("Personagem bloqueado.");
 
-    const opponentCharacter = characters.filter((character) => character.enabled)[Math.floor(Math.random() * 3)];
+    const enabledCharacters = characters.filter((character) => character.enabled);
+    const opponentCharacter = enabledCharacters[Math.floor(Math.random() * enabledCharacters.length)];
     const nextMatch: GameMatch = {
       ...match,
       status: "active",
