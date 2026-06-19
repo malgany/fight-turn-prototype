@@ -11,6 +11,7 @@ import type {
   PlayerProfile,
   PlayerRank,
   PrivateRoom,
+  RematchChoice,
 } from "../types";
 import type { GameService, QueueResult } from "./gameService";
 
@@ -94,6 +95,7 @@ function makeMatch(profile: PlayerProfile, type: "ranked" | "private"): GameMatc
     winnerId: null,
     rankDelta: 0,
     privateScore: type === "private" ? { playerWins: 0, opponentWins: 0 } : null,
+    rematch: { localChoice: null, opponentChoice: null, nextMatchId: null },
   };
 }
 
@@ -267,7 +269,10 @@ export class DemoGameService implements GameService {
     if (match.status !== "active") return match;
 
     const opponentAction = selectableActions[Math.floor(Math.random() * selectableActions.length)];
-    const result = resolveBattleTurn(match.battleState, action, opponentAction);
+    const result = resolveBattleTurn(match.battleState, action, opponentAction, {
+      p1CharacterId: match.p1.characterId,
+      p2CharacterId: match.p2.characterId,
+    });
     let nextMatch: GameMatch = {
       ...match,
       battleState: result.after,
@@ -279,6 +284,7 @@ export class DemoGameService implements GameService {
       lastTurn: result,
       status: result.finished ? "finished" : "active",
       winnerId: result.matchWinner ? match[result.matchWinner].userId : null,
+      rematch: { localChoice: null, opponentChoice: null, nextMatchId: null },
     };
 
     const nextState = { ...state, currentMatch: nextMatch };
@@ -343,6 +349,28 @@ export class DemoGameService implements GameService {
       createdAt: new Date().toISOString(),
     };
     this.commit({ ...state, currentMatch: nextMatch, history: [history, ...state.history], profile: { ...state.profile, presenceStatus: "online" } });
+    return nextMatch;
+  }
+
+  async postMatchChoice(matchId: string, choice: RematchChoice): Promise<GameMatch> {
+    const state = this.state();
+    const match = state.currentMatch;
+    if (!match || match.id !== matchId) throw new Error("Partida nao encontrada.");
+    if (choice === "lobby") {
+      const nextMatch = { ...match, rematch: { ...match.rematch, localChoice: "lobby" as const } };
+      this.commit({ ...state, currentMatch: nextMatch });
+      return nextMatch;
+    }
+
+    const nextMatch = {
+      ...makeMatch(state.profile!, match.matchType === "private" ? "private" : "ranked"),
+      p1: { ...match.p1 },
+      p2: { ...match.p2 },
+      battleState: createInitialBattleState(),
+      status: "active" as const,
+      rematch: { localChoice: "again" as const, opponentChoice: "again" as const, nextMatchId: null },
+    };
+    this.commit({ ...state, currentMatch: nextMatch });
     return nextMatch;
   }
 

@@ -6,6 +6,7 @@ export type Action = "Poke" | "Combo" | "Grab" | "Special" | "Super" | "Block" |
 export type MatchType = "ranked" | "private" | "casual";
 export type MatchStatus = "waiting" | "selecting" | "active" | "resolving" | "finished" | "forfeited";
 export type MatchResult = "win" | "loss" | "draw";
+export type RematchChoice = "again" | "lobby";
 
 export interface CharacterDefinition {
   id: string;
@@ -88,6 +89,8 @@ export interface TurnResolution {
   primary: string;
   secondary: string;
   damaged: Side[];
+  healed: Side[];
+  healing?: Partial<Record<Side, number>>;
   knockedDown: Side[];
   guaranteedTurn: GuaranteedTurn | null;
   p1Action: Action | null;
@@ -123,6 +126,11 @@ export interface GameMatch {
   rankDelta: number;
   privateScore: PrivateScore | null;
   finishedReason?: string | null;
+  rematch: {
+    localChoice: RematchChoice | null;
+    opponentChoice: RematchChoice | null;
+    nextMatchId: string | null;
+  };
 }
 
 export interface PrivateRoom {

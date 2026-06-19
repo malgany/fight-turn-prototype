@@ -57,3 +57,6 @@ verify_jwt = true
 
 [functions.forfeit-match]
 verify_jwt = true
+
+[functions.post-match-choice]
+verify_jwt = true

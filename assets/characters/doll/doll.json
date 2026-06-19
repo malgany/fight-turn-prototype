@@ -1,0 +1,108 @@
+﻿{
+    "id":  "doll",
+    "name":  "Doll",
+    "animations":  {
+                       "idle":  {
+                                    "label":  "Idle",
+                                    "framePattern":  "../../assets/characters/doll-idle/doll-idle-{frame}.webp",
+                                    "frameCount":  113,
+                                    "framePad":  3,
+                                    "frameIntervalMs":  33,
+                                    "scale":  1.35,
+                                    "offsetXPercent":  0,
+                                    "offsetYPercent":  0,
+                                    "sideOffsets":  {
+                                                        "p1":  {
+                                                                   "offsetXPercent":  -8
+                                                               },
+                                                        "p2":  {
+                                                                   "offsetXPercent":  8
+                                                               }
+                                                    }
+                                },
+                       "getUp":  {
+                                     "label":  "Get Up",
+                                     "framePattern":  "../../assets/characters/doll-idle/doll-idle-{frame}.webp",
+                                     "frameCount":  113,
+                                     "framePad":  3,
+                                     "frameIntervalMs":  33,
+                                     "scale":  1.35,
+                                     "offsetXPercent":  0,
+                                     "offsetYPercent":  0,
+                                     "sideOffsets":  {
+                                                         "p1":  {
+                                                                    "offsetXPercent":  -8
+                                                                },
+                                                         "p2":  {
+                                                                    "offsetXPercent":  8
+                                                                }
+                                                     }
+                                 },
+                       "crouch":  {
+                                      "label":  "Crouch",
+                                      "framePattern":  "../../assets/characters/doll-crouch/doll-crouch-{frame}.webp",
+                                      "frameCount":  356,
+                                      "framePad":  3,
+                                      "frameIntervalMs":  33,
+                                      "scale":  1.35,
+                                      "offsetXPercent":  0,
+                                      "offsetYPercent":  0,
+                                      "sideOffsets":  {
+                                                          "p1":  {
+                                                                     "offsetXPercent":  -8
+                                                                 },
+                                                          "p2":  {
+                                                                     "offsetXPercent":  8
+                                                                 }
+                                                      }
+                                  },
+                       "jump":  {
+                                    "label":  "Jump",
+                                    "framePattern":  "../../assets/characters/doll-jump/doll-jump-{frame}.webp",
+                                    "frameCount":  113,
+                                    "framePad":  3,
+                                    "frameIntervalMs":  33,
+                                    "scale":  1.35,
+                                    "offsetXPercent":  0,
+                                    "offsetYPercent":  0,
+                                    "sideOffsets":  {
+                                                        "p1":  {
+                                                                   "offsetXPercent":  -8
+                                                               },
+                                                        "p2":  {
+                                                                   "offsetXPercent":  8
+                                                               }
+                                                    }
+                                },
+                       "special":  {
+                                       "label":  "Special",
+                                       "framePattern":  "../../assets/characters/doll-special/doll-special-{frame}.webp",
+                                       "frameCount":  176,
+                                       "framePad":  3,
+                                       "frameIntervalMs":  16.5,
+                                       "scale":  3.132,
+                                       "offsetXPercent":  0,
+                                       "offsetYPercent":  0,
+                                       "sideOffsets":  {
+                                                           "p1":  {
+                                                                      "fighterOffsetX":  93,
+                                                                      "fighterOffsetY":  60,
+                                                                      "fighterScale":  1
+                                                                  },
+                                                           "p2":  {
+                                                                      "fighterOffsetX":  -93,
+                                                                      "fighterOffsetY":  60,
+                                                                      "fighterScale":  1
+                                                                  }
+                                                       }
+                                   },
+                       "ultimate":  {
+                                        "label":  "Ultimate",
+                                        "framePattern":  "../../assets/characters/doll-ultimate/doll-ultimate-{frame}.webp",
+                                        "frameCount":  126,
+                                        "framePad":  3,
+                                        "frameIntervalMs":  33,
+                                        "firstFrameHoldMs":  450
+                                    }
+                   }
+}

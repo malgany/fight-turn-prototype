@@ -1,7 +1,7 @@
 import { characterById, characters } from "./data/characters";
 import { selectableActions, turnDurationForState } from "./domain/battle";
 import { appRouteUrl } from "./lib/config";
-import type { Action, AppSnapshot, BattleState, GameMatch, GuaranteedTurn, LeaderboardEntry, MatchHistoryEntry, PrivateRoom, Side, TurnResolution } from "./types";
+import type { Action, AppSnapshot, BattleState, GameMatch, GuaranteedTurn, LeaderboardEntry, MatchHistoryEntry, PrivateRoom, RematchChoice, Side, TurnResolution } from "./types";
 import type { GameService } from "./services/gameService";
 
 type Screen =
@@ -95,6 +95,7 @@ function usesMobileStage(screen: Screen): boolean {
 function characterVisualClass(characterId: string): string {
   if (characterId === "itzcoatl") return "shaman";
   if (characterId === "aton") return "aton";
+  if (characterId === "doll") return "doll";
   if (characterId === "coming-soon") return "coming-soon";
   return "ninja";
 }
@@ -302,11 +303,19 @@ export class App {
         await this.forfeit();
         break;
       case "play-again":
+        await this.choosePostMatch("again");
+        break;
+      case "post-match-lobby":
+        await this.choosePostMatch("lobby");
         this.state.match = null;
         await this.navigate("online");
         break;
+      case "post-match-menu":
+        await this.choosePostMatch("lobby");
+        window.location.assign(appRouteUrl("prototype/mobile-layout/"));
+        break;
       case "legacy-menu":
-        window.location.assign(appRouteUrl(""));
+        window.location.assign(appRouteUrl("prototype/mobile-layout/"));
         break;
     }
   }
@@ -488,6 +497,12 @@ export class App {
       winner: this.displaySideFor(match, turn.winner),
       loser: this.displaySideFor(match, turn.loser),
       damaged: turn.damaged.map((side) => this.displaySideFor(match, side)).filter((side): side is Side => Boolean(side)),
+      healed: (turn.healed || []).map((side) => this.displaySideFor(match, side)).filter((side): side is Side => Boolean(side)),
+      healing: Object.fromEntries(
+        Object.entries(turn.healing || {})
+          .map(([side, amount]) => [this.displaySideFor(match, side as Side), amount])
+          .filter(([side]) => Boolean(side)),
+      ) as Partial<Record<Side, number>>,
       knockedDown: turn.knockedDown.map((side) => this.displaySideFor(match, side)).filter((side): side is Side => Boolean(side)),
       guaranteedTurn: this.mapGuaranteedTurn(match, turn.guaranteedTurn),
       p1Action: localIsP1 ? turn.p1Action : turn.p2Action,
@@ -622,6 +637,22 @@ export class App {
     await this.run("Abandonando partida...", async () => {
       const match = await this.service.forfeitMatch(this.state.match!.id);
       this.enterMatch(match);
+    });
+  }
+
+  private async choosePostMatch(choice: RematchChoice): Promise<void> {
+    const match = this.state.match;
+    if (!match || !["finished", "forfeited"].includes(match.status)) return;
+
+    await this.run(choice === "again" ? "Aguardando revanche..." : "Voltando ao lobby...", async () => {
+      const updated = await this.service.postMatchChoice(match.id, choice);
+      if (isLiveMatchStatus(updated.status)) {
+        this.enterMatch(updated);
+        return;
+      }
+
+      this.state.match = updated;
+      this.state.screen = "post-match";
     });
   }
 
@@ -1093,7 +1124,7 @@ export class App {
       <iframe
         class="legacy-online-battle-frame"
         data-legacy-online-battle
-        src="${appRouteUrl("prototype/mobile-layout/?onlineBridge=1&v=20260611-post-match-stage-1")}"
+        src="${appRouteUrl("prototype/mobile-layout/?onlineBridge=1&v=20260618-skip-startup-after-turn")}"
         title="Batalha online Final Genesis"
       ></iframe>
     `;
@@ -1151,6 +1182,31 @@ export class App {
     `;
   }
 
+  private renderRematchButton(match: GameMatch): string {
+    const rematch = match.rematch || { localChoice: null, opponentChoice: null, nextMatchId: null };
+    const opponentLeft = rematch.opponentChoice === "lobby";
+    const localReady = !opponentLeft && rematch.localChoice === "again";
+    const opponentReady = !opponentLeft && rematch.opponentChoice === "again";
+    const disabled = localReady || opponentLeft;
+    const label = opponentLeft
+      ? "Adversario saiu"
+      : localReady
+        ? "Aguardando..."
+        : opponentReady
+          ? "Aceitar revanche"
+          : "Jogar novamente";
+
+    return `
+      <button class="primary-command rematch-command" data-action="play-again" type="button" ${disabled ? "disabled" : ""}>
+        <span class="rematch-badges" aria-hidden="true">
+          ${localReady ? `<span class="rematch-badge p1">P1</span>` : ""}
+          ${opponentReady ? `<span class="rematch-badge p2">P2</span>` : ""}
+        </span>
+        <span>${label}</span>
+      </button>
+    `;
+  }
+
   private renderPostMatchBattle(): string {
     const match = this.state.match;
     const profile = this.state.snapshot.profile;
@@ -1172,9 +1228,9 @@ export class App {
             ${privateScore ? `<p>Placar privado ${privateScore.playerWins} x ${privateScore.opponentWins}</p>` : ""}
           </div>
           <nav class="post-match-actions" aria-label="Acoes da partida">
-            <button class="primary-command" data-action="play-again" type="button">Jogar novamente</button>
-            <button class="secondary-command" data-nav="online" type="button">Voltar ao lobby</button>
-            <button class="ghost-command" data-nav="menu" type="button">Voltar ao menu</button>
+            ${this.renderRematchButton(match)}
+            <button class="secondary-command" data-action="post-match-lobby" type="button">Voltar ao lobby</button>
+            <button class="ghost-command" data-action="post-match-menu" type="button">Voltar ao menu</button>
           </nav>
         </div>
       </section>
@@ -1193,9 +1249,9 @@ export class App {
         ${match.matchType === "ranked" ? `<p>${match.rankDelta >= 0 ? "+" : ""}${match.rankDelta} pontos · streak atualizado</p>` : ""}
         ${privateScore ? `<p>Placar privado: ${privateScore.playerWins} x ${privateScore.opponentWins}</p>` : ""}
         <div class="button-row">
-          <button class="primary-command" data-action="play-again" type="button">Jogar novamente</button>
-          <button class="secondary-command" data-nav="online" type="button">Voltar ao lobby</button>
-          <button class="ghost-command" data-nav="menu" type="button">Voltar ao menu</button>
+          ${this.renderRematchButton(match)}
+          <button class="secondary-command" data-action="post-match-lobby" type="button">Voltar ao lobby</button>
+          <button class="ghost-command" data-action="post-match-menu" type="button">Voltar ao menu</button>
         </div>
       </section>
     `;

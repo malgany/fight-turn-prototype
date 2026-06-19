@@ -250,6 +250,10 @@ export class SupabaseGameService implements GameService {
     return this.invoke<GameMatch>("forfeit-match", { matchId });
   }
 
+  postMatchChoice(matchId: string, choice: "again" | "lobby"): Promise<GameMatch> {
+    return this.invoke<GameMatch>("post-match-choice", { matchId, choice });
+  }
+
   watchMatch(matchId: string, onChange: () => void): () => void {
     const channel = this.client()
       .channel(`match:${matchId}`)

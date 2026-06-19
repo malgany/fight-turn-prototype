@@ -7,6 +7,7 @@ import type {
   PlayerProfile,
   PlayerRank,
   PrivateRoom,
+  RematchChoice,
 } from "../types";
 
 export interface QueueResult {
@@ -35,6 +36,7 @@ export interface GameService {
   submitAction(matchId: string, action: Action): Promise<GameMatch>;
   resolveTurn(matchId: string): Promise<GameMatch>;
   forfeitMatch(matchId: string): Promise<GameMatch>;
+  postMatchChoice(matchId: string, choice: RematchChoice): Promise<GameMatch>;
   watchMatch(matchId: string, onChange: () => void): () => void;
   watchRankedQueue(userId: string, onChange: () => void): () => void;
   watchPrivateRoom(code: string, onChange: () => void): () => void;

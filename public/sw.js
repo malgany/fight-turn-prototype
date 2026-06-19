@@ -1,4 +1,4 @@
-const STATIC_CACHE = "fight-turn-static-v1";
+const STATIC_CACHE = "fight-turn-static-v2";
 const STATIC_PATHS = ["/assets/", "/prototype/"];
 
 self.addEventListener("install", () => {
@@ -25,8 +25,30 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (url.pathname.endsWith(".json") || url.searchParams.has("html-proxy")) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
   event.respondWith(cacheFirst(request));
 });
+
+async function networkFirst(request) {
+  const cache = await caches.open(STATIC_CACHE);
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone()).catch(() => {});
+    }
+    return response;
+  } catch (error) {
+    const cached = await cache.match(request);
+    if (cached) {
+      return cached;
+    }
+    throw error;
+  }
+}
 
 async function cacheFirst(request) {
   const cache = await caches.open(STATIC_CACHE);

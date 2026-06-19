@@ -934,6 +934,11 @@ p {
   --character-zoom: 1.6;
 }
 
+.match-select-screen .character-art.doll {
+  --character-position: center 5%;
+  --character-zoom: 1.75;
+}
+
 .match-select-screen .character-art.coming-soon {
   --character-position: center 2%;
   --character-zoom: 1.6;
@@ -1160,6 +1165,50 @@ p {
   width: min(76%, 220px);
 }
 
+.rematch-command {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 3px;
+}
+
+.rematch-command:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.45) brightness(0.82);
+}
+
+.rematch-badges {
+  position: absolute;
+  top: -9px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.rematch-badge {
+  display: inline-grid;
+  min-width: 24px;
+  min-height: 18px;
+  place-items: center;
+  border: 1px solid #f7fbff;
+  border-radius: 3px;
+  color: #fff;
+  font-size: 0.62rem;
+  line-height: 1;
+  text-shadow: 0 2px 0 #000;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.62);
+}
+
+.rematch-badge.p1 {
+  background: linear-gradient(#5edcff, #1267ff);
+}
+
+.rematch-badge.p2 {
+  background: linear-gradient(#ff5959, #b40713);
+}
+
 .legacy-online-status {
   position: absolute;
   left: 50%;
@@ -1278,15 +1327,92 @@ p {
 .action-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: clamp(1px, 0.35cqw, 3px);
+  padding: clamp(2px, 0.65cqw, 5px);
 }
 
 .action-button {
-  min-height: 58px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: linear-gradient(180deg, #26354a, #111925);
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 5px;
+  background: var(--button-image) center / 100% 100% no-repeat;
   color: var(--text);
+  cursor: pointer;
+  overflow: hidden;
+  font-size: 0;
+  filter: drop-shadow(0 10px 7px rgba(0, 0, 0, 0.42));
+  transition: filter 130ms ease, scale 130ms ease, transform 130ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.action-button::after {
+  content: "";
+  position: absolute;
+  inset: 6%;
+  border-radius: 7px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.46), transparent 32%),
+    radial-gradient(circle, rgba(255, 255, 255, 0.58) 0 16%, rgba(255, 255, 255, 0.16) 36%, transparent 68%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  scale: 0.74;
+  transition: opacity 180ms ease, scale 180ms ease;
+}
+
+.action-button:nth-child(1) {
+  --button-image: url("/assets/ui/action-panel/buttons/poke.png");
+}
+
+.action-button:nth-child(2) {
+  --button-image: url("/assets/ui/action-panel/buttons/combo.png");
+}
+
+.action-button:nth-child(3) {
+  --button-image: url("/assets/ui/action-panel/buttons/grab.png");
+}
+
+.action-button:nth-child(4) {
+  --button-image: url("/assets/ui/action-panel/buttons/special.png");
+}
+
+.action-button:nth-child(5) {
+  --button-image: url("/assets/ui/action-panel/buttons/super.png");
+}
+
+.action-button:nth-child(6) {
+  --button-image: url("/assets/ui/action-panel/buttons/block.png");
+}
+
+.action-button:nth-child(7) {
+  --button-image: url("/assets/ui/action-panel/buttons/crouch.png");
+}
+
+.action-button:nth-child(8) {
+  --button-image: url("/assets/ui/action-panel/buttons/jump.png");
+}
+
+.action-button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(1) brightness(0.58) drop-shadow(0 10px 7px rgba(0, 0, 0, 0.42));
+}
+
+.action-button:not(:disabled):hover {
+  scale: 1.04;
+  filter: brightness(1.18) drop-shadow(0 0 13px rgba(99, 215, 255, 0.42));
+}
+
+.action-button:not(:disabled):hover::after {
+  opacity: 0.62;
+  scale: 1;
+}
+
+.action-button:not(:disabled):active {
+  scale: 0.94;
+  transform: translateY(2%);
+  filter: brightness(1.35) drop-shadow(0 0 14px rgba(255, 255, 255, 0.45));
 }
 
 .battle-footer {
@@ -1546,10 +1672,6 @@ p {
   .arena {
     grid-template-columns: 1fr 90px 1fr;
     min-height: 250px;
-  }
-
-  .action-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .join-form {

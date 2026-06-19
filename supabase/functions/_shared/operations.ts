@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient, type User } from "https://esm.sh/@su
 
 type Side = "p1" | "p2";
 type Action = "Poke" | "Combo" | "Grab" | "Special" | "Super" | "Block" | "Crouch" | "Jump";
+type RematchChoice = "again" | "lobby";
 
 const corsHeaders = {
   "access-control-allow-origin": "*",
@@ -25,6 +26,7 @@ const actionData: Record<Action, { speed?: number; damage?: number }> = {
 };
 const blockChip: Partial<Record<Action, number>> = { Poke: 0, Combo: 2, Special: 2, Super: 3 };
 const tradeDamage: Partial<Record<Action, number>> = { Poke: 3, Combo: 4, Grab: 0, Special: 5, Super: 8 };
+const nonAttackActions: Action[] = ["Block", "Crouch", "Jump"];
 
 function json(body: unknown, init: ResponseInit = {}) {
   return new Response(JSON.stringify(body), {
@@ -130,11 +132,35 @@ function applyDamage(state: any, target: Side, amount: number, source: Action | 
   }
 }
 
+function applyHeal(state: any, side: Side, amount: number) {
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  const previousHealth = state[side].health;
+  state[side].health = clamp(state[side].health + amount);
+  return Math.max(0, state[side].health - previousHealth);
+}
+
 function consumeSuper(state: any, side: Side, action: Action | null) {
   if (action === "Super") state[side].super = 0;
 }
 
-function causesKnockdown(action: Action | "Wait", targetAction: Action | "Wait") {
+function isDoll(side: Side, context: any) {
+  return (side === "p1" ? context?.p1CharacterId : context?.p2CharacterId) === "doll";
+}
+
+function isDollAction(side: Side, action: Action | "Wait" | null, expectedAction: Action, context: any) {
+  return action === expectedAction && isDoll(side, context);
+}
+
+function isDollSpecial(side: Side, action: Action | "Wait" | null, context: any) {
+  return isDollAction(side, action, "Special", context);
+}
+
+function isDollUltimate(side: Side, action: Action | "Wait" | null, context: any) {
+  return isDollAction(side, action, "Super", context);
+}
+
+function causesKnockdown(action: Action | "Wait", targetAction: Action | "Wait", winner: Side, context: any) {
+  if (isDollUltimate(winner, action, context)) return false;
   return action === "Grab" || action === "Special" || action === "Super" || (action === "Combo" && targetAction === "Jump");
 }
 
@@ -142,38 +168,77 @@ function guaranteeTurn(side: Side, allowedActions: Action[], reason: string) {
   return { side, allowedActions, reason, durationMs: 3000 };
 }
 
-function resolveHit(state: any, winner: Side, p1Action: Action | "Wait", p2Action: Action | "Wait", advantageWin = false) {
+function resolveDollUltimateHeal(state: any, side: Side) {
+  const healedAmount = applyHeal(state, side, 28);
+  state.advantage = null;
+  return {
+    type: "hit",
+    winner: side,
+    loser: opposite(side),
+    primary: "DOLL.EXE RECUPEROU",
+    secondary: `${side.toUpperCase()} recuperou vida`,
+    damaged: [],
+    healed: healedAmount > 0 ? [side] : [],
+    healing: healedAmount > 0 ? { [side]: healedAmount } : {},
+    knockedDown: [],
+    guaranteedTurn: null,
+  };
+}
+
+function resolveHit(state: any, winner: Side, p1Action: Action | "Wait", p2Action: Action | "Wait", advantageWin = false, context: any = {}) {
   const loser = opposite(winner);
   const action = winner === "p1" ? p1Action : p2Action;
   const targetAction = winner === "p1" ? p2Action : p1Action;
-  const damage = action === "Wait" ? 0 : actionData[action].damage || 0;
-  const knockedDown = causesKnockdown(action, targetAction) ? [loser] : [];
+  const isDollSpecialHit = isDollSpecial(winner, action, context);
+  const damage = action === "Wait" ? 0 : isDollSpecialHit ? 10 : actionData[action].damage || 0;
+  const knockedDown = causesKnockdown(action, targetAction, winner, context) ? [loser] : [];
   const guaranteedTurn = action === "Combo" && targetAction !== "Jump" ? guaranteeTurn(winner, comboGuaranteedActions, "COMBO ACERTOU") : null;
   applyDamage(state, loser, damage, action);
+  const healedAmount = isDollSpecialHit ? applyHeal(state, winner, Math.round(state[winner].health * 0.1)) : 0;
   state.advantage = winner;
-  return { type: "hit", winner, loser, primary: advantageWin ? "PLUS DECIDIU" : `${action} ACERTOU`, secondary: `${winner.toUpperCase()} venceu o turno`, damaged: damage > 0 ? [loser] : [], knockedDown, guaranteedTurn };
+  return {
+    type: "hit",
+    winner,
+    loser,
+    primary: advantageWin ? "PLUS DECIDIU" : `${action} ACERTOU`,
+    secondary: `${winner.toUpperCase()} venceu o turno`,
+    damaged: damage > 0 ? [loser] : [],
+    healed: healedAmount > 0 ? [winner] : [],
+    healing: healedAmount > 0 ? { [winner]: healedAmount } : {},
+    knockedDown,
+    guaranteedTurn,
+  };
 }
 
-function resolveTurn(stateInput: any, p1Action: Action | null, p2Action: Action | null) {
+function resolveTurn(stateInput: any, p1Action: Action | null, p2Action: Action | null, matchContext: any = {}) {
   const before = structuredClone(stateInput);
   const state = structuredClone(stateInput);
+  const context = {
+    p1CharacterId: matchContext?.player1_character_id,
+    p2CharacterId: matchContext?.player2_character_id,
+  };
+  const guaranteedTurn = stateInput.activeGuaranteedTurn;
   state.activeGuaranteedTurn = null;
   consumeSuper(state, "p1", p1Action);
   consumeSuper(state, "p2", p2Action);
-  let result: any = { type: "draw", winner: null, loser: null, primary: "NEUTRO", secondary: "Sem vantagem", damaged: [], knockedDown: [], guaranteedTurn: null };
+  let result: any = { type: "draw", winner: null, loser: null, primary: "NEUTRO", secondary: "Sem vantagem", damaged: [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: null };
+  const dollUltimateSide = isDollUltimate("p1", p1Action, context) ? "p1" : isDollUltimate("p2", p2Action, context) ? "p2" : null;
 
-  if (!p1Action && !p2Action) {
+  if (dollUltimateSide && guaranteedTurn?.side === dollUltimateSide) {
+    result = resolveDollUltimateHeal(state, dollUltimateSide);
+  } else if (!p1Action && !p2Action) {
     state.advantage = null;
     result.primary = "TEMPO ESGOTADO";
     result.secondary = "Ninguem escolheu ataque";
   } else if (!p1Action && p2Action) {
-    result = attackActions.includes(p2Action) ? { ...resolveHit(state, "p2", "Wait", p2Action), primary: "P1 SEM ACAO" } : result;
+    result = attackActions.includes(p2Action) ? { ...resolveHit(state, "p2", "Wait", p2Action, false, context), primary: "P1 SEM ACAO" } : result;
   } else if (p1Action && !p2Action) {
-    result = attackActions.includes(p1Action) ? { ...resolveHit(state, "p1", p1Action, "Wait"), primary: "GOLPE LIVRE" } : result;
+    result = attackActions.includes(p1Action) ? { ...resolveHit(state, "p1", p1Action, "Wait", false, context), primary: "GOLPE LIVRE" } : result;
   } else if (p1Action && p2Action && attackActions.includes(p1Action) && attackActions.includes(p2Action)) {
+    const ignoresAdvantage = isDollUltimate("p1", p1Action, context) || isDollUltimate("p2", p2Action, context);
     if (p1Action === p2Action) {
-      if (state.advantage) {
-        result = resolveHit(state, state.advantage, p1Action, p2Action, true);
+      if (state.advantage && !ignoresAdvantage) {
+        result = resolveHit(state, state.advantage, p1Action, p2Action, true, context);
       } else if (p1Action === "Grab") {
         state.advantage = null;
         result = { ...result, primary: "AGARRAO QUEBRADO", secondary: "Os dois tentaram agarrar" };
@@ -182,14 +247,14 @@ function resolveTurn(stateInput: any, p1Action: Action | null, p2Action: Action 
         applyDamage(state, "p1", damage, p2Action);
         applyDamage(state, "p2", damage, p1Action);
         state.advantage = null;
-        result = { type: "trade", winner: null, loser: null, primary: "TRADE", secondary: `${p1Action} vs ${p2Action}`, damaged: damage > 0 ? ["p1", "p2"] : [], knockedDown: [], guaranteedTurn: null };
+        result = { type: "trade", winner: null, loser: null, primary: "TRADE", secondary: `${p1Action} vs ${p2Action}`, damaged: damage > 0 ? ["p1", "p2"] : [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: null };
       }
     } else {
       const p1Speed = actionData[p1Action].speed || 99;
       const p2Speed = actionData[p2Action].speed || 99;
       const speedGap = Math.abs(p1Speed - p2Speed);
-      const winner = state.advantage && speedGap <= 1 ? state.advantage : p1Speed < p2Speed ? "p1" : "p2";
-      result = resolveHit(state, winner, p1Action, p2Action, speedGap <= 1 && state.advantage === winner);
+      const winner = state.advantage && speedGap <= 1 && !ignoresAdvantage ? state.advantage : p1Speed < p2Speed ? "p1" : "p2";
+      result = resolveHit(state, winner, p1Action, p2Action, speedGap <= 1 && state.advantage === winner && !ignoresAdvantage, context);
     }
   } else if (p1Action && p2Action) {
     const attacker: Side | null = attackActions.includes(p1Action) ? "p1" : attackActions.includes(p2Action) ? "p2" : null;
@@ -198,19 +263,21 @@ function resolveTurn(stateInput: any, p1Action: Action | null, p2Action: Action 
       const response = attacker === "p1" ? p2Action : p1Action;
       const defender = opposite(attacker);
       const wins: Partial<Record<Action, Action[]>> = { Poke: ["Crouch", "Jump"], Combo: ["Jump"], Grab: ["Block"], Special: ["Crouch", "Jump"], Super: ["Jump"] };
-      if (response === "Block" && blockChip[attack] !== undefined) {
+      if (isDollUltimate(attacker, attack, context) && nonAttackActions.includes(response)) {
+        result = resolveDollUltimateHeal(state, attacker);
+      } else if (response === "Block" && blockChip[attack] !== undefined) {
         const chip = blockChip[attack] || 0;
         applyDamage(state, defender, chip, attack, true);
         state.advantage = defender;
-        result = { type: "blocked", winner: defender, loser: attacker, primary: attack === "Super" ? "ULTIMATE PUNIDO" : "BLOQUEOU", secondary: `${defender.toUpperCase()} segurou ${attack}`, damaged: chip > 0 ? [defender] : [], knockedDown: [], guaranteedTurn: attack === "Super" ? guaranteeTurn(defender, attackActions, "BLOCK NO ULTIMATE") : null };
+        result = { type: "blocked", winner: defender, loser: attacker, primary: attack === "Super" ? "ULTIMATE PUNIDO" : "BLOQUEOU", secondary: `${defender.toUpperCase()} segurou ${attack}`, damaged: chip > 0 ? [defender] : [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: attack === "Super" ? guaranteeTurn(defender, attackActions, "BLOCK NO ULTIMATE") : null };
       } else if (response === "Crouch" && ["Combo", "Grab", "Super"].includes(attack)) {
         state.advantage = defender;
-        result = { type: "evade", winner: defender, loser: attacker, primary: "ABAIXOU", secondary: `${defender.toUpperCase()} evitou ${attack}`, damaged: [], knockedDown: [], guaranteedTurn: null };
+        result = { type: "evade", winner: defender, loser: attacker, primary: "ABAIXOU", secondary: `${defender.toUpperCase()} evitou ${attack}`, damaged: [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: null };
       } else if (response === "Jump" && attack === "Grab") {
         state.advantage = defender;
-        result = { type: "evade", winner: defender, loser: attacker, primary: "PULOU", secondary: `${defender.toUpperCase()} escapou do agarro`, damaged: [], knockedDown: [], guaranteedTurn: guaranteeTurn(defender, selectableActions, "PULO NO GRAB") };
+        result = { type: "evade", winner: defender, loser: attacker, primary: "PULOU", secondary: `${defender.toUpperCase()} escapou do agarro`, damaged: [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: guaranteeTurn(defender, selectableActions, "PULO NO GRAB") };
       } else if (wins[attack]?.includes(response)) {
-        result = resolveHit(state, attacker, attacker === "p1" ? attack : response, attacker === "p2" ? attack : response);
+        result = resolveHit(state, attacker, attacker === "p1" ? attack : response, attacker === "p2" ? attack : response, false, context);
       } else {
         state.advantage = null;
       }
@@ -311,6 +378,7 @@ async function toGameMatch(db: SupabaseClient, match: any, userId: string) {
   const { data: actions } = await db.from("match_actions").select("user_id,action").eq("match_id", match.id).eq("turn_number", match.current_turn);
   const localAction = (actions || []).find((action: any) => action.user_id === userId)?.action || null;
   const opponentHasAction = Boolean((actions || []).find((action: any) => action.user_id === opponentId));
+  const rematchChoices = match.rematch_choices || {};
   const delta = match.rank_delta?.[userId] || 0;
   const privateScore = match.private_score?.[userId] || null;
   return {
@@ -331,19 +399,33 @@ async function toGameMatch(db: SupabaseClient, match: any, userId: string) {
     rankDelta: delta,
     privateScore,
     finishedReason: match.finished_reason || null,
+    rematch: {
+      localChoice: rematchChoices[userId] || null,
+      opponentChoice: rematchChoices[opponentId] || null,
+      nextMatchId: match.rematch_next_match_id || null,
+    },
   };
 }
 
 async function getCurrentMatch(db: SupabaseClient, userId: string) {
-  const { data } = await db
+  const baseQuery = () => db
     .from("matches")
     .select("*")
-    .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
-    .in("status", ["waiting", "selecting", "active", "resolving", "finished", "forfeited"])
+    .or(`player1_id.eq.${userId},player2_id.eq.${userId}`);
+
+  const { data: liveMatch } = await baseQuery()
+    .in("status", ["waiting", "selecting", "active", "resolving"])
     .order("updated_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  return data ? toGameMatch(db, data, userId) : null;
+  if (liveMatch) return toGameMatch(db, liveMatch, userId);
+
+  const { data: finishedMatch } = await baseQuery()
+    .in("status", ["finished", "forfeited"])
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return finishedMatch ? toGameMatch(db, finishedMatch, userId) : null;
 }
 
 async function updatePresence(db: SupabaseClient, userId: string, status: string, matchId?: string) {
@@ -462,7 +544,7 @@ async function resolveAndPersist(db: SupabaseClient, match: any) {
   const { data: actions } = await db.from("match_actions").select("*").eq("match_id", match.id).eq("turn_number", match.current_turn);
   const p1Action = (actions || []).find((action: any) => action.user_id === match.player1_id)?.action || null;
   const p2Action = (actions || []).find((action: any) => action.user_id === match.player2_id)?.action || null;
-  const result = resolveTurn(match.state, p1Action, p2Action);
+  const result = resolveTurn(match.state, p1Action, p2Action, match);
   await db.from("match_turns").upsert({ match_id: match.id, turn_number: match.current_turn, p1_action: p1Action, p2_action: p2Action, result }, { onConflict: "match_id,turn_number" });
   if (await consecutiveInactiveTimeouts(db, match, result) >= 3) {
     const inactivityResult = {
@@ -511,6 +593,80 @@ async function createMatch(db: SupabaseClient, type: "ranked" | "private", p1: a
   await updatePresence(db, p1.id, "in_match", data.id);
   await updatePresence(db, p2.id, "in_match", data.id);
   return data;
+}
+
+async function createRematch(db: SupabaseClient, previousMatch: any, nextMatchId: string) {
+  const state = initialBattleState();
+  const { data, error } = await db.from("matches").insert({
+    id: nextMatchId,
+    match_type: previousMatch.match_type,
+    status: "active",
+    player1_id: previousMatch.player1_id,
+    player2_id: previousMatch.player2_id,
+    player1_character_id: previousMatch.player1_character_id,
+    player2_character_id: previousMatch.player2_character_id,
+    state,
+    current_turn: 1,
+    turn_deadline_at: deadlineFromState(state),
+    last_turn: null,
+    room_code: previousMatch.room_code || null,
+  }).select("*").single();
+  if (error) throw error;
+  await updatePresence(db, previousMatch.player1_id, "in_match", data.id);
+  await updatePresence(db, previousMatch.player2_id, "in_match", data.id);
+  return data;
+}
+
+async function choosePostMatch(db: SupabaseClient, matchId: string, userId: string, choice: RematchChoice) {
+  const { data: match } = await db.from("matches").select("*").eq("id", matchId).single();
+  if (!match || ![match.player1_id, match.player2_id].includes(userId)) throw new Error("Partida nao encontrada.");
+  if (!["finished", "forfeited"].includes(match.status)) throw new Error("A partida ainda nao terminou.");
+
+  if (match.rematch_next_match_id) {
+    const { data: nextMatch } = await db.from("matches").select("*").eq("id", match.rematch_next_match_id).single();
+    return nextMatch || match;
+  }
+
+  const choices = { ...(match.rematch_choices || {}), [userId]: choice };
+  const { data: updated } = await db
+    .from("matches")
+    .update({ rematch_choices: choices })
+    .eq("id", match.id)
+    .select("*")
+    .single();
+
+  if (choice !== "again") {
+    await updatePresence(db, userId, "online");
+    return updated;
+  }
+
+  const opponentId = userId === match.player1_id ? match.player2_id : match.player1_id;
+  if (choices[opponentId] !== "again") {
+    await updatePresence(db, userId, "in_match", match.id);
+    return updated;
+  }
+
+  const nextMatchId = crypto.randomUUID();
+  const { data: reserved } = await db
+    .from("matches")
+    .update({ rematch_next_match_id: nextMatchId, rematch_choices: choices })
+    .eq("id", match.id)
+    .is("rematch_next_match_id", null)
+    .select("*")
+    .maybeSingle();
+
+  if (!reserved) {
+    const { data: latest } = await db.from("matches").select("*").eq("id", match.id).single();
+    if (latest?.rematch_next_match_id) {
+      const { data: nextMatch } = await db.from("matches").select("*").eq("id", latest.rematch_next_match_id).single();
+      return nextMatch || latest;
+    }
+    return latest || updated;
+  }
+
+  const nextMatch = await createRematch(db, reserved, nextMatchId);
+  await db.from("matches").update({ rematch_choices: choices }).eq("id", reserved.id);
+  return nextMatch;
 }
 
 async function selectMatchCharacter(db: SupabaseClient, matchId: string, userId: string, characterId: string) {
@@ -677,6 +833,14 @@ async function operation(req: Request, name: string) {
     if (!match || ![match.player1_id, match.player2_id].includes(user.id)) throw new Error("Partida nao encontrada.");
     const winnerSide: Side = match.player1_id === user.id ? "p2" : "p1";
     const updated = await finishMatch(db, match, winnerSide, "forfeit");
+    return toGameMatch(db, updated, user.id);
+  }
+
+  if (name === "post-match-choice") {
+    const matchId = String(body.matchId || "");
+    const choice = String(body.choice || "") as RematchChoice;
+    if (!["again", "lobby"].includes(choice)) throw new Error("Escolha invalida.");
+    const updated = await choosePostMatch(db, matchId, user.id, choice);
     return toGameMatch(db, updated, user.id);
   }
 

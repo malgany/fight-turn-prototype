@@ -32,6 +32,16 @@ export const characters: CharacterDefinition[] = [
     requiredDivision: "Bronze",
   },
   {
+    id: "doll",
+    name: "Doll.exe",
+    portraitUrl: "/assets/ui/character-select/fighter-doll.png",
+    enabled: true,
+    isDefault: true,
+    unlockDescription: "Disponivel desde o inicio",
+    requiredPoints: 0,
+    requiredDivision: "Bronze",
+  },
+  {
     id: "coming-soon",
     name: "Em breve",
     portraitUrl: "/assets/ui/character-select/fighter-coming-soon-face-question.webp",
