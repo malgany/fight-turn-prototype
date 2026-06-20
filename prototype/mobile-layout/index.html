@@ -3253,6 +3253,14 @@
         aton: "../../game-assets/characters/urban/urban.json?v=20260608-aton-position-plus",
         doll: "../../game-assets/characters/doll/doll.json?v=20260620-doll-jump-odd-slow",
       };
+      const ANIMATION_FRAME_LIMITS = Object.freeze({
+        idle: 60,
+        getUp: 90,
+        crouch: 90,
+        jump: 60,
+        special: 100,
+        ultimate: 120,
+      });
       const CHARACTER_PORTRAITS = {
         ninja: {
           src: "../../game-assets/ui/character-select/fighter-ninja.webp?v=20260608-despill",
@@ -4036,11 +4044,28 @@
         return response.json();
       }
 
-      function buildAnimationFrames(animation) {
+      function sampleAnimationFrameNumbers(frameNumbers, frameLimit) {
+        if (!Number.isInteger(frameLimit) || frameLimit < 1 || frameNumbers.length <= frameLimit) {
+          return frameNumbers;
+        }
+
+        if (frameLimit === 1) {
+          return [frameNumbers[0]];
+        }
+
+        const lastIndex = frameNumbers.length - 1;
+        return Array.from({ length: frameLimit }, (_, index) => {
+          const sourceIndex = Math.round((index * lastIndex) / (frameLimit - 1));
+          return frameNumbers[sourceIndex];
+        });
+      }
+
+      function buildAnimationFrames(animation, animationKey) {
         const frameStart = Number.isInteger(animation.frameStart) ? animation.frameStart : 1;
         const frameStep = Number.isInteger(animation.frameStep) && animation.frameStep > 0 ? animation.frameStep : 1;
-        return Array.from({ length: animation.frameCount }, (_, index) => {
-          const frame = String(frameStart + index * frameStep).padStart(animation.framePad || 3, "0");
+        const frameNumbers = Array.from({ length: animation.frameCount }, (_, index) => frameStart + index * frameStep);
+        return sampleAnimationFrameNumbers(frameNumbers, ANIMATION_FRAME_LIMITS[animationKey]).map((frameNumber) => {
+          const frame = String(frameNumber).padStart(animation.framePad || 3, "0");
           return animation.framePattern.replace("{frame}", frame);
         });
       }
@@ -4058,12 +4083,12 @@
           ultimateAnimation: animations.ultimate,
         };
 
-        loadout.idleFrames = buildAnimationFrames(loadout.idleAnimation);
-        loadout.getUpFrames = buildAnimationFrames(loadout.getUpAnimation);
-        loadout.crouchFrames = buildAnimationFrames(loadout.crouchAnimation);
-        loadout.jumpFrames = buildAnimationFrames(loadout.jumpAnimation);
-        loadout.specialFrames = buildAnimationFrames(loadout.specialAnimation);
-        loadout.ultimateFrames = buildAnimationFrames(loadout.ultimateAnimation);
+        loadout.idleFrames = buildAnimationFrames(loadout.idleAnimation, "idle");
+        loadout.getUpFrames = buildAnimationFrames(loadout.getUpAnimation, "getUp");
+        loadout.crouchFrames = buildAnimationFrames(loadout.crouchAnimation, "crouch");
+        loadout.jumpFrames = buildAnimationFrames(loadout.jumpAnimation, "jump");
+        loadout.specialFrames = buildAnimationFrames(loadout.specialAnimation, "special");
+        loadout.ultimateFrames = buildAnimationFrames(loadout.ultimateAnimation, "ultimate");
         return loadout;
       }
 

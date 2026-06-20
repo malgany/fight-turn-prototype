@@ -33,6 +33,15 @@ const characterConfigPaths = [
   "characters/doll/doll.json",
 ];
 
+const animationFrameLimits = {
+  idle: 60,
+  getUp: 90,
+  crouch: 90,
+  jump: 60,
+  special: 100,
+  ultimate: 120,
+};
+
 await rm(gameAssets, { recursive: true, force: true });
 await mkdir(gameAssets, { recursive: true });
 
@@ -137,7 +146,7 @@ async function validateCharacterFrames() {
   for (const configPath of characterConfigPaths) {
     const raw = await readFile(join(gameAssets, configPath), "utf8");
     const config = JSON.parse(raw);
-    for (const animation of Object.values(config.animations || {})) {
+    for (const [animationKey, animation] of Object.entries(config.animations || {})) {
       const framePattern = normalizeAssetPath(String(animation.framePattern || ""));
       const frameCount = Number(animation.frameCount || 0);
       const framePad = Number(animation.framePad || 0);
@@ -156,14 +165,28 @@ async function validateCharacterFrames() {
         throw new Error(`Invalid animation declaration in ${configPath}`);
       }
 
-      const requiredFrames = [];
-      for (let index = 0; index < frameCount; index += 1) {
-        const frame = frameStart + index * frameStep;
-        requiredFrames.push(framePattern.replace("{frame}", String(frame).padStart(framePad, "0")));
-      }
+      const frameNumbers = Array.from({ length: frameCount }, (_, index) => frameStart + index * frameStep);
+      const requiredFrames = sampleAnimationFrameNumbers(frameNumbers, animationFrameLimits[animationKey])
+        .map((frame) => framePattern.replace("{frame}", String(frame).padStart(framePad, "0")));
       await assertExistingAssets(requiredFrames);
     }
   }
+}
+
+function sampleAnimationFrameNumbers(frameNumbers, frameLimit) {
+  if (!Number.isInteger(frameLimit) || frameLimit < 1 || frameNumbers.length <= frameLimit) {
+    return frameNumbers;
+  }
+
+  if (frameLimit === 1) {
+    return [frameNumbers[0]];
+  }
+
+  const lastIndex = frameNumbers.length - 1;
+  return Array.from({ length: frameLimit }, (_, index) => {
+    const sourceIndex = Math.round((index * lastIndex) / (frameLimit - 1));
+    return frameNumbers[sourceIndex];
+  });
 }
 
 async function assertExistingAssets(assetPaths) {
