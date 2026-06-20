@@ -63,9 +63,10 @@
                        "jump":  {
                                     "label":  "Jump",
                                     "framePattern":  "../../game-assets/characters/doll-jump/doll-jump-{frame}.webp",
-                                    "frameCount":  113,
+                                    "frameCount":  57,
                                     "framePad":  3,
-                                    "frameIntervalMs":  18,
+                                    "frameStep":  2,
+                                    "frameIntervalMs":  23.4,
                                     "scale":  1.18,
                                     "offsetXPercent":  0,
                                     "offsetYPercent":  0,

@@ -141,12 +141,24 @@ async function validateCharacterFrames() {
       const framePattern = normalizeAssetPath(String(animation.framePattern || ""));
       const frameCount = Number(animation.frameCount || 0);
       const framePad = Number(animation.framePad || 0);
-      if (!framePattern || !framePattern.includes("{frame}") || !Number.isInteger(frameCount) || frameCount < 1) {
+      const frameStart = Number(animation.frameStart ?? 1);
+      const frameStep = Number(animation.frameStep ?? 1);
+      if (
+        !framePattern ||
+        !framePattern.includes("{frame}") ||
+        !Number.isInteger(frameCount) ||
+        frameCount < 1 ||
+        !Number.isInteger(frameStart) ||
+        frameStart < 1 ||
+        !Number.isInteger(frameStep) ||
+        frameStep < 1
+      ) {
         throw new Error(`Invalid animation declaration in ${configPath}`);
       }
 
       const requiredFrames = [];
-      for (let frame = 1; frame <= frameCount; frame += 1) {
+      for (let index = 0; index < frameCount; index += 1) {
+        const frame = frameStart + index * frameStep;
         requiredFrames.push(framePattern.replace("{frame}", String(frame).padStart(framePad, "0")));
       }
       await assertExistingAssets(requiredFrames);

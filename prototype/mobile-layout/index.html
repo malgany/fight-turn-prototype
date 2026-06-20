@@ -3227,6 +3227,7 @@
       const GUARANTEED_TURN_DURATION = 3000;
       const TURN_BREAK = 2800;
       const RESULT_REVEAL_DELAY = 720;
+      const SPRITE_ANIMATION_SETTLE_TIMEOUT_MS = 2500;
       const HEALTH_TRAIL_DELAY = 3000;
       const GET_UP_FIRST_FRAME_HOLD = 1000;
       const STAGES = [
@@ -3250,7 +3251,7 @@
         ninja: "../../game-assets/characters/ninja/ninja.json?v=20260608-special-position-plus",
         itzcoatl: "../../game-assets/characters/itzcoatl/itzcoatl.json?v=20260609-special-offset",
         aton: "../../game-assets/characters/urban/urban.json?v=20260608-aton-position-plus",
-        doll: "../../game-assets/characters/doll/doll.json?v=20260619-doll-get-up",
+        doll: "../../game-assets/characters/doll/doll.json?v=20260620-doll-jump-odd-slow",
       };
       const CHARACTER_PORTRAITS = {
         ninja: {
@@ -4036,8 +4037,10 @@
       }
 
       function buildAnimationFrames(animation) {
+        const frameStart = Number.isInteger(animation.frameStart) ? animation.frameStart : 1;
+        const frameStep = Number.isInteger(animation.frameStep) && animation.frameStep > 0 ? animation.frameStep : 1;
         return Array.from({ length: animation.frameCount }, (_, index) => {
-          const frame = String(index + 1).padStart(animation.framePad || 3, "0");
+          const frame = String(frameStart + index * frameStep).padStart(animation.framePad || 3, "0");
           return animation.framePattern.replace("{frame}", frame);
         });
       }
@@ -4217,6 +4220,7 @@
         const animation = spriteAnimations[side];
         if (animation) {
           window.clearTimeout(animation.timerId);
+          completeSpriteAnimation(animation);
           spriteAnimations[side] = null;
         }
         applySpriteDisplay(side, characterLoadoutForSide(side).idleAnimation);
@@ -4240,6 +4244,34 @@
         return animationConfig.frameIntervalMs;
       }
 
+      function completeSpriteAnimation(playback) {
+        if (playback?.complete && !playback.isDone) {
+          playback.isDone = true;
+          playback.complete();
+        }
+      }
+
+      function waitForActiveSpriteAnimations(maxWaitMs = SPRITE_ANIMATION_SETTLE_TIMEOUT_MS) {
+        const pending = Object.values(spriteAnimations)
+          .map((animation) => animation?.done)
+          .filter(Boolean);
+
+        if (!pending.length) {
+          return Promise.resolve();
+        }
+
+        return Promise.race([
+          Promise.allSettled(pending),
+          wait(maxWaitMs),
+        ]);
+      }
+
+      function scheduleStartTurnAfterSpriteAnimations(delayMs) {
+        window.setTimeout(() => {
+          void waitForActiveSpriteAnimations().then(startTurn);
+        }, delayMs);
+      }
+
       function animationStartDelay(animationConfig, targetFrameIndex) {
         const frameCount = Math.max(0, Math.min(animationConfig.frameCount || 0, targetFrameIndex));
         let duration = 0;
@@ -4254,9 +4286,17 @@
       function playSpriteAnimation(side, animationConfig, frames, { firstFrameHoldMs = 0, holdLastFrame = false } = {}) {
         clearSpriteAnimation(side);
 
-        const playback = { frameIndex: 0, timerId: null };
+        const playback = { frameIndex: 0, timerId: null, isDone: false, done: null, complete: null };
+        playback.done = new Promise((resolve) => {
+          playback.complete = resolve;
+        });
         spriteAnimations[side] = playback;
         applySpriteDisplay(side, animationConfig);
+
+        if (!frames.length) {
+          completeSpriteAnimation(playback);
+          return playback.done;
+        }
 
         const advance = () => {
           if (spriteAnimations[side] !== playback) {
@@ -4273,11 +4313,13 @@
 
           if (holdLastFrame) {
             playback.timerId = null;
+            completeSpriteAnimation(playback);
             return;
           }
 
           playback.timerId = window.setTimeout(() => {
             if (spriteAnimations[side] === playback) {
+              completeSpriteAnimation(playback);
               clearSpriteAnimation(side);
             }
           }, animationFrameDelay(animationConfig, playback.frameIndex - 1));
@@ -4287,10 +4329,11 @@
           fighterSprite(side).src = frames[0];
           playback.frameIndex = 1;
           playback.timerId = window.setTimeout(advance, firstFrameHoldMs);
-          return;
+          return playback.done;
         }
 
         advance();
+        return playback.done;
       }
 
       function animationPlaybackDuration(frames, animationConfig, { firstFrameHoldMs = 0 } = {}) {
@@ -6466,7 +6509,7 @@
               const loadout = characterLoadoutForSide(side);
               return Math.max(duration, GET_UP_FIRST_FRAME_HOLD + loadout.getUpFrames.length * loadout.getUpAnimation.frameIntervalMs + 220);
             }, 0);
-            window.setTimeout(startTurn, Math.max(TURN_BREAK, knockdownBreak, responseBreak));
+            scheduleStartTurnAfterSpriteAnimations(Math.max(TURN_BREAK, knockdownBreak, responseBreak));
           }, Math.max(360, ultimateCinematicBreak));
         }, RESULT_REVEAL_DELAY);
       }
@@ -7800,7 +7843,7 @@
           legacyResolveTurn();
           onlineBridge.allowLocalResolve = false;
           onlineBridge.resolutionTimerId = window.setTimeout(() => {
-            onlineBridgeFinishResolution(payload);
+            void waitForActiveSpriteAnimations().then(() => onlineBridgeFinishResolution(payload));
           }, resolutionDelay);
           return;
         }
