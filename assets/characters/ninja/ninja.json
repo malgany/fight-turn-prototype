@@ -1,6 +1,10 @@
 {
   "id": "ninja",
   "name": "Ninja",
+  "actionAudio": {
+    "special": "../../game-assets/audio/actions/special-ninja.mp3",
+    "ultimate": "../../game-assets/audio/actions/ultimate-ninja.mp3"
+  },
   "animations": {
     "idle": {
       "label": "Idle",

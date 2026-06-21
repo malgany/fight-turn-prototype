@@ -1,6 +1,17 @@
 {
     "id":  "doll",
     "name":  "Doll",
+    "actionAudio":  {
+                        "special":  {
+                                        "src":  "../../game-assets/audio/actions/special-doll.mp3",
+                                        "durationMs":  5874.649,
+                                        "fitToAnimation":  true
+                                    },
+                        "ultimate":  {
+                                         "src":  "../../game-assets/audio/actions/ultimate-doll.mp3",
+                                         "delayMs":  1800
+                                     }
+                    },
     "animations":  {
                        "idle":  {
                                     "label":  "Idle",

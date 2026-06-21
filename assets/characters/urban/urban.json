@@ -1,6 +1,14 @@
 {
   "id": "aton",
   "name": "Aton",
+  "actionAudio": {
+    "special": "../../game-assets/audio/actions/special-aton.mp3",
+    "ultimate": {
+      "src": "../../game-assets/audio/actions/ultimate-aton.mp3",
+      "delayMs": 1000,
+      "volume": 0.25
+    }
+  },
   "animations": {
     "idle": {
       "label": "Idle",

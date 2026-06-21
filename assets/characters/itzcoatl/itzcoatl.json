@@ -1,6 +1,18 @@
 {
   "id": "itzcoatl",
   "name": "Itzcóatl",
+  "actionAudio": {
+    "special": {
+      "src": "../../game-assets/audio/actions/special-itzcoatl.mp3",
+      "delayMs": 500,
+      "durationMs": 4876.19,
+      "fitToAnimation": true
+    },
+    "ultimate": {
+      "src": "../../game-assets/audio/actions/ultimate-itzcoatl.mp3",
+      "delayMs": 1000
+    }
+  },
   "animations": {
     "idle": {
       "label": "Idle",

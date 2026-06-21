@@ -919,6 +919,38 @@
         filter: drop-shadow(0 0 14px rgba(255, 40, 40, 0.72));
       }
 
+      .ultimate-caption {
+        position: absolute;
+        left: 8%;
+        right: 8%;
+        bottom: 10%;
+        z-index: 4;
+        display: none;
+        padding: 8px 10px;
+        border: 2px solid rgba(255, 225, 225, 0.82);
+        background: rgba(6, 8, 14, 0.78);
+        color: #fff6f0;
+        font-family: "Anime Ace BB", Arial, sans-serif;
+        font-size: clamp(9px, 2.9cqw, 15px);
+        font-weight: 900;
+        line-height: 1.25;
+        text-align: center;
+        text-shadow:
+          0 2px 0 #000,
+          0 0 6px rgba(255, 30, 30, 0.85);
+        box-shadow:
+          0 0 0 2px rgba(0, 0, 0, 0.72),
+          0 0 14px rgba(255, 28, 28, 0.36);
+      }
+
+      .ultimate-caption.is-visible {
+        display: block;
+      }
+
+      .ultimate-cinematic.p2 .ultimate-caption {
+        transform: scaleX(-1);
+      }
+
       .battle-token {
         position: absolute;
         top: 23%;
@@ -3046,6 +3078,7 @@
           <div class="ultimate-cinematic-panel" id="ultimateCinematicPanel">
             <img class="ultimate-label-red" id="ultimateLabelRed" src="../../game-assets/ui/ultimate/label-red.png?v=20260604-fullstage" alt="">
             <img class="ultimate-frame" id="ultimateFrame" src="../../game-assets/characters/ninja-ultimate/ninja-ultimate-001.webp" alt="">
+            <div class="ultimate-caption" id="ultimateCaption" aria-hidden="true"></div>
           </div>
         </div>
       </section>
@@ -3282,6 +3315,7 @@
       const ULTIMATE_CINEMATIC_INTRO_MS = 680;
       const ULTIMATE_CINEMATIC_HOLD_MS = 1000;
       const ULTIMATE_CINEMATIC_EXIT_MS = 180;
+      const DOLL_ULTIMATE_CAPTION = "Reator Vozrozhdenie, Iniciar protocolo de reconfiguração molecular.";
       const MENU_MUSIC_PATH = "../../game-assets/audio/i-fall-i-rise-fire-in-m.mp3";
       const BATTLE_MUSIC_PATH = "../../game-assets/audio/combo-clash-arena.mp3";
       const AUDIO_STORAGE_KEY = "fightTurn.audioEnabled";
@@ -3478,6 +3512,7 @@
         ultimateCinematicPanel: document.querySelector("#ultimateCinematicPanel"),
         ultimateLabelRed: document.querySelector("#ultimateLabelRed"),
         ultimateFrame: document.querySelector("#ultimateFrame"),
+        ultimateCaption: document.querySelector("#ultimateCaption"),
         startScreen: document.querySelector("#startScreen"),
         characterSelectScreen: document.querySelector("#characterSelectScreen"),
         characterPreviewArt: document.querySelector("#characterPreviewArt"),
@@ -3561,6 +3596,9 @@
         userActivated: false,
         musicElements: {},
         musicSources: {},
+        actionAudioElements: {},
+        actionAudioSources: {},
+        actionAudioTimers: [],
       };
 
       function canUseGameAudio() {
@@ -3656,6 +3694,9 @@
         state.audioEnabled = enabled;
         writeAudioPreference(enabled);
         syncAudioToggleUi();
+        if (!enabled) {
+          stopActionAudio();
+        }
       }
 
       function sfxGainValue() {
@@ -3948,6 +3989,145 @@
         audioState.musicSources[trackName].connect(audioState.musicGain);
       }
 
+      function actionAudioPath(actionAudio) {
+        if (typeof actionAudio === "string") {
+          return actionAudio;
+        }
+
+        return actionAudio?.src || null;
+      }
+
+      function actionAudioDelay(actionAudio) {
+        return typeof actionAudio?.delayMs === "number" ? Math.max(0, actionAudio.delayMs) : 0;
+      }
+
+      function actionAudioVolume(actionAudio) {
+        return typeof actionAudio?.volume === "number" ? Math.max(0, Math.min(1, actionAudio.volume)) : 1;
+      }
+
+      function getActionAudioElement(path) {
+        if (!path) {
+          return null;
+        }
+
+        if (audioState.actionAudioElements[path]) {
+          return audioState.actionAudioElements[path];
+        }
+
+        const audio = new Audio(path);
+        audio.preload = "auto";
+        audio.volume = 1;
+        audioState.actionAudioElements[path] = audio;
+        return audio;
+      }
+
+      function connectActionAudioSource(path) {
+        if (!audioState.context || !audioState.sfxGain || audioState.actionAudioSources[path]) {
+          return;
+        }
+
+        const audio = getActionAudioElement(path);
+        if (!audio) {
+          return;
+        }
+
+        audioState.actionAudioSources[path] = audioState.context.createMediaElementSource(audio);
+        audioState.actionAudioSources[path].connect(audioState.sfxGain);
+      }
+
+      function preloadActionAudio(actionAudio) {
+        const path = actionAudioPath(actionAudio);
+        const audio = getActionAudioElement(path);
+        if (audio) {
+          audio.load();
+        }
+      }
+
+      function actionAudioPlaybackRate(actionAudio, fitToDurationMs) {
+        if (!actionAudio?.fitToAnimation || !Number.isFinite(fitToDurationMs) || fitToDurationMs <= 0) {
+          return 1;
+        }
+
+        const durationMs = Number(actionAudio.durationMs || 0);
+        if (!Number.isFinite(durationMs) || durationMs <= 0) {
+          return 1;
+        }
+
+        return Math.max(0.25, durationMs / fitToDurationMs);
+      }
+
+      function trackActionAudioTimer(timerId) {
+        audioState.actionAudioTimers.push(timerId);
+        return timerId;
+      }
+
+      function untrackActionAudioTimer(timerId) {
+        audioState.actionAudioTimers = audioState.actionAudioTimers.filter((entry) => entry !== timerId);
+      }
+
+      function stopAudioElement(audio) {
+        audio.pause();
+        audio.playbackRate = 1;
+        try {
+          audio.currentTime = 0;
+        } catch {
+        }
+      }
+
+      function playActionAudio(actionAudio, options = {}) {
+        const path = actionAudioPath(actionAudio);
+        if (!path || !canUseGameAudio()) {
+          return;
+        }
+
+        audioState.userActivated = true;
+
+        if (!state.audioEnabled) {
+          return;
+        }
+
+        const delayMs = actionAudioDelay(actionAudio);
+        if (delayMs > 0) {
+          const timerId = window.setTimeout(() => {
+            untrackActionAudioTimer(timerId);
+            playActionAudio({ ...actionAudio, delayMs: 0 }, options);
+          }, delayMs);
+          trackActionAudioTimer(timerId);
+          return;
+        }
+
+        const context = getAudioContext();
+        if (!context || !audioState.sfxGain) {
+          return;
+        }
+
+        resumeAudioContext(context);
+        connectActionAudioSource(path);
+
+        const audio = getActionAudioElement(path);
+        if (!audio) {
+          return;
+        }
+
+        stopAudioElement(audio);
+        audio.volume = actionAudioVolume(actionAudio);
+        audio.playbackRate = actionAudioPlaybackRate(actionAudio, options.fitToDurationMs);
+        audio.preservesPitch = false;
+        audio.play().catch(() => {});
+      }
+
+      function playLoadoutActionAudio(loadout, actionName, options = {}) {
+        playActionAudio(loadout?.actionAudio?.[actionName], options);
+      }
+
+      function stopActionAudio() {
+        audioState.actionAudioTimers.forEach((timerId) => window.clearTimeout(timerId));
+        audioState.actionAudioTimers = [];
+        Object.values(audioState.actionAudioElements).forEach((audio) => {
+          stopAudioElement(audio);
+        });
+      }
+
       function startAudioTrack(trackName) {
         const music = getMusicElement(trackName);
 
@@ -4081,6 +4261,7 @@
           jumpAnimation: animations.jump,
           specialAnimation: animations.special,
           ultimateAnimation: animations.ultimate,
+          actionAudio: config.actionAudio || {},
         };
 
         loadout.idleFrames = buildAnimationFrames(loadout.idleAnimation, "idle");
@@ -4206,6 +4387,8 @@
         preloadFrames(loadout.jumpFrames);
         preloadFrames(loadout.specialFrames);
         preloadFrames(loadout.ultimateFrames);
+        preloadActionAudio(loadout.actionAudio?.special);
+        preloadActionAudio(loadout.actionAudio?.ultimate);
       }
 
       function preloadActiveCharacterFrames() {
@@ -4471,6 +4654,10 @@
         sides.forEach((side) => {
           const loadout = characterLoadoutForSide(side);
           scheduleSpecialLunge(side);
+          const specialDurationMs = animationPlaybackDuration(loadout.specialFrames, loadout.specialAnimation);
+          playLoadoutActionAudio(loadout, "special", {
+            fitToDurationMs: specialDurationMs,
+          });
           playSpriteAnimation(side, loadout.specialAnimation, loadout.specialFrames);
         });
       }
@@ -4554,10 +4741,20 @@
         ultimateCinematicState.timers.forEach((timerId) => window.clearTimeout(timerId));
         ultimateCinematicState.timers = [];
         el.ultimateCinematic.classList.remove("is-active", "is-playing", "p1", "p2");
+        el.ultimateCaption.classList.remove("is-visible");
+        el.ultimateCaption.textContent = "";
+        el.ultimateCaption.setAttribute("aria-hidden", "true");
         const loadout = characterLoadoutForSide("p1");
         if (loadout.ultimateFrames.length) {
           el.ultimateFrame.src = loadout.ultimateFrames[0];
         }
+      }
+
+      function syncUltimateCaption(loadout) {
+        const showCaption = loadout.id === "doll";
+        el.ultimateCaption.textContent = showCaption ? DOLL_ULTIMATE_CAPTION : "";
+        el.ultimateCaption.classList.toggle("is-visible", showCaption);
+        el.ultimateCaption.setAttribute("aria-hidden", String(!showCaption));
       }
 
       function playUltimateCinematic(side) {
@@ -4570,12 +4767,14 @@
 
         clearUltimateCinematic();
         el.ultimateFrame.src = frames[0];
+        syncUltimateCaption(loadout);
         el.ultimateCinematic.classList.add("is-active", side);
 
         const firstFrameHoldMs = animation.firstFrameHoldMs || 0;
         const playbackStartMs = ULTIMATE_CINEMATIC_INTRO_MS + ULTIMATE_CINEMATIC_HOLD_MS + firstFrameHoldMs;
         const playbackDurationMs = frames.length * animation.frameIntervalMs;
         const totalDurationMs = playbackStartMs + playbackDurationMs + ULTIMATE_CINEMATIC_EXIT_MS;
+        playLoadoutActionAudio(loadout, "ultimate");
 
         scheduleUltimateCinematic(() => {
           let frameIndex = 1;
