@@ -84,7 +84,7 @@
                                        "framePattern":  "../../game-assets/characters/doll-special/doll-special-{frame}.webp",
                                        "frameCount":  176,
                                        "framePad":  3,
-                                       "frameIntervalMs":  12,
+                                       "frameIntervalMs":  8,
                                        "scale":  2.64,
                                        "offsetXPercent":  0,
                                        "offsetYPercent":  0,
