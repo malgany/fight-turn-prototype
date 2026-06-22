@@ -537,6 +537,10 @@ export class App {
       p2: { ...state[opponentSide] },
       advantage: this.displaySideFor(match, state.advantage),
       activeGuaranteedTurn: this.mapGuaranteedTurn(match, state.activeGuaranteedTurn),
+      itzcoatlResurrectionUsed: {
+        p1: Boolean(state.itzcoatlResurrectionUsed?.[match.playerSide]),
+        p2: Boolean(state.itzcoatlResurrectionUsed?.[opponentSide]),
+      },
       turnNumber: state.turnNumber,
     };
   }

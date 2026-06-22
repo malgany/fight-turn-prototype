@@ -45,6 +45,7 @@ export function createInitialBattleState(): BattleState {
     p2: { health: 100, super: 0 },
     advantage: null,
     activeGuaranteedTurn: null,
+    itzcoatlResurrectionUsed: { p1: false, p2: false },
     turnNumber: 1,
   };
 }
@@ -74,6 +75,7 @@ function cloneState(state: BattleState): BattleState {
     p2: { ...state.p2 },
     advantage: state.advantage,
     activeGuaranteedTurn: state.activeGuaranteedTurn ? { ...state.activeGuaranteedTurn, allowedActions: [...state.activeGuaranteedTurn.allowedActions] } : null,
+    itzcoatlResurrectionUsed: { ...(state.itzcoatlResurrectionUsed || {}) },
     turnNumber: state.turnNumber,
   };
 }
@@ -113,6 +115,18 @@ function isDoll(side: Side, context: BattleCharacterContext): boolean {
   return (side === "p1" ? context.p1CharacterId : context.p2CharacterId) === "doll";
 }
 
+function isKrampus(side: Side, context: BattleCharacterContext): boolean {
+  return (side === "p1" ? context.p1CharacterId : context.p2CharacterId) === "ninja";
+}
+
+function isItzcoatl(side: Side, context: BattleCharacterContext): boolean {
+  return (side === "p1" ? context.p1CharacterId : context.p2CharacterId) === "itzcoatl";
+}
+
+function isAton(side: Side, context: BattleCharacterContext): boolean {
+  return (side === "p1" ? context.p1CharacterId : context.p2CharacterId) === "aton";
+}
+
 function isDollAction(side: Side, action: Action | "Wait" | null, expectedAction: Action, context: BattleCharacterContext): boolean {
   return action === expectedAction && isDoll(side, context);
 }
@@ -128,6 +142,68 @@ function isDollUltimate(side: Side, action: Action | "Wait" | null, context: Bat
 function causesKnockdown(action: Action | "Wait", targetAction: Action | "Wait", winner: Side, context: BattleCharacterContext): boolean {
   if (action === "Grab" || action === "Special" || action === "Super") return true;
   return action === "Combo" && targetAction === "Jump";
+}
+
+function actionDamage(side: Side, action: Action | "Wait", context: BattleCharacterContext): number {
+  if (action === "Wait") return 0;
+  if (isDollSpecial(side, action, context)) return 10;
+  if (isKrampus(side, context) && action === "Special") return 13;
+  if (isKrampus(side, context) && action === "Super") return 30;
+  return actionData[action].damage || 0;
+}
+
+function blockDamage(attacker: Side, attack: Action, beforeState: BattleState, context: BattleCharacterContext): number {
+  const baseChip = blockChip[attack] || 0;
+  const atonBonus = isAton(attacker, context) && beforeState[attacker].super >= 3 ? 4 : 0;
+  return baseChip + atonBonus;
+}
+
+function applyKrampusKnockdownPassive(state: BattleState, side: Side, knockedDown: Side[], context: BattleCharacterContext): void {
+  if (knockedDown.length > 0 && isKrampus(side, context)) {
+    state[side].super = Math.min(3, state[side].super + 1);
+  }
+}
+
+function addHealingToResult<T extends { healed: Side[]; healing?: Partial<Record<Side, number>> }>(result: T, side: Side, amount: number): T {
+  if (amount <= 0) return result;
+
+  return {
+    ...result,
+    healed: result.healed.includes(side) ? result.healed : [...result.healed, side],
+    healing: {
+      ...(result.healing || {}),
+      [side]: (result.healing?.[side] || 0) + amount,
+    },
+  };
+}
+
+function applyDollTurnStartPassive<T extends { healed: Side[]; healing?: Partial<Record<Side, number>> }>(
+  state: BattleState,
+  result: T,
+  context: BattleCharacterContext,
+): T {
+  let nextResult = result;
+  (["p1", "p2"] as Side[]).forEach((side) => {
+    if (!isDoll(side, context) || state[side].health <= 0) return;
+    const healedAmount = applyHeal(state, side, 1);
+    nextResult = addHealingToResult(nextResult, side, healedAmount);
+  });
+  return nextResult;
+}
+
+function applyItzcoatlResurrection<T extends { healed: Side[]; healing?: Partial<Record<Side, number>> }>(
+  state: BattleState,
+  result: T,
+  context: BattleCharacterContext,
+): T {
+  let nextResult = result;
+  (["p1", "p2"] as Side[]).forEach((side) => {
+    if (!isItzcoatl(side, context) || state[side].health > 0 || state.itzcoatlResurrectionUsed?.[side]) return;
+    state[side].health = 1;
+    state.itzcoatlResurrectionUsed = { ...state.itzcoatlResurrectionUsed, [side]: true };
+    nextResult = addHealingToResult(nextResult, side, 1);
+  });
+  return nextResult;
 }
 
 function guaranteeTurn(side: Side, allowedActions: Action[], reason: string): GuaranteedTurn {
@@ -157,7 +233,7 @@ function baseResult(state: BattleState, p1Action: Action | null, p2Action: Actio
 }
 
 function resolveDollUltimateHeal(state: BattleState, side: Side) {
-  const healedAmount = applyHeal(state, side, 28);
+  const healedAmount = applyHeal(state, side, 30);
   state.advantage = null;
 
   return {
@@ -174,17 +250,43 @@ function resolveDollUltimateHeal(state: BattleState, side: Side) {
   };
 }
 
+function resolveBothDollUltimatesHeal(state: BattleState) {
+  const p1HealedAmount = applyHeal(state, "p1", 30);
+  const p2HealedAmount = applyHeal(state, "p2", 30);
+  state.advantage = null;
+
+  return {
+    type: "draw" as const,
+    winner: null,
+    loser: null,
+    primary: "DOLL.EXE RECUPEROU",
+    secondary: "As duas Doll.exe recuperaram vida",
+    damaged: [],
+    healed: ([
+      ...(p1HealedAmount > 0 ? ["p1"] : []),
+      ...(p2HealedAmount > 0 ? ["p2"] : []),
+    ] as Side[]),
+    healing: {
+      ...(p1HealedAmount > 0 ? { p1: p1HealedAmount } : {}),
+      ...(p2HealedAmount > 0 ? { p2: p2HealedAmount } : {}),
+    },
+    knockedDown: [],
+    guaranteedTurn: null,
+  };
+}
+
 function resolveHit(state: BattleState, winner: Side, p1Action: Action | "Wait", p2Action: Action | "Wait", advantageWin = false, context: BattleCharacterContext = {}) {
   const loser = opposite(winner);
   const action = winner === "p1" ? p1Action : p2Action;
   const targetAction = winner === "p1" ? p2Action : p1Action;
   const isDollSpecialHit = isDollSpecial(winner, action, context);
-  const damage = action === "Wait" ? 0 : isDollSpecialHit ? 10 : actionData[action].damage || 0;
+  const damage = actionDamage(winner, action, context);
   const knockedDown = causesKnockdown(action, targetAction, winner, context) ? [loser] : [];
   const guaranteedTurn = action === "Combo" && targetAction !== "Jump" ? guaranteeTurn(winner, comboGuaranteedActions, "COMBO ACERTOU") : null;
 
   applyDamage(state, loser, damage, action);
-  const healedAmount = isDollSpecialHit ? applyHeal(state, winner, Math.round(state[winner].health * 0.1)) : 0;
+  applyKrampusKnockdownPassive(state, winner, knockedDown, context);
+  const healedAmount = isDollSpecialHit ? applyHeal(state, winner, 10) : 0;
   state.advantage = winner;
 
   return {
@@ -253,7 +355,7 @@ function resolveAttackVsAttack(state: BattleState, p1Action: Action, p2Action: A
   return resolveHit(state, winner, p1Action, p2Action, speedGap <= 1 && state.advantage === winner && !ignoresAdvantage, context);
 }
 
-function resolveAttackVsResponse(state: BattleState, attacker: Side, attack: Action, response: Action, context: BattleCharacterContext) {
+function resolveAttackVsResponse(state: BattleState, attacker: Side, attack: Action, response: Action, context: BattleCharacterContext, beforeState: BattleState) {
   const defender = opposite(attacker);
   const wins: Partial<Record<Action, Action[]>> = {
     Poke: ["Crouch", "Jump"],
@@ -268,7 +370,7 @@ function resolveAttackVsResponse(state: BattleState, attacker: Side, attack: Act
   }
 
   if (response === "Block" && blockChip[attack] !== undefined) {
-    const chip = blockChip[attack] || 0;
+    const chip = blockDamage(attacker, attack, beforeState, context);
     applyDamage(state, defender, chip, attack, { blocked: true });
     state.advantage = defender;
     return {
@@ -353,8 +455,16 @@ export function resolveBattleTurn(currentState: BattleState, p1Action: Action | 
     : isDollUltimate("p2", p2Action, context)
       ? "p2"
       : null;
+  const p1DollUltimate = isDollUltimate("p1", p1Action, context);
+  const p2DollUltimate = isDollUltimate("p2", p2Action, context);
 
-  if (dollUltimateSide && guaranteedTurn?.side === dollUltimateSide) {
+  if (p1DollUltimate && p2DollUltimate) {
+    partial = { ...partial, ...resolveBothDollUltimatesHeal(state) };
+  } else if (p1DollUltimate && p2Action && attackActions.includes(p2Action)) {
+    partial = { ...partial, ...resolveHit(state, "p2", "Super", p2Action, false, context) };
+  } else if (p2DollUltimate && p1Action && attackActions.includes(p1Action)) {
+    partial = { ...partial, ...resolveHit(state, "p1", p1Action, "Super", false, context) };
+  } else if (dollUltimateSide) {
     partial = { ...partial, ...resolveDollUltimateHeal(state, dollUltimateSide) };
   } else if (!p1Action && !p2Action) {
     state.advantage = null;
@@ -376,9 +486,9 @@ export function resolveBattleTurn(currentState: BattleState, p1Action: Action | 
   } else if (attackActions.includes(p1Action) && attackActions.includes(p2Action)) {
     partial = { ...partial, ...resolveAttackVsAttack(state, p1Action, p2Action, context) };
   } else if (attackActions.includes(p1Action)) {
-    partial = { ...partial, ...resolveAttackVsResponse(state, "p1", p1Action, p2Action, context) };
+    partial = { ...partial, ...resolveAttackVsResponse(state, "p1", p1Action, p2Action, context, currentState) };
   } else if (attackActions.includes(p2Action)) {
-    partial = { ...partial, ...resolveAttackVsResponse(state, "p2", p2Action, p1Action, context) };
+    partial = { ...partial, ...resolveAttackVsResponse(state, "p2", p2Action, p1Action, context, currentState) };
   } else {
     state.advantage = null;
     partial = { ...partial, primary: "NEUTRO", secondary: `${displayActionName(p1Action)} vs ${displayActionName(p2Action)}` };
@@ -387,9 +497,17 @@ export function resolveBattleTurn(currentState: BattleState, p1Action: Action | 
   state.activeGuaranteedTurn = partial.guaranteedTurn;
   state.turnNumber = currentState.turnNumber + 1;
 
-  const p1Dead = state.p1.health <= 0;
-  const p2Dead = state.p2.health <= 0;
-  const matchWinner = p1Dead && p2Dead ? null : p1Dead ? "p2" : p2Dead ? "p1" : null;
+  partial = applyItzcoatlResurrection(state, partial, context);
+
+  const p1DeadAfterResurrection = state.p1.health <= 0;
+  const p2DeadAfterResurrection = state.p2.health <= 0;
+  if (!p1DeadAfterResurrection && !p2DeadAfterResurrection) {
+    partial = applyDollTurnStartPassive(state, partial, context);
+  }
+
+  const p1DeadAfterPassive = state.p1.health <= 0;
+  const p2DeadAfterPassive = state.p2.health <= 0;
+  const matchWinner = p1DeadAfterPassive && p2DeadAfterPassive ? null : p1DeadAfterPassive ? "p2" : p2DeadAfterPassive ? "p1" : null;
 
   return {
     ...partial,
@@ -397,7 +515,7 @@ export function resolveBattleTurn(currentState: BattleState, p1Action: Action | 
     p2Action,
     before,
     after: state,
-    finished: p1Dead || p2Dead,
+    finished: p1DeadAfterPassive || p2DeadAfterPassive,
     matchWinner,
   };
 }

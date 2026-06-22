@@ -79,6 +79,7 @@ export interface BattleState {
   p2: FighterState;
   advantage: Side | null;
   activeGuaranteedTurn: GuaranteedTurn | null;
+  itzcoatlResurrectionUsed?: Partial<Record<Side, boolean>>;
   turnNumber: number;
 }
 

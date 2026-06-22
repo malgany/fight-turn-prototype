@@ -1,5 +1,19 @@
-const STATIC_CACHE = "fight-turn-static-v5";
+const STATIC_CACHE = "fight-turn-static-v6";
 const STATIC_PATHS = ["/assets/", "/game-assets/", "/prototype/"];
+const STATIC_CONTENT_TYPES = {
+  ".css": "text/css",
+  ".gif": "image/gif",
+  ".html": "text/html",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".js": "text/javascript",
+  ".json": "application/json",
+  ".mp3": "audio/mpeg",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+  ".ttf": "font/ttf",
+  ".webp": "image/webp",
+};
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -37,7 +51,7 @@ async function networkFirst(request) {
   const cache = await caches.open(STATIC_CACHE);
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    if (shouldCacheResponse(request, response)) {
       cache.put(request, response.clone()).catch(() => {});
     }
     return response;
@@ -58,8 +72,21 @@ async function cacheFirst(request) {
   }
 
   const response = await fetch(request);
-  if (response.ok) {
+  if (shouldCacheResponse(request, response)) {
     cache.put(request, response.clone()).catch(() => {});
   }
   return response;
+}
+
+function shouldCacheResponse(request, response) {
+  if (!response.ok) {
+    return false;
+  }
+
+  const expectedType = STATIC_CONTENT_TYPES[new URL(request.url).pathname.match(/\.[^.\/]+$/)?.[0] || ""];
+  if (!expectedType) {
+    return true;
+  }
+
+  return (response.headers.get("content-type") || "").toLowerCase().startsWith(expectedType);
 }
