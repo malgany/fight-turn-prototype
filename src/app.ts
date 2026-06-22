@@ -78,6 +78,10 @@ function initialScreenForRoute(): Screen {
   return window.location.pathname.startsWith("/online") || window.location.pathname.startsWith("/auth/callback") ? "online" : "menu";
 }
 
+function legacyMainMenuUrl(): string {
+  return appRouteUrl("prototype/mobile-layout/?skipIntro=1");
+}
+
 function usesMobileStage(screen: Screen): boolean {
   return [
     "login",
@@ -319,10 +323,10 @@ export class App {
         break;
       case "post-match-menu":
         await this.choosePostMatch("lobby");
-        window.location.assign(appRouteUrl("prototype/mobile-layout/"));
+        window.location.assign(legacyMainMenuUrl());
         break;
       case "legacy-menu":
-        window.location.assign(appRouteUrl("prototype/mobile-layout/"));
+        window.location.assign(legacyMainMenuUrl());
         break;
     }
   }
@@ -808,6 +812,7 @@ export class App {
           ${usesBattleStage ? "" : this.renderStatus()}
           ${this.renderScreen()}
         </div>
+        ${this.renderLoadingOverlay()}
       </main>
     `;
     this.bindRenderedControls();
@@ -944,9 +949,18 @@ export class App {
       : "";
     return `
       ${demo}
-      ${this.state.loading ? `<div class="banner loading">${escapeHtml(this.state.info || "Carregando...")}</div>` : ""}
       ${this.state.error ? `<div class="banner error">${escapeHtml(this.state.error)}</div>` : ""}
       ${this.state.info && !this.state.loading ? `<div class="banner info">${escapeHtml(this.state.info)}</div>` : ""}
+    `;
+  }
+
+  private renderLoadingOverlay(): string {
+    if (!this.state.loading) return "";
+    return `
+      <section class="loading-overlay" role="status" aria-live="polite" aria-label="${escapeHtml(this.state.info || "Carregando...")}">
+        <img class="loading-spinner" src="/game-assets/ui/loading/loading-spinner.webp?v=20260622-key2" alt="">
+        <div class="loading-text">${escapeHtml(this.state.info || "Carregando...")}</div>
+      </section>
     `;
   }
 
@@ -1206,7 +1220,7 @@ export class App {
       <iframe
         class="legacy-online-battle-frame"
         data-legacy-online-battle
-        src="${appRouteUrl("prototype/mobile-layout/?onlineBridge=1&v=20260619-end-fight-reveal-v1")}"
+        src="${appRouteUrl("prototype/mobile-layout/?onlineBridge=1&v=20260622-match-loading-v1")}"
         title="Batalha online Final Genesis"
       ></iframe>
     `;

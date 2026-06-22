@@ -77,6 +77,9 @@ await mkdir(resolve(dist, "auth", "callback"), { recursive: true });
 await cp(spaIndex, resolve(dist, "auth", "callback", "index.html"), {
   force: true,
 });
+await cp(spaIndex, resolve(dist, "auth", "callback.html"), {
+  force: true,
+});
 
 await rm(resolve(dist, "prototype"), {
   recursive: true,

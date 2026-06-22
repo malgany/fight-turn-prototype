@@ -4,6 +4,21 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <title>Final Genesis - Mobile Layout</title>
+    <script>
+      (() => {
+        const introCompletedKey = "finalGenesis.introCompleted";
+        const params = new URLSearchParams(window.location.search);
+        let skipOpeningIntro = params.get("skipIntro") === "1";
+        try {
+          skipOpeningIntro = skipOpeningIntro || window.sessionStorage.getItem(introCompletedKey) === "1";
+        } catch {
+          // Session storage is optional in embedded/native shells.
+        }
+        if (skipOpeningIntro) {
+          document.documentElement.classList.add("skip-opening-intro");
+        }
+      })();
+    </script>
     <style>
       @font-face {
         font-family: "Anime Ace BB";
@@ -26,6 +41,9 @@
         --health-frame: url("../../game-assets/ui/hud/health-frame.webp?v=20260605-health-frame");
         --arena-background: url("../../game-assets/backgrounds/stage-training-zone.png?v=20260619-stages");
         --title-screen-art: url("../../game-assets/backgrounds/title-screen-fighters.webp?v=20260605-1340");
+        --intro-splash-logo: url("../../game-assets/ui/intro/malgany-play-logo.webp?v=20260622-intro");
+        --intro-final-genesis-logo: url("../../game-assets/ui/intro/final-genesis-intro-logo.webp?v=20260622-intro-logo");
+        --intro-consent-bg: url("../../game-assets/ui/intro/start-consent-bg.webp?v=20260622-intro");
         --menu-button-play: url("../../game-assets/ui/menu/jogar.webp?v=20260605-1340");
         --menu-button-online: url("../../game-assets/ui/menu/online.png?v=20260609-1714");
         --menu-button-help: url("../../game-assets/ui/menu/ajuda.webp?v=20260605-1340");
@@ -1197,6 +1215,8 @@
         z-index: 112;
         display: grid;
         place-items: center;
+        align-content: center;
+        gap: clamp(10px, 3cqw, 16px);
         background:
           radial-gradient(circle at 50% 46%, rgba(5, 9, 18, 0.08), rgba(5, 9, 18, 0.58) 72%),
           rgba(5, 9, 18, 0.18);
@@ -1211,11 +1231,22 @@
         display: none;
       }
 
+      .online-bridge-loading-spinner {
+        display: none;
+        width: clamp(86px, 24cqw, 128px);
+        aspect-ratio: 1;
+        object-fit: contain;
+      }
+
+      .online-bridge-start-layer.is-loading .online-bridge-loading-spinner {
+        display: block;
+      }
+
       .online-bridge-start-text {
         padding: 8px 18px;
         color: #f2f6ff;
         font-family: "Anime Ace BB", Arial, sans-serif;
-        font-size: clamp(28px, 10cqw, 56px);
+        font-size: clamp(18px, 5.4cqw, 30px);
         line-height: 1;
         text-align: center;
         text-shadow:
@@ -1223,6 +1254,10 @@
           0 0 16px rgba(99, 215, 255, 0.86),
           0 0 28px rgba(228, 38, 45, 0.54);
         transform: skewX(-8deg);
+      }
+
+      .online-bridge-start-layer:not(.is-loading) .online-bridge-start-text {
+        font-size: clamp(28px, 10cqw, 56px);
       }
 
       .advanced-debug-selection {
@@ -1741,23 +1776,22 @@
         align-content: center;
         gap: clamp(4px, 1.4cqw, 9px);
         width: min(86%, 430px);
-        aspect-ratio: 960 / 640;
-        padding: 7% 8%;
+        padding: 0;
         border: 0;
-        background: var(--battle-over-panel-art) center / 100% 100% no-repeat;
-        filter: drop-shadow(0 14px 16px rgba(0, 0, 0, 0.62));
+        background: transparent;
+        filter: none;
       }
 
       .battle-over-title {
         max-width: 100%;
-        color: #080808;
+        color: #ffffff;
         font-size: clamp(22px, 7.4cqw, 38px);
         line-height: 0.95;
         text-align: center;
         text-shadow:
           2px 2px 0 #e01818,
-          0 3px 0 rgba(255, 255, 255, 0.82),
-          0 0 10px rgba(255, 255, 255, 0.72);
+          0 3px 0 rgba(0, 0, 0, 0.82),
+          0 0 10px rgba(0, 0, 0, 0.72);
       }
 
       .battle-over-button {
@@ -1800,6 +1834,15 @@
 
       .screen.is-hidden {
         display: none;
+      }
+
+      html.skip-opening-intro .splash-screen,
+      html.skip-opening-intro .consent-screen {
+        display: none;
+      }
+
+      html.skip-opening-intro .start-screen.is-hidden {
+        display: grid;
       }
 
       .exit-confirm {
@@ -1861,6 +1904,110 @@
         background: linear-gradient(#d42020, #891111);
       }
 
+      .splash-screen {
+        place-items: center;
+        padding: 9%;
+        background: #ffffff;
+      }
+
+      .splash-logo {
+        width: min(72%, 360px);
+        display: block;
+        object-fit: contain;
+      }
+
+      .consent-screen {
+        grid-template-rows: auto 1fr auto;
+        align-content: stretch;
+        justify-items: center;
+        padding: 5.5% 6% 7%;
+        background:
+          linear-gradient(to bottom, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.18) 44%, rgba(0, 0, 0, 0.64) 78%, rgba(0, 0, 0, 0.88)),
+          var(--intro-consent-bg) center / cover no-repeat;
+        overflow: hidden;
+      }
+
+      .consent-logo {
+        width: min(44%, 220px);
+        display: block;
+        object-fit: contain;
+        filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.58));
+      }
+
+      .consent-content {
+        align-self: end;
+        width: min(100%, 420px);
+        display: grid;
+        justify-items: center;
+        gap: clamp(9px, 2.7cqw, 14px);
+        text-align: center;
+      }
+
+      .consent-start-button {
+        width: min(62%, 270px);
+        min-height: clamp(42px, 11.5cqw, 58px);
+        border: 1px solid rgba(178, 246, 255, 0.78);
+        border-radius: 7px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 46%),
+          linear-gradient(180deg, #54d7e7, #168ba3);
+        color: #ffffff;
+        font: inherit;
+        font-size: clamp(13px, 4.1cqw, 20px);
+        line-height: 1;
+        text-shadow: 0 2px 0 rgba(0, 0, 0, 0.46);
+        box-shadow:
+          inset 0 -4px 0 rgba(0, 0, 0, 0.24),
+          inset 0 2px 0 rgba(255, 255, 255, 0.26),
+          0 9px 0 rgba(0, 0, 0, 0.34);
+        cursor: pointer;
+        transition: transform 150ms ease, filter 150ms ease;
+      }
+
+      .consent-copy {
+        margin: 0;
+        color: #ffffff;
+        font-size: clamp(7px, 2cqw, 10px);
+        line-height: 1.28;
+        max-width: min(94%, 390px);
+        text-shadow:
+          0 2px 0 rgba(0, 0, 0, 0.92),
+          0 0 8px rgba(0, 0, 0, 0.82);
+      }
+
+      .consent-copy span {
+        white-space: nowrap;
+      }
+
+      .consent-links {
+        width: min(96%, 430px);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: clamp(18px, 9cqw, 64px);
+        align-items: center;
+      }
+
+      .consent-links a {
+        color: #64ddec;
+        font-size: clamp(7px, 1.9cqw, 10px);
+        line-height: 1.2;
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 3px;
+        white-space: nowrap;
+        text-shadow:
+          0 2px 0 rgba(0, 0, 0, 0.96),
+          0 0 8px rgba(0, 0, 0, 0.72);
+      }
+
+      .consent-links a:first-child {
+        justify-self: start;
+      }
+
+      .consent-links a:last-child {
+        justify-self: end;
+      }
+
       .start-screen {
         grid-template-rows: auto auto;
         align-content: center;
@@ -1893,11 +2040,11 @@
       .menu-actions {
         display: grid;
         justify-items: center;
-        gap: clamp(0px, 0.8cqw, 5px);
+        gap: clamp(0px, 0.6cqw, 4px);
       }
 
       .menu-button {
-        width: min(82%, 360px);
+        width: min(62%, 270px);
         aspect-ratio: 960 / 300;
         min-height: 0;
         border: 0;
@@ -1943,6 +2090,7 @@
       }
 
       .menu-button:focus-visible,
+      .consent-start-button:focus-visible,
       .character-card:focus-visible,
       .character-select-button:focus-visible,
       .help-tab:focus-visible,
@@ -1964,6 +2112,7 @@
 
       @media (hover: hover) and (pointer: fine) {
         .menu-button:hover:not(:disabled),
+        .consent-start-button:hover:not(:disabled),
         .character-select-button:hover:not(:disabled),
         .help-back:hover:not(:disabled),
         .battle-over-button:hover:not(:disabled),
@@ -2004,6 +2153,8 @@
 
       .menu-button:active,
       .menu-button.is-pressing,
+      .consent-start-button:active,
+      .consent-start-button.is-pressing,
       .help-tab:active,
       .help-tab.is-pressing,
       .character-select-button:active,
@@ -2313,7 +2464,9 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         align-items: end;
         gap: clamp(16px, 4.5cqw, 26px);
-        padding: 0 2%;
+        width: 125%;
+        margin-left: -12.5%;
+        padding: 0;
       }
 
       .character-select-button {
@@ -2737,7 +2890,23 @@
   </head>
   <body>
     <main class="phone" aria-label="Final Genesis mobile battle layout prototype">
-      <section class="screen start-screen" id="startScreen" aria-label="Tela inicial">
+      <section class="screen splash-screen" id="splashScreen" aria-label="Malgany Play">
+        <img class="splash-logo" src="../../game-assets/ui/intro/malgany-play-logo.webp?v=20260622-intro" alt="Malgany Play" draggable="false">
+      </section>
+
+      <section class="screen consent-screen is-hidden" id="consentScreen" aria-label="Boas-vindas">
+        <img class="consent-logo" src="../../game-assets/ui/intro/final-genesis-intro-logo.webp?v=20260622-intro-logo" alt="Final Genesis" draggable="false">
+        <div class="consent-content">
+          <button class="consent-start-button" type="button" id="consentStartButton">COMEÇAR JOGO</button>
+          <p class="consent-copy">Ao clicar no botão <span>[Começar jogo]</span> ou continuar a acessar o jogo,<br>você leu e concordou com os seguintes termos.</p>
+          <nav class="consent-links" aria-label="Termos legais">
+            <a href="../../terms.html" target="_blank" rel="noopener noreferrer">Termos de Serviço</a>
+            <a href="../../privacy.html" target="_blank" rel="noopener noreferrer">Política de Privacidade</a>
+          </nav>
+        </div>
+      </section>
+
+      <section class="screen start-screen is-hidden" id="startScreen" aria-label="Tela inicial">
         <div class="title-stack">
           <img class="game-title" src="../../game-assets/ui/menu/logo.webp?v=20260605-1630" alt="Final Genesis" draggable="false">
         </div>
@@ -3091,6 +3260,7 @@
       <section class="state-popup-layer" id="statePopupLayer" aria-hidden="true"></section>
 
       <section class="online-bridge-start-layer is-hidden" id="onlineBridgeStartLayer" aria-hidden="true">
+        <img class="online-bridge-loading-spinner" src="../../game-assets/ui/loading/loading-spinner.webp?v=20260622-key2" alt="">
         <div class="online-bridge-start-text" id="onlineBridgeStartText">CARREGANDO</div>
       </section>
 
@@ -3271,6 +3441,7 @@
         },
         {
           id: "ravenfall-shore",
+          musicTrack: "heavenfall-shore",
           backgrounds: [
             "../../game-assets/backgrounds/stage-ravenfall-day.png?v=20260619-stages",
             "../../game-assets/backgrounds/stage-ravenfall-night.png?v=20260619-stages",
@@ -3278,6 +3449,7 @@
         },
         {
           id: "black-forest-cellar",
+          musicTrack: "black-forest-cellar",
           backgrounds: ["../../game-assets/backgrounds/stage-black-forest-cellar.png?v=20260619-stages"],
         },
       ];
@@ -3319,10 +3491,20 @@
       const DOLL_ULTIMATE_CAPTION = "Reator Vozrozhdenie, Iniciar protocolo de reconfiguração molecular.";
       const MENU_MUSIC_PATH = "../../game-assets/audio/i-fall-i-rise-fire-in-m.mp3";
       const BATTLE_MUSIC_PATH = "../../game-assets/audio/combo-clash-arena.mp3";
+      const HEAVENFALL_SHORE_MUSIC_PATH = "../../game-assets/audio/new-vulka.mp3";
+      const BLACK_FOREST_CELLAR_MUSIC_PATH = "../../game-assets/audio/black-forest-cellar.mp3";
+      const MUSIC_TRACK_PATHS = {
+        menu: MENU_MUSIC_PATH,
+        battle: BATTLE_MUSIC_PATH,
+        "heavenfall-shore": HEAVENFALL_SHORE_MUSIC_PATH,
+        "black-forest-cellar": BLACK_FOREST_CELLAR_MUSIC_PATH,
+      };
       const AUDIO_STORAGE_KEY = "fightTurn.audioEnabled";
       const SFX_VOLUME_STORAGE_KEY = "fightTurn.sfxVolume";
       const MUSIC_STORAGE_KEY = "fightTurn.musicEnabled";
       const MUSIC_VOLUME_STORAGE_KEY = "fightTurn.musicVolume";
+      const INTRO_COMPLETED_STORAGE_KEY = "finalGenesis.introCompleted";
+      const INTRO_SPLASH_DURATION = 3000;
       const IRIS_TRANSITION_DURATION = 860;
       const MOBILE_UI_ACTION_DELAY = 650;
       const characterConfigCache = new Map();
@@ -3335,6 +3517,7 @@
 
       let activeStageBackground = null;
       let activeStageId = null;
+      let activeStageMusicTrack = "battle";
 
       function randomArrayItem(items) {
         return items[Math.floor(Math.random() * items.length)];
@@ -3352,6 +3535,7 @@
       function applyRandomStageBackground() {
         const stage = randomStage();
         activeStageId = stage.id;
+        activeStageMusicTrack = stage.musicTrack || "battle";
         activeStageBackground = randomArrayItem(stage.backgrounds);
         document.documentElement.style.setProperty("--arena-background", `url("${activeStageBackground}")`);
       }
@@ -3516,6 +3700,9 @@
         ultimateLabelRed: document.querySelector("#ultimateLabelRed"),
         ultimateFrame: document.querySelector("#ultimateFrame"),
         ultimateCaption: document.querySelector("#ultimateCaption"),
+        splashScreen: document.querySelector("#splashScreen"),
+        consentScreen: document.querySelector("#consentScreen"),
+        consentStartButton: document.querySelector("#consentStartButton"),
         startScreen: document.querySelector("#startScreen"),
         characterSelectScreen: document.querySelector("#characterSelectScreen"),
         characterPreviewArt: document.querySelector("#characterPreviewArt"),
@@ -3587,6 +3774,7 @@
       const ultimateCinematicState = { timers: [] };
       const comboHitEffectTimers = { p1: null, p2: null };
       let mobileUiActionLocked = false;
+      let introSplashTimerId = null;
       const audioState = {
         context: null,
         masterGain: null,
@@ -3958,7 +4146,7 @@
 
         resumeAudioContext(audioState.context);
 
-        if (trackName === "menu" || trackName === "battle") {
+        if (MUSIC_TRACK_PATHS[trackName]) {
           startAudioTrack(trackName);
           return;
         }
@@ -3967,7 +4155,7 @@
       }
 
       function musicPath(trackName) {
-        return trackName === "menu" ? MENU_MUSIC_PATH : BATTLE_MUSIC_PATH;
+        return MUSIC_TRACK_PATHS[trackName] || BATTLE_MUSIC_PATH;
       }
 
       function getMusicElement(trackName) {
@@ -4206,7 +4394,7 @@
         }
 
         if (state.phase === "choosing" || state.phase === "resolving") {
-          startMusic("battle");
+          startMusic(activeStageMusicTrack || "battle");
           return;
         }
 
@@ -6862,11 +7050,14 @@
 
         if (!options.skipVisualPreload) {
           el.noticePrimary.textContent = "CARREGANDO";
+          onlineBridgeShowStartText("CARREGANDO", { loading: true });
           await preloadTurnVisuals({ ...result, p1Action, p2Action });
           await nextFrame();
           if (state.resolutionId !== resolutionId || state.phase !== "resolving") {
+            onlineBridgeHideStartText();
             return;
           }
+          onlineBridgeHideStartText();
         }
 
         revealCpuToken();
@@ -7065,7 +7256,71 @@
         showStartScreen();
       }
 
+      function clearIntroSplashTimer() {
+        if (introSplashTimerId !== null) {
+          window.clearTimeout(introSplashTimerId);
+          introSplashTimerId = null;
+        }
+      }
+
+      function hideIntroScreens() {
+        clearIntroSplashTimer();
+        el.splashScreen.classList.add("is-hidden");
+        el.consentScreen.classList.add("is-hidden");
+      }
+
+      function markIntroCompleted() {
+        document.documentElement.classList.add("skip-opening-intro");
+        try {
+          window.sessionStorage.setItem(INTRO_COMPLETED_STORAGE_KEY, "1");
+        } catch {
+          // Session storage is optional in embedded/native shells.
+        }
+      }
+
+      function shouldShowOpeningIntro() {
+        if (new URLSearchParams(window.location.search).get("skipIntro") === "1") {
+          markIntroCompleted();
+          return false;
+        }
+
+        try {
+          return window.sessionStorage.getItem(INTRO_COMPLETED_STORAGE_KEY) !== "1";
+        } catch {
+          return true;
+        }
+      }
+
+      function showConsentScreen() {
+        clearIntroSplashTimer();
+        state.phase = "intro-consent";
+        hideExitConfirm();
+        el.splashScreen.classList.add("is-hidden");
+        el.consentScreen.classList.remove("is-hidden");
+        el.startScreen.classList.add("is-hidden");
+        el.characterSelectScreen.classList.add("is-hidden");
+        el.helpScreen.classList.add("is-hidden");
+        el.optionsScreen.classList.add("is-hidden");
+        updateDebugPanel();
+      }
+
+      function showIntroSplash() {
+        clearIntroSplashTimer();
+        state.phase = "intro-splash";
+        hideExitConfirm();
+        el.splashScreen.classList.remove("is-hidden");
+        el.consentScreen.classList.add("is-hidden");
+        el.startScreen.classList.add("is-hidden");
+        el.characterSelectScreen.classList.add("is-hidden");
+        el.helpScreen.classList.add("is-hidden");
+        el.optionsScreen.classList.add("is-hidden");
+        updateDebugPanel();
+        introSplashTimerId = window.setTimeout(showConsentScreen, INTRO_SPLASH_DURATION);
+      }
+
       function showStartScreen() {
+        markIntroCompleted();
+        hideIntroScreens();
         leaveAdvancedDebugMode();
         window.clearInterval(state.timerId);
         clearUltimateCinematic();
@@ -7186,6 +7441,7 @@
       }
 
       function showCharacterSelectScreen() {
+        hideIntroScreens();
         leaveAdvancedDebugMode();
         window.clearInterval(state.timerId);
         state.phase = "character-select";
@@ -7217,6 +7473,7 @@
       }
 
       function showHelpScreen() {
+        hideIntroScreens();
         leaveAdvancedDebugMode();
         window.clearInterval(state.timerId);
         state.phase = "help";
@@ -7230,6 +7487,7 @@
       }
 
       function showOptionsScreen() {
+        hideIntroScreens();
         leaveAdvancedDebugMode();
         window.clearInterval(state.timerId);
         state.phase = "options";
@@ -7334,6 +7592,19 @@
         onClosed();
         await nextFrame();
         await animateIrisOpen();
+      }
+
+      async function runMenuIrisTransition(action) {
+        if (state.startTransitionActive) {
+          return;
+        }
+
+        state.startTransitionActive = true;
+        try {
+          await runIrisTransition(action);
+        } finally {
+          state.startTransitionActive = false;
+        }
       }
 
       function fadeOutCurrentMusic(duration) {
@@ -7510,8 +7781,15 @@
       el.exitBattleButton.addEventListener("click", () => {
         runUiButtonAction(el.exitBattleButton, exitBattleToMenu);
       });
+      el.consentStartButton.addEventListener("click", () => {
+        runUiButtonAction(el.consentStartButton, () => {
+          void runMenuIrisTransition(showStartScreen);
+        });
+      });
       el.playButton.addEventListener("click", () => {
-        runUiButtonAction(el.playButton, showCharacterSelectScreen);
+        runUiButtonAction(el.playButton, () => {
+          void runMenuIrisTransition(showCharacterSelectScreen);
+        });
       });
       el.characterCards.forEach((card) => {
         card.addEventListener("click", () => {
@@ -7525,7 +7803,9 @@
         runUiButtonAction(el.characterConfirmButton, startGameFromSelection, { sound: false });
       });
       el.helpButton.addEventListener("click", () => {
-        runUiButtonAction(el.helpButton, showHelpScreen);
+        runUiButtonAction(el.helpButton, () => {
+          void runMenuIrisTransition(showHelpScreen);
+        });
       });
       function navigateToOnlineApp() {
         const base = window.location.origin && window.location.origin !== "null"
@@ -7543,7 +7823,9 @@
         });
       });
       el.optionsButton.addEventListener("click", () => {
-        runUiButtonAction(el.optionsButton, showOptionsScreen);
+        runUiButtonAction(el.optionsButton, () => {
+          void runMenuIrisTransition(showOptionsScreen);
+        });
       });
       el.exitAppButton.addEventListener("click", () => {
         runUiButtonAction(el.exitAppButton, showExitConfirm);
@@ -7605,7 +7887,7 @@
 
       const ONLINE_BRIDGE_PRELOAD_TIMEOUT_MS = TURN_VISUAL_PRELOAD_TIMEOUT_MS;
       const ONLINE_BRIDGE_PRELOAD_GRACE_MS = TURN_VISUAL_PRELOAD_TIMEOUT_MS + 750;
-      const ONLINE_BRIDGE_STARTUP_PRELOAD_TIMEOUT_MS = 5500;
+      const ONLINE_BRIDGE_STARTUP_PRELOAD_TIMEOUT_MS = 12000;
       const ONLINE_BRIDGE_READY_TEXT_MS = 1600;
       const ONLINE_BRIDGE_FIGHT_TEXT_MS = 900;
       const ONLINE_BRIDGE_STARTUP_BUSY_MS = ONLINE_BRIDGE_STARTUP_PRELOAD_TIMEOUT_MS
@@ -7951,6 +8233,18 @@
         return [...frameSet];
       }
 
+      async function onlineBridgePreloadMatchVisuals() {
+        const frameSet = new Set(onlineBridgeStartupFrames());
+        if (activeStageBackground) {
+          frameSet.add(activeStageBackground);
+        }
+
+        await waitForDecodedFrames([...frameSet], ONLINE_BRIDGE_STARTUP_PRELOAD_TIMEOUT_MS);
+        syncCharacterSpritesToIdle();
+        updateHud();
+        await nextFrame();
+      }
+
       function onlineBridgeWarmActionFrames(side, action) {
         const loadout = characterLoadoutForSide(side);
         if (action === "Crouch") {
@@ -7971,9 +8265,7 @@
       }
 
       async function onlineBridgePreloadStartupVisuals() {
-        await waitForDecodedFrames(onlineBridgeStartupFrames(), ONLINE_BRIDGE_STARTUP_PRELOAD_TIMEOUT_MS);
-        syncCharacterSpritesToIdle();
-        updateHud();
+        await onlineBridgePreloadMatchVisuals();
       }
 
       async function onlineBridgePlayStartupSequence(payload) {
@@ -7984,7 +8276,7 @@
         }
 
         onlineBridgePostVisualBusy(payload, ONLINE_BRIDGE_STARTUP_BUSY_MS);
-        onlineBridgeShowStartText("CARREGANDO", { loading: true });
+        onlineBridgeShowStartText("CARREGANDO PARTIDA", { loading: true });
         await onlineBridgePreloadStartupVisuals();
         if (onlineBridge.matchId !== payload.matchId) {
           return false;
@@ -8179,7 +8471,7 @@
         document.body.classList.add("online-bridge-mode");
 
         onlineBridge.startupPromise = (async () => {
-          onlineBridgeShowStartText("CARREGANDO", { loading: true });
+          onlineBridgeShowStartText("CARREGANDO PARTIDA", { loading: true });
           if (payload.status === "active" || payload.status === "resolving") {
             onlineBridgePostVisualBusy(payload, ONLINE_BRIDGE_STARTUP_BUSY_MS + 3000);
           }
@@ -8199,6 +8491,10 @@
           el.helpScreen.classList.add("is-hidden");
           el.optionsScreen.classList.add("is-hidden");
           applyRandomStageBackground();
+          await onlineBridgePreloadMatchVisuals();
+          if (onlineBridge.matchId !== payload.matchId) {
+            return;
+          }
           resetBattle();
           const shouldPlayStartupSequence = onlineBridgeShouldPlayStartupSequence(payload);
           if (!shouldPlayStartupSequence) {
@@ -8269,12 +8565,16 @@
           const resolutionDelay = onlineBridgeResolutionDelay(payload.lastTurn);
           onlineBridgePostVisualBusy(payload, resolutionDelay + ONLINE_BRIDGE_PRELOAD_GRACE_MS);
           state.phase = "resolving";
-          el.noticePrimary.textContent = "RESOLVENDO";
+          el.noticePrimary.textContent = "CARREGANDO";
+          onlineBridgeShowStartText("CARREGANDO", { loading: true });
           onlineBridgeSetActionLock(true);
           await onlineBridgePreloadTurnVisuals(payload.lastTurn);
           if (onlineBridge.lastTurnKey !== turnKey || !onlineBridge.isAnimatingTurn) {
+            onlineBridgeHideStartText();
             return;
           }
+          onlineBridgeHideStartText();
+          el.noticePrimary.textContent = "RESOLVENDO";
           onlineBridge.allowLocalResolve = true;
           onlineBridge.blockLocalStart = true;
           void legacyResolveTurn({ skipVisualPreload: true });
@@ -8300,6 +8600,7 @@
       }
 
       if (onlineBridgeEnabled) {
+        hideIntroScreens();
         document.addEventListener("click", (event) => {
           const button = event.target.closest?.(".action");
           if (!button || !onlineBridge.active) {
@@ -8334,7 +8635,11 @@
 
         onlineBridgePost({ type: "ready" });
       } else {
-        showStartScreen();
+        if (shouldShowOpeningIntro()) {
+          showIntroSplash();
+        } else {
+          showStartScreen();
+        }
       }
     </script>
   </body>
