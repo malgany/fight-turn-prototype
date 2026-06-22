@@ -1841,7 +1841,7 @@
         display: none;
       }
 
-      html.skip-opening-intro .start-screen.is-hidden {
+      html.skip-opening-intro:not(.intro-bootstrapped) .start-screen.is-hidden {
         display: grid;
       }
 
@@ -3573,8 +3573,9 @@
           capacitorBridge?.getPlatform?.() === "android" ||
           window.location.protocol === "capacitor:"
       );
-      const onlineBridgeEnabled = new URLSearchParams(window.location.search).get("onlineBridge") === "1";
-      const debugAvailable = LOCAL_DEBUG_HOSTS.has(window.location.hostname) && !isNativeShell && !onlineBridgeEnabled;
+      const pageParams = new URLSearchParams(window.location.search);
+      const onlineBridgeEnabled = pageParams.get("onlineBridge") === "1";
+      const debugAvailable = LOCAL_DEBUG_HOSTS.has(window.location.hostname) && !isNativeShell && !onlineBridgeEnabled && pageParams.get("debug") !== "0";
       const attackActions = ["Poke", "Combo", "Grab", "Special", "Super"];
       const selectableActions = ["Poke", "Combo", "Grab", "Special", "Super", "Block", "Crouch", "Jump"];
       const comboGuaranteedActions = selectableActions.filter((action) => !["Grab", "Combo"].includes(action));
@@ -7270,7 +7271,6 @@
       }
 
       function markIntroCompleted() {
-        document.documentElement.classList.add("skip-opening-intro");
         try {
           window.sessionStorage.setItem(INTRO_COMPLETED_STORAGE_KEY, "1");
         } catch {
@@ -8640,6 +8640,7 @@
         } else {
           showStartScreen();
         }
+        document.documentElement.classList.add("intro-bootstrapped");
       }
     </script>
   </body>
