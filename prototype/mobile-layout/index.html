@@ -3261,6 +3261,7 @@
       const TURN_BREAK = 2800;
       const RESULT_REVEAL_DELAY = 720;
       const SPRITE_ANIMATION_SETTLE_TIMEOUT_MS = 2500;
+      const TURN_VISUAL_PRELOAD_TIMEOUT_MS = 6000;
       const HEALTH_TRAIL_DELAY = 3000;
       const GET_UP_FIRST_FRAME_HOLD = 1000;
       const STAGES = [
@@ -3457,6 +3458,7 @@
         sfxVolume: readSfxVolumePreference(),
         musicEnabled: readMusicPreference(),
         musicVolume: readMusicVolumePreference(),
+        resolutionId: 0,
       };
 
       const el = {
@@ -4120,6 +4122,12 @@
         playActionAudio(loadout?.actionAudio?.[actionName], options);
       }
 
+      function playLoadoutActionAudioAfterPaint(loadout, actionName, options = {}) {
+        void nextFrame().then(() => {
+          playLoadoutActionAudio(loadout, actionName, options);
+        });
+      }
+
       function stopActionAudio() {
         audioState.actionAudioTimers.forEach((timerId) => window.clearTimeout(timerId));
         audioState.actionAudioTimers = [];
@@ -4315,8 +4323,7 @@
       const decodedFrameCache = new Map();
 
       function warmImageFrame(frame) {
-        const image = new Image();
-        image.src = frame;
+        void decodeFrame(frame);
       }
 
       function decodeFrame(frame) {
@@ -4328,46 +4335,70 @@
         image.decoding = "async";
         const entry = {
           image,
-          promise: new Promise((resolve) => {
-            let settled = false;
-            const finish = () => {
-              if (settled) {
-                return;
-              }
+          status: "pending",
+          promise: null,
+        };
+        entry.promise = new Promise((resolve) => {
+          let settled = false;
+          const finish = (status) => {
+            if (settled) {
+              return;
+            }
 
-              settled = true;
-              if (typeof image.decode === "function") {
-                image.decode().catch(() => {}).finally(resolve);
-                return;
-              }
-
-              resolve();
+            settled = true;
+            const complete = (finalStatus) => {
+              entry.status = finalStatus;
+              resolve(entry);
             };
 
-            image.addEventListener("load", finish, { once: true });
-            image.addEventListener("error", finish, { once: true });
-            image.src = frame;
-            if (image.complete) {
-              finish();
+            if (status === "loaded" && typeof image.decode === "function") {
+              image.decode()
+                .then(() => complete("decoded"))
+                .catch(() => complete("loaded"));
+              return;
             }
-          }),
-        };
+
+            complete(status);
+          };
+
+          image.addEventListener("load", () => finish("loaded"), { once: true });
+          image.addEventListener("error", () => finish("error"), { once: true });
+          image.src = frame;
+          if (image.complete) {
+            finish(image.naturalWidth > 0 ? "loaded" : "error");
+          }
+        });
 
         decodedFrameCache.set(frame, entry);
         return entry.promise;
       }
 
-      function waitForDecodedFrames(frames, timeoutMs) {
+      async function waitForDecodedFrames(frames, timeoutMs = TURN_VISUAL_PRELOAD_TIMEOUT_MS) {
         const uniqueFrames = [...new Set(frames.filter(Boolean))];
         if (!uniqueFrames.length) {
-          return Promise.resolve();
+          return { total: 0, ready: 0, timedOut: false };
         }
 
+        let timedOut = false;
+        let timeoutId = null;
         const decoded = Promise.all(uniqueFrames.map(decodeFrame));
         const timeout = new Promise((resolve) => {
-          window.setTimeout(resolve, timeoutMs);
+          timeoutId = window.setTimeout(() => {
+            timedOut = true;
+            resolve();
+          }, timeoutMs);
         });
-        return Promise.race([decoded, timeout]);
+        await Promise.race([decoded, timeout]);
+        if (timeoutId) {
+          window.clearTimeout(timeoutId);
+        }
+
+        const ready = uniqueFrames.filter((frame) => {
+          const status = decodedFrameCache.get(frame)?.status;
+          return status === "decoded" || status === "loaded";
+        }).length;
+
+        return { total: uniqueFrames.length, ready, timedOut };
       }
 
       function clearDecodedFrameCache() {
@@ -4393,6 +4424,33 @@
 
       function preloadActiveCharacterFrames() {
         new Set(Object.values(characterLoadouts).filter(Boolean)).forEach(preloadCharacterLoadout);
+      }
+
+      function activeCharacterEssentialFrames() {
+        const frameSet = new Set();
+        ["p1", "p2"].forEach((side) => {
+          const loadout = characterLoadoutForSide(side);
+          if (loadout.idleFrames[0]) {
+            frameSet.add(loadout.idleFrames[0]);
+          }
+          if (loadout.ultimateFrames[0]) {
+            frameSet.add(loadout.ultimateFrames[0]);
+          }
+        });
+
+        [el.p1Sprite.src, el.p2Sprite.src, el.p1PortraitArt.src, el.p2PortraitArt.src, el.ultimateFrame.src]
+          .filter(Boolean)
+          .forEach((frame) => frameSet.add(frame));
+
+        return [...frameSet];
+      }
+
+      function preloadEssentialCharacterVisuals() {
+        return waitForDecodedFrames(activeCharacterEssentialFrames(), TURN_VISUAL_PRELOAD_TIMEOUT_MS);
+      }
+
+      function warmActiveCharacterVisuals() {
+        window.setTimeout(preloadActiveCharacterFrames, 0);
       }
 
       function fighterSprite(side) {
@@ -4655,10 +4713,10 @@
           const loadout = characterLoadoutForSide(side);
           scheduleSpecialLunge(side);
           const specialDurationMs = animationPlaybackDuration(loadout.specialFrames, loadout.specialAnimation);
-          playLoadoutActionAudio(loadout, "special", {
+          playSpriteAnimation(side, loadout.specialAnimation, loadout.specialFrames);
+          playLoadoutActionAudioAfterPaint(loadout, "special", {
             fitToDurationMs: specialDurationMs,
           });
-          playSpriteAnimation(side, loadout.specialAnimation, loadout.specialFrames);
         });
       }
 
@@ -4774,7 +4832,7 @@
         const playbackStartMs = ULTIMATE_CINEMATIC_INTRO_MS + ULTIMATE_CINEMATIC_HOLD_MS + firstFrameHoldMs;
         const playbackDurationMs = frames.length * animation.frameIntervalMs;
         const totalDurationMs = playbackStartMs + playbackDurationMs + ULTIMATE_CINEMATIC_EXIT_MS;
-        playLoadoutActionAudio(loadout, "ultimate");
+        playLoadoutActionAudioAfterPaint(loadout, "ultimate");
 
         scheduleUltimateCinematic(() => {
           let frameIndex = 1;
@@ -6613,7 +6671,8 @@
         return result.winner === "p1" ? p1Action : p2Action;
       }
 
-      function resolveTurn() {
+      async function resolveTurn(options = {}) {
+        const resolutionId = ++state.resolutionId;
         const wasGuaranteedTurn = Boolean(state.activeGuaranteedTurn);
         const guaranteedTurn = state.activeGuaranteedTurn;
         state.phase = "resolving";
@@ -6627,8 +6686,6 @@
           p1: state.p1.health,
           p2: state.p2.health,
         };
-        revealCpuToken();
-        playSound("reveal");
 
         consumeSuper("p1", p1Action);
         consumeSuper("p2", p2Action);
@@ -6671,6 +6728,18 @@
           state.advantage = null;
           result = { type: "draw", winner: null, loser: null, primary: "NEUTRO", secondary: `${displayActionName(p1Action)} vs ${displayActionName(p2Action)}`, damaged: [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: null };
         }
+
+        if (!options.skipVisualPreload) {
+          el.noticePrimary.textContent = "CARREGANDO";
+          await preloadTurnVisuals({ ...result, p1Action, p2Action });
+          await nextFrame();
+          if (state.resolutionId !== resolutionId || state.phase !== "resolving") {
+            return;
+          }
+        }
+
+        revealCpuToken();
+        playSound("reveal");
 
         const responseBreak = responseAnimationBreak(p1Action, p2Action, result);
         playResponseAnimations(p1Action, p2Action, result);
@@ -6935,6 +7004,8 @@
         syncCharacterSpritesToIdle();
         syncHudPortraits();
         startIdleLoop();
+        await preloadEssentialCharacterVisuals();
+        warmActiveCharacterVisuals();
         return true;
       }
 
@@ -7400,8 +7471,8 @@
       window.addEventListener("resize", syncAdvancedSelectionFrame);
       syncAudioToggleUi();
 
-      const ONLINE_BRIDGE_PRELOAD_TIMEOUT_MS = 2200;
-      const ONLINE_BRIDGE_PRELOAD_GRACE_MS = 2500;
+      const ONLINE_BRIDGE_PRELOAD_TIMEOUT_MS = TURN_VISUAL_PRELOAD_TIMEOUT_MS;
+      const ONLINE_BRIDGE_PRELOAD_GRACE_MS = TURN_VISUAL_PRELOAD_TIMEOUT_MS + 750;
       const ONLINE_BRIDGE_STARTUP_PRELOAD_TIMEOUT_MS = 5500;
       const ONLINE_BRIDGE_READY_TEXT_MS = 1600;
       const ONLINE_BRIDGE_FIGHT_TEXT_MS = 900;
@@ -7431,12 +7502,12 @@
       const legacyStartTurn = startTurn;
 
       if (onlineBridgeEnabled) {
-        resolveTurn = function resolveTurnOnlineBridgeGuard() {
+        resolveTurn = function resolveTurnOnlineBridgeGuard(options = {}) {
           if (onlineBridge.active && !onlineBridge.allowLocalResolve) {
             return;
           }
 
-          return legacyResolveTurn();
+          return legacyResolveTurn(options);
         };
 
         startTurn = function startTurnOnlineBridgeGuard() {
@@ -7676,50 +7747,54 @@
         return RESULT_REVEAL_DELAY + Math.max(360, ultimateBreak) + Math.max(TURN_BREAK, knockdownBreak, responseBreak) + 160;
       }
 
-      function onlineBridgeAddFrames(frameSet, frames) {
+      function addVisualFrames(frameSet, frames) {
         frames.forEach((frame) => frameSet.add(frame));
       }
 
-      function onlineBridgeAddActionFrames(frameSet, side, action, opponentAction, turn) {
+      function addActionVisualFrames(frameSet, side, action, opponentAction, turn) {
         const loadout = characterLoadoutForSide(side);
 
         if (action === "Crouch") {
-          onlineBridgeAddFrames(frameSet, loadout.crouchFrames);
+          addVisualFrames(frameSet, loadout.crouchFrames);
         }
 
         if (action === "Jump" && !["Poke", "Combo", "Special"].includes(opponentAction)) {
-          onlineBridgeAddFrames(frameSet, loadout.jumpFrames);
+          addVisualFrames(frameSet, loadout.jumpFrames);
         }
 
         if (specialConnects(side, action, turn)) {
-          onlineBridgeAddFrames(frameSet, loadout.specialFrames);
+          addVisualFrames(frameSet, loadout.specialFrames);
         }
       }
 
-      function onlineBridgeTurnFrames(turn) {
+      function turnVisualFrames(turn) {
         const frameSet = new Set();
         const p1Action = turn.p1Action;
         const p2Action = turn.p2Action;
         const winningAction = resultWinnerAction(turn, p1Action, p2Action);
 
-        onlineBridgeAddActionFrames(frameSet, "p1", p1Action, p2Action, turn);
-        onlineBridgeAddActionFrames(frameSet, "p2", p2Action, p1Action, turn);
+        addActionVisualFrames(frameSet, "p1", p1Action, p2Action, turn);
+        addActionVisualFrames(frameSet, "p2", p2Action, p1Action, turn);
 
         (turn.knockedDown || []).forEach((side) => {
           const loadout = characterLoadoutForSide(side);
-          onlineBridgeAddFrames(frameSet, loadout.getUpFrames);
+          addVisualFrames(frameSet, loadout.getUpFrames);
         });
 
         if (turn.type === "hit" && winningAction === "Super" && turn.winner) {
           const loadout = characterLoadoutForSide(turn.winner);
-          onlineBridgeAddFrames(frameSet, loadout.ultimateFrames);
+          addVisualFrames(frameSet, loadout.ultimateFrames);
         }
 
         if (turn.type === "hit" && winningAction === "Combo") {
-          onlineBridgeAddFrames(frameSet, comboHitFrames);
+          addVisualFrames(frameSet, comboHitFrames);
         }
 
         return [...frameSet];
+      }
+
+      function preloadTurnVisuals(turn, timeoutMs = TURN_VISUAL_PRELOAD_TIMEOUT_MS) {
+        return waitForDecodedFrames(turnVisualFrames(turn), timeoutMs);
       }
 
       function onlineBridgeStartupFrames() {
@@ -7754,7 +7829,7 @@
       }
 
       function onlineBridgePreloadTurnVisuals(turn) {
-        return waitForDecodedFrames(onlineBridgeTurnFrames(turn), ONLINE_BRIDGE_PRELOAD_TIMEOUT_MS);
+        return preloadTurnVisuals(turn, ONLINE_BRIDGE_PRELOAD_TIMEOUT_MS);
       }
 
       async function onlineBridgePreloadStartupVisuals() {
@@ -8064,7 +8139,7 @@
           }
           onlineBridge.allowLocalResolve = true;
           onlineBridge.blockLocalStart = true;
-          legacyResolveTurn();
+          void legacyResolveTurn({ skipVisualPreload: true });
           onlineBridge.allowLocalResolve = false;
           onlineBridge.resolutionTimerId = window.setTimeout(() => {
             void waitForActiveSpriteAnimations().then(() => onlineBridgeFinishResolution(payload));
