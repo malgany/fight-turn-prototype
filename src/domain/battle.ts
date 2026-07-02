@@ -88,11 +88,22 @@ function opposite(side: Side): Side {
   return side === "p1" ? "p2" : "p1";
 }
 
-function applyDamage(state: BattleState, targetSide: Side, amount: number, sourceAction: Action | "Wait", options: { blocked?: boolean } = {}): void {
+function grantsDefenderSuper(sourceAction: Action | "Wait", options: { comboKnockdown?: boolean }): boolean {
+  if (sourceAction === "Combo") return Boolean(options.comboKnockdown);
+  return ["Grab", "Special", "Super"].includes(sourceAction);
+}
+
+function applyDamage(
+  state: BattleState,
+  targetSide: Side,
+  amount: number,
+  sourceAction: Action | "Wait",
+  options: { blocked?: boolean; comboKnockdown?: boolean } = {},
+): void {
   if (!Number.isFinite(amount) || amount <= 0) return;
 
   state[targetSide].health = clampPercent(state[targetSide].health - amount);
-  if (["Combo", "Grab", "Special", "Super"].includes(sourceAction) && !options.blocked) {
+  if (grantsDefenderSuper(sourceAction, options) && !options.blocked) {
     state[targetSide].super = Math.min(3, state[targetSide].super + 1);
   }
 }
@@ -284,7 +295,7 @@ function resolveHit(state: BattleState, winner: Side, p1Action: Action | "Wait",
   const knockedDown = causesKnockdown(action, targetAction, winner, context) ? [loser] : [];
   const guaranteedTurn = action === "Combo" && targetAction !== "Jump" ? guaranteeTurn(winner, comboGuaranteedActions, "COMBO ACERTOU") : null;
 
-  applyDamage(state, loser, damage, action);
+  applyDamage(state, loser, damage, action, { comboKnockdown: knockedDown.length > 0 });
   applyKrampusKnockdownPassive(state, winner, knockedDown, context);
   const healedAmount = isDollSpecialHit ? applyHeal(state, winner, 10) : 0;
   state.advantage = winner;

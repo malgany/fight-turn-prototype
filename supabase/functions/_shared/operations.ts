@@ -142,10 +142,15 @@ function clamp(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
-function applyDamage(state: any, target: Side, amount: number, source: Action | "Wait", blocked = false) {
+function grantsDefenderSuper(source: Action | "Wait", options: { comboKnockdown?: boolean }) {
+  if (source === "Combo") return Boolean(options.comboKnockdown);
+  return ["Grab", "Special", "Super"].includes(source);
+}
+
+function applyDamage(state: any, target: Side, amount: number, source: Action | "Wait", options: { blocked?: boolean; comboKnockdown?: boolean } = {}) {
   if (!Number.isFinite(amount) || amount <= 0) return;
   state[target].health = clamp(state[target].health - amount);
-  if (["Combo", "Grab", "Special", "Super"].includes(source) && !blocked) {
+  if (grantsDefenderSuper(source, options) && !options.blocked) {
     state[target].super = Math.min(3, state[target].super + 1);
   }
 }
@@ -299,7 +304,7 @@ function resolveHit(state: any, winner: Side, p1Action: Action | "Wait", p2Actio
   const damage = actionDamage(winner, action, context);
   const knockedDown = causesKnockdown(action, targetAction, winner, context) ? [loser] : [];
   const guaranteedTurn = action === "Combo" && targetAction !== "Jump" ? guaranteeTurn(winner, comboGuaranteedActions, "COMBO ACERTOU") : null;
-  applyDamage(state, loser, damage, action);
+  applyDamage(state, loser, damage, action, { comboKnockdown: knockedDown.length > 0 });
   applyKrampusKnockdownPassive(state, winner, knockedDown, context);
   const healedAmount = isDollSpecialHit ? applyHeal(state, winner, 10) : 0;
   state.advantage = winner;
@@ -382,7 +387,7 @@ function resolveTurn(stateInput: any, p1Action: Action | null, p2Action: Action 
         result = resolveDollUltimateHeal(state, attacker);
       } else if (response === "Block" && blockChip[attack] !== undefined) {
         const chip = blockDamage(attacker, attack, stateInput, context);
-        applyDamage(state, defender, chip, attack, true);
+        applyDamage(state, defender, chip, attack, { blocked: true });
         state.advantage = defender;
         result = { type: "blocked", winner: defender, loser: attacker, primary: attack === "Super" ? "ULTIMATE PUNIDO" : "BLOQUEOU", secondary: `${defender.toUpperCase()} segurou ${attack}`, damaged: chip > 0 ? [defender] : [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: attack === "Super" ? guaranteeTurn(defender, attackActions, "BLOCK NO ULTIMATE") : null };
       } else if (response === "Crouch" && ["Combo", "Grab", "Super"].includes(attack)) {
@@ -912,6 +917,7 @@ async function operation(req: Request, name: string) {
     const code = String(body.code || "").toUpperCase();
     const { data: room } = await db.from("private_rooms").select("*").eq("code", code).maybeSingle();
     if (!room) throw new Error("Sala nao encontrada.");
+    if (room.host_id !== user.id && room.guest_id !== user.id) throw new Error("Voce ainda nao entrou nesta sala.");
     const ids = [room.host_id, room.guest_id].filter(Boolean);
     const profiles = await profileMap(db, ids);
     const match = room.match_id ? await db.from("matches").select("*").eq("id", room.match_id).maybeSingle() : { data: null };

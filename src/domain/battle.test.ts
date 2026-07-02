@@ -30,6 +30,24 @@ describe("resolveBattleTurn", () => {
     expect(result.after.p2.health).toBe(88);
   });
 
+  it("does not give the opponent ultimate bar when Combo hits without knockdown", () => {
+    const result = resolveBattleTurn(createInitialBattleState(), "Combo", "Special");
+
+    expect(result.type).toBe("hit");
+    expect(result.winner).toBe("p1");
+    expect(result.knockedDown).toEqual([]);
+    expect(result.after.p2.super).toBe(0);
+  });
+
+  it("gives the opponent ultimate bar when Combo hits Jump and knocks down", () => {
+    const result = resolveBattleTurn(createInitialBattleState(), "Combo", "Jump");
+
+    expect(result.type).toBe("hit");
+    expect(result.winner).toBe("p1");
+    expect(result.knockedDown).toEqual(["p2"]);
+    expect(result.after.p2.super).toBe(1);
+  });
+
   it("finishes when health reaches zero", () => {
     const state = createInitialBattleState();
     state.p2.health = 4;

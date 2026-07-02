@@ -509,6 +509,19 @@ export class App {
   private async resumePrivateRoom(code: string): Promise<void> {
     const normalizedCode = code.trim().toUpperCase();
     if (!normalizedCode) return;
+
+    const joined = await this.service.joinPrivateRoom(normalizedCode).catch(() => null);
+    if (joined) {
+      this.state.room = joined.room;
+      if (joined.match) {
+        this.enterMatch(joined.match);
+      } else {
+        this.state.screen = "private-room";
+        this.startRoomPolling(normalizedCode);
+      }
+      return;
+    }
+
     const response = await this.service.getPrivateRoom(normalizedCode).catch(() => null);
     if (!response) return;
     this.state.room = response.room;
@@ -775,10 +788,16 @@ export class App {
   private startRoomPolling(code: string): void {
     this.clearPolling();
     const pollRoom = async () => {
-      const currentMatch = await this.service.getCurrentMatch().catch(() => null);
-      if (currentMatch?.matchType === "private" && isLiveMatchStatus(currentMatch.status)) {
-        this.enterMatch(currentMatch);
+      const response = await this.service.getPrivateRoom(code).catch(() => null);
+      if (!response) return;
+
+      this.state.room = response.room;
+      if (response.match?.matchType === "private" && isLiveMatchStatus(response.match.status)) {
+        this.enterMatch(response.match);
+        return;
       }
+
+      if (this.state.screen === "private-room") this.render();
     };
 
     this.unsubscribePrivateRoom = this.service.watchPrivateRoom(code, () => {
@@ -822,8 +841,6 @@ export class App {
   }
 
   private syncRouteRefresh(): void {
-    const refreshSelector = "meta[data-final-genesis-room-refresh]";
-    const existingRefresh = document.head.querySelector<HTMLMetaElement>(refreshSelector);
     const url = new URL(window.location.href);
 
     if (!this.initialBootstrapComplete && url.searchParams.has("room")) return;
@@ -840,18 +857,9 @@ export class App {
       url.search = "";
       url.searchParams.set("room", this.state.room.code);
       if (window.location.href !== url.href) window.history.replaceState(null, "", url.href);
-
-      if (!existingRefresh) {
-        const meta = document.createElement("meta");
-        meta.dataset.finalGenesisRoomRefresh = "true";
-        meta.httpEquiv = "refresh";
-        meta.content = "4";
-        document.head.appendChild(meta);
-      }
       return;
     }
 
-    existingRefresh?.remove();
     if (url.searchParams.has("room")) {
       url.searchParams.delete("room");
       window.history.replaceState(null, "", url.href);

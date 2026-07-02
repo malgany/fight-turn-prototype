@@ -3140,9 +3140,9 @@
             <label class="volume-control">
               <span class="volume-header">
                 <span>Volume dos efeitos</span>
-                <span class="volume-value" id="sfxVolumeValue">85%</span>
+                <span class="volume-value" id="sfxVolumeValue">80%</span>
               </span>
-              <input class="volume-slider" type="range" id="sfxVolumeSlider" min="0" max="100" value="85">
+              <input class="volume-slider" type="range" id="sfxVolumeSlider" min="0" max="100" value="80">
             </label>
             <label class="audio-toggle">
               <span class="audio-toggle-label">
@@ -3155,9 +3155,9 @@
             <label class="volume-control">
               <span class="volume-header">
                 <span>Volume da música</span>
-                <span class="volume-value" id="musicVolumeValue">70%</span>
+                <span class="volume-value" id="musicVolumeValue">80%</span>
               </span>
-              <input class="volume-slider" type="range" id="musicVolumeSlider" min="0" max="100" value="70">
+              <input class="volume-slider" type="range" id="musicVolumeSlider" min="0" max="100" value="80">
             </label>
           </section>
 
@@ -3823,7 +3823,7 @@
           // Storage can be unavailable in private modes; default volume still works.
         }
 
-        return 85;
+        return 80;
       }
 
       function writeSfxVolumePreference(volume) {
@@ -3860,7 +3860,7 @@
           // Storage can be unavailable in private modes; default volume still works.
         }
 
-        return 70;
+        return 80;
       }
 
       function writeMusicVolumePreference(volume) {
@@ -6607,6 +6607,14 @@
         }, 420);
       }
 
+      function grantsDefenderSuper(sourceAction, options = {}) {
+        if (sourceAction === "Combo") {
+          return Boolean(options.comboKnockdown);
+        }
+
+        return ["Grab", "Special", "Super"].includes(sourceAction);
+      }
+
       function applyDamage(targetSide, amount, sourceAction, options = {}) {
         if (!Number.isFinite(amount) || amount <= 0) {
           return;
@@ -6616,7 +6624,7 @@
         state[targetSide].health = clampPercent(state[targetSide].health - amount);
         showHealthDamageTrail(targetSide, previousHealth);
 
-        const grantsSuper = ["Combo", "Grab", "Special", "Super"].includes(sourceAction);
+        const grantsSuper = grantsDefenderSuper(sourceAction, options);
         if (grantsSuper && !options.blocked && !state.debugMode) {
           state[targetSide].super = Math.min(3, state[targetSide].super + 1);
         }
@@ -6871,7 +6879,7 @@
         const guaranteedTurn = action === "Combo" && targetAction !== "Jump"
           ? guaranteeTurn(winner, comboGuaranteedActions, "COMBO ACERTOU")
           : null;
-        applyDamage(loser, damage, action);
+        applyDamage(loser, damage, action, { comboKnockdown: knockedDown.length > 0 });
         applyKrampusKnockdownPassive(winner, knockedDown);
         const healedAmount = isDollSpecialHit ? applyHeal(winner, 10) : 0;
         state.advantage = winner;
