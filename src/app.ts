@@ -1228,7 +1228,7 @@ export class App {
       <iframe
         class="legacy-online-battle-frame"
         data-legacy-online-battle
-        src="${appRouteUrl("prototype/mobile-layout/?onlineBridge=1&v=20260622-match-loading-v1")}"
+        src="${appRouteUrl("prototype/mobile-layout/?onlineBridge=1&v=20260702-android-private-room-menu-fix")}"
         title="Batalha online Final Genesis"
       ></iframe>
     `;

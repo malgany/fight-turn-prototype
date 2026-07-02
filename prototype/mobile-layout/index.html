@@ -1845,6 +1845,10 @@
         display: grid;
       }
 
+      html.online-bridge-mode .screen {
+        display: none !important;
+      }
+
       .exit-confirm {
         position: absolute;
         inset: 0;
@@ -7278,6 +7282,15 @@
         el.consentScreen.classList.add("is-hidden");
       }
 
+      function hideLegacyMenuScreens() {
+        hideIntroScreens();
+        el.startScreen.classList.add("is-hidden");
+        el.characterSelectScreen.classList.add("is-hidden");
+        el.helpScreen.classList.add("is-hidden");
+        el.optionsScreen.classList.add("is-hidden");
+        hideExitConfirm();
+      }
+
       function markIntroCompleted() {
         try {
           window.sessionStorage.setItem(INTRO_COMPLETED_STORAGE_KEY, "1");
@@ -8477,6 +8490,7 @@
         state.selectedP1Character = payload.localCharacterId;
         state.selectedP2Character = payload.opponentCharacterId;
         document.body.classList.add("online-bridge-mode");
+        hideLegacyMenuScreens();
 
         onlineBridge.startupPromise = (async () => {
           onlineBridgeShowStartText("CARREGANDO PARTIDA", { loading: true });
@@ -8608,7 +8622,7 @@
       }
 
       if (onlineBridgeEnabled) {
-        hideIntroScreens();
+        hideLegacyMenuScreens();
         document.addEventListener("click", (event) => {
           const button = event.target.closest?.(".action");
           if (!button || !onlineBridge.active) {
