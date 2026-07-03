@@ -7929,6 +7929,8 @@
         started: false,
         matchId: null,
         currentTurn: null,
+        pendingLocalAction: null,
+        pendingLocalTurn: null,
         startupPromise: null,
         startupReady: false,
         lastTurnKey: null,
@@ -8122,6 +8124,35 @@
             button.classList.remove("is-held", "flash");
           }
         });
+      }
+
+      function onlineBridgeVisibleLocalAction(payload) {
+        if (payload.localAction) {
+          return payload.localAction;
+        }
+
+        if (
+          payload.status === "active"
+          && onlineBridge.pendingLocalAction
+          && onlineBridge.pendingLocalTurn === payload.currentTurn
+          && onlineBridge.matchId === payload.matchId
+        ) {
+          return onlineBridge.pendingLocalAction;
+        }
+
+        return null;
+      }
+
+      function onlineBridgeSyncPendingLocalAction(payload) {
+        if (
+          payload.localAction
+          || payload.status !== "active"
+          || onlineBridge.matchId !== payload.matchId
+          || onlineBridge.pendingLocalTurn !== payload.currentTurn
+        ) {
+          onlineBridge.pendingLocalAction = null;
+          onlineBridge.pendingLocalTurn = null;
+        }
       }
 
       function onlineBridgeStateKey(battleState) {
@@ -8381,12 +8412,14 @@
       function onlineBridgePrepareTurn(payload, options = {}) {
         const payloadKey = options.payloadKey || onlineBridgePayloadKey(payload);
         onlineBridge.currentTurn = payload.currentTurn;
+        const visibleLocalAction = onlineBridgeVisibleLocalAction(payload);
         if (!options.force && onlineBridge.lastPayloadKey === payloadKey) {
-          onlineBridgeSetActionLock(Boolean(payload.localAction) || payload.status !== "active" || Boolean(options.pauseClock));
+          onlineBridgeSetActionLock(Boolean(visibleLocalAction) || payload.status !== "active" || Boolean(options.pauseClock));
           return;
         }
 
         onlineBridge.lastPayloadKey = payloadKey;
+        onlineBridgeSyncPendingLocalAction(payload);
         window.clearInterval(state.timerId);
         state.timerId = null;
         if (payload.status === "active") {
@@ -8398,13 +8431,13 @@
         }
         onlineBridgeApplyState(payload.battleState);
         state.phase = payload.status === "active" ? "choosing" : "resolving";
-        state.selectedAction = payload.localAction || null;
+        state.selectedAction = visibleLocalAction;
         state.aiAction = null;
 
         if (state.activeGuaranteedTurn) {
           el.noticePrimary.textContent = "GOLPE GARANTIDO";
         } else {
-          el.noticePrimary.textContent = payload.localAction ? "AGUARDANDO" : "READY";
+          el.noticePrimary.textContent = visibleLocalAction ? "AGUARDANDO" : "READY";
         }
 
         setTokenDisplay(false);
@@ -8418,7 +8451,7 @@
         const parsedServerNowMs = payload.serverNow ? new Date(payload.serverNow).getTime() : Date.now();
         const hasTurnTime = !Number.isFinite(parsedDeadlineMs) || parsedDeadlineMs > parsedServerNowMs;
         onlineBridgeSetActionLock(
-          Boolean(payload.localAction)
+          Boolean(visibleLocalAction)
             || payload.status !== "active"
             || Boolean(options.pauseClock)
             || !hasTurnTime
@@ -8457,6 +8490,8 @@
         }
 
         playSound("select");
+        onlineBridge.pendingLocalAction = action;
+        onlineBridge.pendingLocalTurn = onlineBridge.currentTurn;
         state.selectedAction = action;
         setTokenDisplay(false);
         updateHud();
@@ -8496,6 +8531,8 @@
         onlineBridge.lastPayloadKey = null;
         onlineBridge.isAnimatingTurn = false;
         onlineBridge.pendingPayload = null;
+        onlineBridge.pendingLocalAction = null;
+        onlineBridge.pendingLocalTurn = null;
         onlineBridgeStopResolutionTimer();
         onlineBridge.blockLocalStart = true;
         state.debugAvailable = false;
@@ -8590,6 +8627,8 @@
         if (payload.lastTurn && onlineBridge.lastTurnKey !== turnKey) {
           onlineBridge.lastTurnKey = turnKey;
           onlineBridge.lastPayloadKey = null;
+          onlineBridge.pendingLocalAction = null;
+          onlineBridge.pendingLocalTurn = null;
           onlineBridgeStopClock();
           onlineBridgeStopResolutionTimer();
           onlineBridgeApplyState(payload.lastTurn.before);

@@ -6,6 +6,7 @@ import type { GameService } from "./services/gameService";
 
 const ACTION_SUBMIT_GRACE_MS = 1200;
 const POST_MATCH_REVEAL_DELAY_MS = 10_000;
+const MATCH_START_REVEAL_DELAY_MS = 4_000;
 
 type Screen =
   | "login"
@@ -136,6 +137,8 @@ export class App {
   private postMatchRevealTimerId: number | null = null;
   private postMatchRevealKey: string | null = null;
   private postMatchOverlayVisibleKey: string | null = null;
+  private matchStartRevealTimerId: number | null = null;
+  private matchStartRevealKey: string | null = null;
 
   constructor(
     private readonly root: HTMLElement,
@@ -231,6 +234,7 @@ export class App {
   private async navigate(screen: Screen): Promise<void> {
     this.clearPolling();
     this.clearPostMatchOverlayState();
+    this.clearMatchStartRevealTimer();
     this.state.error = null;
     this.state.info = null;
 
@@ -317,12 +321,10 @@ export class App {
         await this.choosePostMatch("again");
         break;
       case "post-match-lobby":
-        await this.choosePostMatch("lobby");
-        this.state.match = null;
-        await this.navigate("online");
+        this.leaveFinishedMatch("online");
         break;
       case "post-match-menu":
-        await this.choosePostMatch("lobby");
+        this.leaveFinishedMatch("menu");
         window.location.assign(legacyMainMenuUrl());
         break;
       case "legacy-menu":
@@ -420,6 +422,43 @@ export class App {
   private clearPostMatchOverlayState(): void {
     this.clearPostMatchRevealTimer();
     this.postMatchOverlayVisibleKey = null;
+  }
+
+  private clearMatchStartRevealTimer(): void {
+    if (this.matchStartRevealTimerId) window.clearTimeout(this.matchStartRevealTimerId);
+    this.matchStartRevealTimerId = null;
+    this.matchStartRevealKey = null;
+  }
+
+  private matchStartKey(match: GameMatch): string {
+    return `${match.id}:${match.currentTurn}:${match.p1.characterId || "p1"}:${match.p2.characterId || "p2"}`;
+  }
+
+  private shouldDelayMatchStart(match: GameMatch, previousScreen: Screen): boolean {
+    return previousScreen === "match-character-select"
+      && match.status === "active"
+      && match.currentTurn === 1
+      && !match.lastTurn
+      && Boolean(match.p1.characterId)
+      && Boolean(match.p2.characterId);
+  }
+
+  private scheduleMatchStartReveal(match: GameMatch): void {
+    const key = this.matchStartKey(match);
+    if (this.matchStartRevealKey === key && this.matchStartRevealTimerId) return;
+
+    this.clearMatchStartRevealTimer();
+    this.matchStartRevealKey = key;
+    this.matchStartRevealTimerId = window.setTimeout(() => {
+      this.matchStartRevealTimerId = null;
+      const currentMatch = this.state.match;
+      if (!currentMatch || this.matchStartKey(currentMatch) !== key || currentMatch.status !== "active") return;
+      this.matchStartRevealKey = null;
+      this.state.screen = "battle";
+      this.render();
+      this.syncLegacyBattleFrameBurst();
+      this.resolveExpiredTurnIfNeeded();
+    }, MATCH_START_REVEAL_DELAY_MS);
   }
 
   private schedulePostMatchReveal(match: GameMatch): void {
@@ -654,16 +693,21 @@ export class App {
       this.clearPostMatchOverlayState();
     }
     if (this.shouldDelayPostMatchReveal(match, previousScreen)) {
+      this.clearMatchStartRevealTimer();
       this.state.screen = "battle";
       this.schedulePostMatchReveal(match);
+    } else if (this.shouldDelayMatchStart(match, previousScreen)) {
+      this.state.screen = "match-character-select";
+      this.scheduleMatchStartReveal(match);
     } else {
+      this.clearMatchStartRevealTimer();
       this.state.screen = this.isFinishedMatch(match) ? "post-match" : match.status === "selecting" ? "match-character-select" : "battle";
     }
     this.unsubscribeMatch?.();
     this.unsubscribeMatch = this.service.watchMatch(match.id, () => {
       void this.refreshMatch();
     });
-    if (this.state.screen === "battle" || this.state.screen === "match-character-select") {
+    if (this.state.screen === "battle" || this.state.screen === "match-character-select" || this.state.screen === "post-match") {
       this.pollId = window.setInterval(() => {
         void this.refreshMatch().catch(() => undefined);
       }, 1_000);
@@ -683,6 +727,14 @@ export class App {
     const currentMatchId = this.state.match?.id;
     const match = currentMatchId ? await this.service.getMatch(currentMatchId) : await this.service.getCurrentMatch();
     if (match) {
+      if (match.rematch?.nextMatchId && this.isFinishedMatch(match)) {
+        const nextMatch = await this.service.getMatch(match.rematch.nextMatchId).catch(() => null);
+        if (nextMatch && isLiveMatchStatus(nextMatch.status)) {
+          this.enterMatch(nextMatch);
+          return;
+        }
+      }
+
       if (this.isInactivityDraw(match)) {
         this.returnToLobbyAfterInactivityDraw(match);
         return;
@@ -704,11 +756,18 @@ export class App {
           this.state.screen = "post-match";
         }
       } else if (match.status === "selecting") {
+        this.clearMatchStartRevealTimer();
         this.clearPostMatchOverlayState();
         this.state.screen = "match-character-select";
       } else if (match.status === "active" || match.status === "resolving") {
         this.clearPostMatchOverlayState();
-        this.state.screen = "battle";
+        if (this.shouldDelayMatchStart(match, previousScreen)) {
+          this.state.screen = "match-character-select";
+          this.scheduleMatchStartReveal(match);
+        } else {
+          this.clearMatchStartRevealTimer();
+          this.state.screen = "battle";
+        }
       }
       if (previousScreen === "battle" && this.state.screen === "battle") {
         this.syncLegacyBattleFrame();
@@ -752,7 +811,32 @@ export class App {
 
       this.state.match = updated;
       this.state.screen = "post-match";
+      if (choice === "again" && !this.pollId) {
+        this.pollId = window.setInterval(() => {
+          void this.refreshMatch().catch(() => undefined);
+        }, 1_000);
+      }
     });
+  }
+
+  private leaveFinishedMatch(destination: "online" | "menu"): void {
+    const match = this.state.match;
+    this.clearPolling();
+    this.unsubscribeMatch?.();
+    this.unsubscribeMatch = null;
+    this.clearPostMatchOverlayState();
+    this.clearMatchStartRevealTimer();
+    this.state.match = null;
+    this.state.error = null;
+    this.state.info = null;
+    if (destination === "online") {
+      this.state.screen = "online";
+      void this.service.heartbeat("online").catch(() => undefined);
+      this.render();
+    }
+    if (match && this.isFinishedMatch(match)) {
+      void this.service.postMatchChoice(match.id, "lobby").catch(() => undefined);
+    }
   }
 
   private startHeartbeat(): void {
@@ -1166,6 +1250,7 @@ export class App {
     const opponentPlayer = match[opponentSide];
     const localSelected = localPlayer.characterId !== null;
     const opponentSelected = opponentPlayer.characterId !== null;
+    const matchReady = match.status === "active" && localSelected && opponentSelected;
     const localCharacter = localPlayer.characterId ? characterById(localPlayer.characterId) : null;
     const opponentCharacter = opponentPlayer.characterId ? characterById(opponentPlayer.characterId) : null;
     const previewCharacter = localCharacter || characterById(this.state.snapshot.profile?.selectedCharacterId || "ninja");
@@ -1185,6 +1270,7 @@ export class App {
             <strong>${opponentCharacter ? escapeHtml(opponentCharacter.name) : "Aguardando"}</strong>
           </div>
         </div>
+        ${matchReady ? `<div class="match-starting-status" role="status" aria-live="polite">Luta comecando...</div>` : ""}
         <div class="character-preview-stage" aria-hidden="true">
           <img class="character-preview-art ${previewClass}" src="${previewCharacter.portraitUrl}" alt="" draggable="false">
         </div>

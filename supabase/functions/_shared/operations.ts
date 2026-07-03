@@ -29,7 +29,7 @@ const defaultCharacterUnlockRules = [
 const attackActions: Action[] = ["Poke", "Combo", "Grab", "Special", "Super"];
 const selectableActions: Action[] = ["Poke", "Combo", "Grab", "Special", "Super", "Block", "Crouch", "Jump"];
 const comboGuaranteedActions = selectableActions.filter((action) => !["Grab", "Combo"].includes(action));
-const TURN_RESOLUTION_VISUAL_BUFFER_MS = 8000;
+const TURN_RESOLUTION_VISUAL_BUFFER_MS = 15000;
 const ACTION_SUBMIT_GRACE_MS = 1200;
 const actionData: Record<Action, { speed?: number; damage?: number }> = {
   Poke: { speed: 1, damage: 4 },
@@ -726,12 +726,15 @@ async function consecutiveInactiveTimeouts(db: SupabaseClient, match: any, resul
 }
 
 async function resolveAndPersist(db: SupabaseClient, match: any) {
-  const { data: claimed } = await db.from("matches").update({ status: "resolving" })
+  let { data: claimed } = await db.from("matches").update({ status: "resolving" })
     .eq("id", match.id)
     .eq("current_turn", match.current_turn)
     .eq("status", "active")
     .select("*")
     .maybeSingle();
+  if (!claimed && match.status === "resolving") {
+    claimed = match;
+  }
   if (!claimed) {
     const { data: latest } = await db.from("matches").select("*").eq("id", match.id).single();
     return latest;
@@ -822,11 +825,6 @@ async function choosePostMatch(db: SupabaseClient, matchId: string, userId: stri
   if (!match || ![match.player1_id, match.player2_id].includes(userId)) throw new Error("Partida nao encontrada.");
   if (!["finished", "forfeited"].includes(match.status)) throw new Error("A partida ainda nao terminou.");
 
-  if (match.rematch_next_match_id) {
-    const { data: nextMatch } = await db.from("matches").select("*").eq("id", match.rematch_next_match_id).single();
-    return nextMatch || match;
-  }
-
   const choices = { ...(match.rematch_choices || {}), [userId]: choice };
   const { data: updated } = await db
     .from("matches")
@@ -838,6 +836,11 @@ async function choosePostMatch(db: SupabaseClient, matchId: string, userId: stri
   if (choice !== "again") {
     await updatePresence(db, userId, "online");
     return updated;
+  }
+
+  if (match.rematch_next_match_id) {
+    const { data: nextMatch } = await db.from("matches").select("*").eq("id", match.rematch_next_match_id).single();
+    return nextMatch || updated;
   }
 
   const opponentId = userId === match.player1_id ? match.player2_id : match.player1_id;
