@@ -27,6 +27,7 @@ export interface GameService {
   getHistory(): Promise<MatchHistoryEntry[]>;
   joinRankedQueue(): Promise<QueueResult>;
   leaveRankedQueue(): Promise<void>;
+  getMatch(matchId: string): Promise<GameMatch | null>;
   getCurrentMatch(): Promise<GameMatch | null>;
   getMatchedQueueMatch(): Promise<GameMatch | null>;
   createPrivateRoom(): Promise<PrivateRoom>;

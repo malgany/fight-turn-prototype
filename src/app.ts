@@ -680,7 +680,8 @@ export class App {
   }
 
   private async refreshMatch(): Promise<void> {
-    const match = await this.service.getCurrentMatch();
+    const currentMatchId = this.state.match?.id;
+    const match = currentMatchId ? await this.service.getMatch(currentMatchId) : await this.service.getCurrentMatch();
     if (match) {
       if (this.isInactivityDraw(match)) {
         this.returnToLobbyAfterInactivityDraw(match);

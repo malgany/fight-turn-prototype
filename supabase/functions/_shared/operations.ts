@@ -438,7 +438,11 @@ async function ensureProfile(db: SupabaseClient, user: User) {
     presence_status: "online",
   };
 
-  await db.from("profiles").upsert(profile, { onConflict: "id", ignoreDuplicates: false });
+  await db.from("profiles").upsert(profile, { onConflict: "id", ignoreDuplicates: true });
+  await db
+    .from("profiles")
+    .update({ display_name: profile.display_name, avatar_url: profile.avatar_url, account_type: profile.account_type })
+    .eq("id", user.id);
   await db.from("player_rank").upsert({ user_id: user.id, division: "Bronze" }, { onConflict: "user_id", ignoreDuplicates: true });
 
   const { data: defaultCharacters } = await db.from("characters").select("id").eq("is_default", true).eq("enabled", true);
@@ -559,6 +563,18 @@ async function getCurrentMatch(db: SupabaseClient, userId: string) {
     .limit(1)
     .maybeSingle();
   return finishedMatch ? toGameMatch(db, finishedMatch, userId) : null;
+}
+
+async function getLiveMatchRow(db: SupabaseClient, userId: string) {
+  const { data } = await db
+    .from("matches")
+    .select("*")
+    .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
+    .in("status", ["waiting", "selecting", "active", "resolving"])
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data || null;
 }
 
 async function activateMatchIfReady(db: SupabaseClient, match: any) {
@@ -866,6 +882,11 @@ async function operation(req: Request, name: string) {
   if (name === "join-ranked-queue") {
     const { data: profile } = await db.from("profiles").select("*").eq("id", user.id).single();
     if (profile.account_type === "guest") throw new Error("Ranked exige login com Google.");
+    const existingLiveMatch = await getLiveMatchRow(db, user.id);
+    if (existingLiveMatch) {
+      const activeExistingMatch = await activateMatchIfReady(db, existingLiveMatch);
+      return { status: "matched", match: await toGameMatch(db, activeExistingMatch, user.id) };
+    }
     const { data: rank } = await db.from("player_rank").select("rank_points").eq("user_id", user.id).single();
     const { data: opponentQueue } = await db.from("ranked_queue").select("user_id").eq("status", "waiting").neq("user_id", user.id).order("queued_at", { ascending: true }).limit(1).maybeSingle();
     if (opponentQueue) {

@@ -203,6 +203,14 @@ export class SupabaseGameService implements GameService {
     return this.getMatchedQueueMatch();
   }
 
+  async getMatch(matchId: string): Promise<GameMatch | null> {
+    try {
+      return await this.invoke<GameMatch>("finish-match", { matchId });
+    } catch {
+      return null;
+    }
+  }
+
   async getMatchedQueueMatch(): Promise<GameMatch | null> {
     const {
       data: { session },

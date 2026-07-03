@@ -201,6 +201,11 @@ export class DemoGameService implements GameService {
     return this.state().currentMatch;
   }
 
+  async getMatch(matchId: string): Promise<GameMatch | null> {
+    const match = this.state().currentMatch;
+    return match?.id === matchId ? match : null;
+  }
+
   async getMatchedQueueMatch(): Promise<GameMatch | null> {
     return this.state().currentMatch;
   }
