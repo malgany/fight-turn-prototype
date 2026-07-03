@@ -1164,7 +1164,8 @@ p {
 
 .post-match-actions .primary-command,
 .post-match-actions .secondary-command,
-.post-match-actions .ghost-command {
+.post-match-actions .ghost-command,
+.post-match-actions .rematch-status {
   min-height: clamp(42px, 12cqw, 52px);
   padding: 8px 10px;
   font-size: clamp(0.58rem, 2.9cqw, 0.82rem);
@@ -1185,9 +1186,17 @@ p {
   gap: 3px;
 }
 
-.rematch-command:disabled {
-  cursor: not-allowed;
-  filter: grayscale(0.45) brightness(0.82);
+.rematch-status {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  background: rgba(18, 20, 25, 0.72);
+  color: rgba(255, 255, 255, 0.74);
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 0 2px 0 #000;
+  box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.34);
 }
 
 .rematch-badges {

@@ -1658,6 +1658,15 @@
         scale: 0.74;
       }
 
+      body.online-bridge-local-locked .action::before {
+        filter: grayscale(1) brightness(0.58) drop-shadow(0 10px 7px rgba(0, 0, 0, 0.42)) !important;
+      }
+
+      body.online-bridge-local-locked .action::after {
+        opacity: 0 !important;
+        scale: 0.74 !important;
+      }
+
       .action::before {
         content: "";
         position: absolute;
@@ -7919,6 +7928,7 @@
         active: false,
         started: false,
         matchId: null,
+        currentTurn: null,
         startupPromise: null,
         startupReady: false,
         lastTurnKey: null,
@@ -8065,13 +8075,13 @@
           onlineBridge.turnDeadlineKey = deadlineKey;
           onlineBridge.turnDeadlineMs = null;
         }
-        const candidateDeadlineMs = options.restartFromNow
-          ? Date.now() + duration
-          : Number.isFinite(parsedDeadlineMs) ? parsedDeadlineMs : serverNowMs + duration;
+        const candidateDeadlineMs = Number.isFinite(parsedDeadlineMs)
+          ? parsedDeadlineMs
+          : options.restartFromNow
+            ? Date.now() + duration
+            : serverNowMs + duration;
         const shouldKeepTurnOpen = payload.status === "active" && !payload.localAction;
-        const deadlineMs = shouldKeepTurnOpen
-          ? Math.max(candidateDeadlineMs, onlineBridge.turnDeadlineMs || 0)
-          : candidateDeadlineMs;
+        const deadlineMs = candidateDeadlineMs;
         if (shouldKeepTurnOpen) {
           onlineBridge.turnDeadlineMs = deadlineMs;
         }
@@ -8101,6 +8111,8 @@
       }
 
       function onlineBridgeSetActionLock(locked) {
+        const localLockedByGuaranteed = Boolean(state.activeGuaranteedTurn && state.activeGuaranteedTurn.side !== "p1");
+        document.body.classList.toggle("online-bridge-local-locked", localLockedByGuaranteed);
         el.actionButtons.forEach((button) => {
           const action = button.dataset.action;
           const disabled = locked || state.phase !== "choosing" || !canUseAction("p1", action);
@@ -8368,6 +8380,7 @@
 
       function onlineBridgePrepareTurn(payload, options = {}) {
         const payloadKey = options.payloadKey || onlineBridgePayloadKey(payload);
+        onlineBridge.currentTurn = payload.currentTurn;
         if (!options.force && onlineBridge.lastPayloadKey === payloadKey) {
           onlineBridgeSetActionLock(Boolean(payload.localAction) || payload.status !== "active" || Boolean(options.pauseClock));
           return;
@@ -8640,7 +8653,7 @@
             return;
           }
           onlineBridgeSetActionLock(true);
-          onlineBridgePost({ type: "action", action });
+          onlineBridgePost({ type: "action", action, turnNumber: onlineBridge.currentTurn });
         }, true);
 
         el.exitBattleButton.addEventListener("click", () => {

@@ -352,7 +352,8 @@ export class App {
     }
 
     if (message.type === "action" && typeof message.action === "string") {
-      await this.submitMatchAction(message.action as Action);
+      const turnNumber = Number(message.turnNumber ?? message.currentTurn);
+      await this.submitMatchAction(message.action as Action, Number.isFinite(turnNumber) ? turnNumber : undefined);
       return;
     }
 
@@ -385,7 +386,7 @@ export class App {
     this.legacyBattleVisualBusyKey = null;
     this.legacyBattleVisualBusyUntilMs = 0;
     if (match.status === "active" && !match.localAction) {
-      this.localTurnDeadlineMs = Date.now() + turnDurationForState(match.battleState);
+      this.syncLocalTurnClock(match, true);
       this.syncLegacyBattleFrame();
     }
   }
@@ -672,7 +673,6 @@ export class App {
       if (previousBattleMatchId !== match.id) {
         this.legacyBattleVisualBusyKey = this.legacyBattleVisualKey(match);
         this.legacyBattleVisualBusyUntilMs = Date.now() + 10_000;
-        this.localTurnDeadlineMs = Date.now() + turnDurationForState(match.battleState);
       }
       this.syncLegacyBattleFrameBurst();
     }
@@ -719,11 +719,11 @@ export class App {
     }
   }
 
-  private async submitMatchAction(action: Action): Promise<void> {
+  private async submitMatchAction(action: Action, turnNumber = this.state.match?.currentTurn): Promise<void> {
     if (!this.state.match) return;
     this.state.error = null;
     try {
-      const match = await this.service.submitAction(this.state.match!.id, action);
+      const match = await this.service.submitAction(this.state.match!.id, action, turnNumber);
       this.enterMatch(match);
     } catch (error) {
       this.state.error = error instanceof Error ? error.message : String(error);
@@ -905,9 +905,9 @@ export class App {
     }
   }
 
-  private syncLocalTurnClock(match: GameMatch): void {
+  private syncLocalTurnClock(match: GameMatch, force = false): void {
     const key = `${match.id}:${match.currentTurn}:${match.turnDeadlineAt}:${match.status}`;
-    if (this.turnClockKey === key && this.localTurnDeadlineMs !== null) return;
+    if (!force && this.turnClockKey === key && this.localTurnDeadlineMs !== null) return;
 
     this.turnClockKey = key;
     if (match.status !== "active" && match.status !== "resolving") {
@@ -1292,19 +1292,16 @@ export class App {
     const opponentLeft = rematch.opponentChoice === "lobby";
     const localReady = !opponentLeft && rematch.localChoice === "again";
     const opponentReady = !opponentLeft && rematch.opponentChoice === "again";
-    const disabled = localReady || opponentLeft;
-    const label = opponentLeft
-      ? "Adversario saiu"
-      : localReady
-        ? "Aguardando..."
-        : opponentReady
-          ? "Aceitar revanche"
-          : "Jogar novamente";
+    if (opponentLeft || localReady) {
+      const label = opponentLeft ? "Adversario saiu" : "Aguardando...";
+      return `<div class="rematch-status" role="status" aria-live="polite">${label}</div>`;
+    }
+
+    const label = opponentReady ? "Aceitar revanche" : "Jogar novamente";
 
     return `
-      <button class="primary-command rematch-command" data-action="play-again" type="button" ${disabled ? "disabled" : ""}>
+      <button class="primary-command rematch-command" data-action="play-again" type="button">
         <span class="rematch-badges" aria-hidden="true">
-          ${localReady ? `<span class="rematch-badge p1">P1</span>` : ""}
           ${opponentReady ? `<span class="rematch-badge p2">P2</span>` : ""}
         </span>
         <span>${label}</span>

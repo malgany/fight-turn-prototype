@@ -268,7 +268,7 @@ export class DemoGameService implements GameService {
     return nextMatch;
   }
 
-  async submitAction(matchId: string, action: Action): Promise<GameMatch> {
+  async submitAction(matchId: string, action: Action, _turnNumber?: number): Promise<GameMatch> {
     const state = this.state();
     const match = state.currentMatch;
     if (!match || match.id !== matchId) throw new Error("Partida nao encontrada.");

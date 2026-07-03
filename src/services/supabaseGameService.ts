@@ -246,8 +246,8 @@ export class SupabaseGameService implements GameService {
     return this.invoke<GameMatch>("select-match-character", { matchId, characterId });
   }
 
-  submitAction(matchId: string, action: Action): Promise<GameMatch> {
-    return this.invoke<GameMatch>("submit-action", { matchId, action });
+  submitAction(matchId: string, action: Action, turnNumber?: number): Promise<GameMatch> {
+    return this.invoke<GameMatch>("submit-action", { matchId, action, turnNumber });
   }
 
   resolveTurn(matchId: string): Promise<GameMatch> {

@@ -34,7 +34,7 @@ export interface GameService {
   joinPrivateRoom(code: string): Promise<{ room: PrivateRoom; match: GameMatch | null }>;
   getPrivateRoom(code: string): Promise<{ room: PrivateRoom; match: GameMatch | null }>;
   selectMatchCharacter(matchId: string, characterId: string): Promise<GameMatch>;
-  submitAction(matchId: string, action: Action): Promise<GameMatch>;
+  submitAction(matchId: string, action: Action, turnNumber?: number): Promise<GameMatch>;
   resolveTurn(matchId: string): Promise<GameMatch>;
   forfeitMatch(matchId: string): Promise<GameMatch>;
   postMatchChoice(matchId: string, choice: RematchChoice): Promise<GameMatch>;

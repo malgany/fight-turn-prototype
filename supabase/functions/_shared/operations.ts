@@ -425,6 +425,24 @@ function canUseAction(state: any, side: Side, action: Action) {
   return true;
 }
 
+function sideUserId(match: any, side: Side) {
+  return side === "p1" ? match.player1_id : match.player2_id;
+}
+
+function requiredActionUserIds(match: any) {
+  const guaranteed = match.state?.activeGuaranteedTurn;
+  if (guaranteed?.side === "p1" || guaranteed?.side === "p2") {
+    return [sideUserId(match, guaranteed.side)];
+  }
+
+  return [match.player1_id, match.player2_id];
+}
+
+function hasRequiredActions(match: any, actions: any[]) {
+  const submittedUserIds = new Set((actions || []).map((action: any) => action.user_id));
+  return requiredActionUserIds(match).every((userId) => submittedUserIds.has(userId));
+}
+
 async function ensureProfile(db: SupabaseClient, user: User) {
   await ensureDefaultCharacters(db);
 
@@ -708,6 +726,18 @@ async function consecutiveInactiveTimeouts(db: SupabaseClient, match: any, resul
 }
 
 async function resolveAndPersist(db: SupabaseClient, match: any) {
+  const { data: claimed } = await db.from("matches").update({ status: "resolving" })
+    .eq("id", match.id)
+    .eq("current_turn", match.current_turn)
+    .eq("status", "active")
+    .select("*")
+    .maybeSingle();
+  if (!claimed) {
+    const { data: latest } = await db.from("matches").select("*").eq("id", match.id).single();
+    return latest;
+  }
+
+  match = claimed;
   const { data: actions } = await db.from("match_actions").select("*").eq("match_id", match.id).eq("turn_number", match.current_turn);
   const p1Action = (actions || []).find((action: any) => action.user_id === match.player1_id)?.action || null;
   const p2Action = (actions || []).find((action: any) => action.user_id === match.player2_id)?.action || null;
@@ -734,8 +764,11 @@ async function resolveAndPersist(db: SupabaseClient, match: any) {
     last_turn: result,
     current_turn: result.after.turnNumber,
     turn_deadline_at: deadlineAfterTurnResolution(result.after),
-  }).eq("id", match.id).select("*").single();
-  return updated;
+  }).eq("id", match.id).eq("current_turn", match.current_turn).eq("status", "resolving").select("*").maybeSingle();
+  if (updated) return updated;
+
+  const { data: latest } = await db.from("matches").select("*").eq("id", match.id).single();
+  return latest;
 }
 
 function randomCode() {
@@ -959,10 +992,14 @@ async function operation(req: Request, name: string) {
   if (name === "submit-action") {
     const matchId = String(body.matchId || "");
     const action = String(body.action || "") as Action;
+    const requestedTurnNumber = Number(body.turnNumber);
     if (!selectableActions.includes(action)) throw new Error("Acao invalida.");
     const { data: match } = await db.from("matches").select("*").eq("id", matchId).single();
     if (!match || ![match.player1_id, match.player2_id].includes(user.id)) throw new Error("Partida nao encontrada.");
     if (match.status !== "active") return toGameMatch(db, match, user.id);
+    if (Number.isFinite(requestedTurnNumber) && requestedTurnNumber !== match.current_turn) {
+      return toGameMatch(db, match, user.id);
+    }
     const side: Side = match.player1_id === user.id ? "p1" : "p2";
     if (!canUseAction(match.state, side, action)) throw new Error("Acao nao permitida neste turno.");
     if (new Date(match.turn_deadline_at).getTime() + ACTION_SUBMIT_GRACE_MS < Date.now()) {
@@ -971,7 +1008,7 @@ async function operation(req: Request, name: string) {
     }
     await db.from("match_actions").upsert({ match_id: match.id, turn_number: match.current_turn, user_id: user.id, action }, { onConflict: "match_id,turn_number,user_id" });
     const { data: actions } = await db.from("match_actions").select("user_id").eq("match_id", match.id).eq("turn_number", match.current_turn);
-    const updated = (actions || []).length >= 2 ? await resolveAndPersist(db, match) : match;
+    const updated = hasRequiredActions(match, actions || []) ? await resolveAndPersist(db, match) : match;
     return toGameMatch(db, updated, user.id);
   }
 
