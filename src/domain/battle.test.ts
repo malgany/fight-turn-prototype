@@ -7,7 +7,7 @@ describe("resolveBattleTurn", () => {
 
     expect(result.type).toBe("hit");
     expect(result.winner).toBe("p1");
-    expect(result.after.p2.health).toBe(96);
+    expect(result.after.p2.health).toBe(94);
     expect(result.finished).toBe(false);
   });
 
@@ -27,7 +27,7 @@ describe("resolveBattleTurn", () => {
 
     expect(result.primary).toBe("GOLPE LIVRE");
     expect(result.winner).toBe("p1");
-    expect(result.after.p2.health).toBe(88);
+    expect(result.after.p2.health).toBe(80);
   });
 
   it("does not give the opponent ultimate bar when Combo hits without knockdown", () => {
@@ -57,7 +57,15 @@ describe("resolveBattleTurn", () => {
     expect(result.matchWinner).toBe("p1");
   });
 
-  it("applies Doll special damage and lifesteal on hit", () => {
+  it("uses updated standard Grab damage", () => {
+    const result = resolveBattleTurn(createInitialBattleState(), "Grab", "Block");
+
+    expect(result.type).toBe("hit");
+    expect(result.winner).toBe("p1");
+    expect(result.after.p2.health).toBe(84);
+  });
+
+  it("applies updated Doll special damage and lifesteal on hit", () => {
     const state = createInitialBattleState();
     state.p1.health = 50;
     state.p2.health = 10;
@@ -66,8 +74,8 @@ describe("resolveBattleTurn", () => {
     expect(result.type).toBe("hit");
     expect(result.winner).toBe("p1");
     expect(result.after.p2.health).toBe(0);
-    expect(result.after.p1.health).toBe(60);
-    expect(result.healing?.p1).toBe(10);
+    expect(result.after.p1.health).toBe(52);
+    expect(result.healing?.p1).toBe(2);
   });
 
   it("keeps Doll special chip blocked without healing", () => {
@@ -90,10 +98,10 @@ describe("resolveBattleTurn", () => {
 
     expect(result.type).toBe("hit");
     expect(result.winner).toBe("p1");
-    expect(result.after.p1.health).toBe(100);
+    expect(result.after.p1.health).toBe(95);
     expect(result.after.p2.health).toBe(100);
     expect(result.after.p1.super).toBe(0);
-    expect(result.healing?.p1).toBe(30);
+    expect(result.healing?.p1).toBe(25);
     expect(result.after.advantage).toBeNull();
     expect(result.knockedDown).toEqual([]);
     expect(result.after.activeGuaranteedTurn).toBeNull();
@@ -106,9 +114,9 @@ describe("resolveBattleTurn", () => {
     state.activeGuaranteedTurn = { side: "p1", allowedActions: ["Super"], reason: "TESTE", durationMs: 3000 };
     const result = resolveBattleTurn(state, "Super", null, { p1CharacterId: "doll", p2CharacterId: "ninja" });
 
-    expect(result.after.p1.health).toBe(100);
+    expect(result.after.p1.health).toBe(95);
     expect(result.after.p2.health).toBe(100);
-    expect(result.healing?.p1).toBe(30);
+    expect(result.healing?.p1).toBe(25);
     expect(result.knockedDown).toEqual([]);
     expect(result.after.advantage).toBeNull();
   });
@@ -121,7 +129,7 @@ describe("resolveBattleTurn", () => {
     const result = resolveBattleTurn(state, "Super", "Special", { p1CharacterId: "doll", p2CharacterId: "ninja" });
 
     expect(result.winner).toBe("p2");
-    expect(result.after.p1.health).toBe(28);
+    expect(result.after.p1.health).toBe(24);
     expect(result.after.p2.health).toBe(100);
     expect(result.healing?.p1).toBe(1);
   });
@@ -134,28 +142,29 @@ describe("resolveBattleTurn", () => {
 
     expect(result.type).toBe("hit");
     expect(result.winner).toBe("p1");
-    expect(result.after.p1.health).toBe(100);
+    expect(result.after.p1.health).toBe(95);
     expect(result.after.p2.health).toBe(100);
-    expect(result.healing?.p1).toBe(30);
+    expect(result.healing?.p1).toBe(25);
     expect(result.knockedDown).toEqual([]);
   });
 
-  it("heals Doll by one at the start of the next turn", () => {
+  it("does not heal Doll when she is not knocked down", () => {
     const state = createInitialBattleState();
     state.p1.health = 50;
     const result = resolveBattleTurn(state, "Block", "Block", { p1CharacterId: "doll", p2CharacterId: "itzcoatl" });
 
-    expect(result.after.p1.health).toBe(51);
-    expect(result.healing?.p1).toBe(1);
+    expect(result.after.p1.health).toBe(50);
+    expect(result.healed).toEqual([]);
   });
 
-  it("caps Doll passive healing at full health", () => {
+  it("heals Doll by one when she is knocked down", () => {
     const state = createInitialBattleState();
-    state.p1.health = 100;
-    const result = resolveBattleTurn(state, "Block", "Block", { p1CharacterId: "doll", p2CharacterId: "itzcoatl" });
+    state.p1.health = 50;
+    const result = resolveBattleTurn(state, "Block", "Grab", { p1CharacterId: "doll", p2CharacterId: "aton" });
 
-    expect(result.after.p1.health).toBe(100);
-    expect(result.healed).toEqual([]);
+    expect(result.knockedDown).toEqual(["p1"]);
+    expect(result.after.p1.health).toBe(35);
+    expect(result.healing?.p1).toBe(1);
   });
 
   it("does not revive Doll with passive healing after lethal damage", () => {
@@ -168,29 +177,18 @@ describe("resolveBattleTurn", () => {
     expect(result.healed).toEqual([]);
   });
 
-  it("applies Doll passive when entering a guaranteed turn", () => {
+  it("does not apply Doll passive when entering a guaranteed turn without knockdown", () => {
     const state = createInitialBattleState();
     state.p1.health = 50;
     const result = resolveBattleTurn(state, "Combo", null, { p1CharacterId: "doll", p2CharacterId: "itzcoatl" });
 
-    expect(result.after.p1.health).toBe(51);
+    expect(result.after.p1.health).toBe(50);
     expect(result.after.activeGuaranteedTurn?.side).toBe("p1");
-    expect(result.healing?.p1).toBe(1);
+    expect(result.healed).toEqual([]);
   });
 
-  it("keeps Itzcoatl special at 18 damage and knockdown", () => {
+  it("uses updated Itzcoatl special damage and knockdown", () => {
     const result = resolveBattleTurn(createInitialBattleState(), "Special", "Jump", { p1CharacterId: "itzcoatl", p2CharacterId: "ninja" });
-
-    expect(result.type).toBe("hit");
-    expect(result.winner).toBe("p1");
-    expect(result.after.p2.health).toBe(82);
-    expect(result.knockedDown).toEqual(["p2"]);
-  });
-
-  it("keeps Itzcoatl ultimate at 25 damage on hit", () => {
-    const state = createInitialBattleState();
-    state.p1.super = 3;
-    const result = resolveBattleTurn(state, "Super", null, { p1CharacterId: "itzcoatl", p2CharacterId: "ninja" });
 
     expect(result.type).toBe("hit");
     expect(result.winner).toBe("p1");
@@ -198,16 +196,29 @@ describe("resolveBattleTurn", () => {
     expect(result.knockedDown).toEqual(["p2"]);
   });
 
-  it("resurrects Itzcoatl at one health after lethal damage", () => {
+  it("uses updated Itzcoatl ultimate damage on hit", () => {
+    const state = createInitialBattleState();
+    state.p1.super = 3;
+    const result = resolveBattleTurn(state, "Super", null, { p1CharacterId: "itzcoatl", p2CharacterId: "ninja" });
+
+    expect(result.type).toBe("hit");
+    expect(result.winner).toBe("p1");
+    expect(result.after.p2.health).toBe(65);
+    expect(result.knockedDown).toEqual(["p2"]);
+  });
+
+  it("resurrects Itzcoatl at five health and returns to neutral after lethal damage", () => {
     const state = createInitialBattleState();
     state.p1.health = 4;
+    state.advantage = "p2";
     const result = resolveBattleTurn(state, null, "Poke", { p1CharacterId: "itzcoatl", p2CharacterId: "aton" });
 
     expect(result.finished).toBe(false);
     expect(result.matchWinner).toBeNull();
-    expect(result.after.p1.health).toBe(1);
+    expect(result.after.p1.health).toBe(5);
+    expect(result.after.advantage).toBeNull();
     expect(result.after.itzcoatlResurrectionUsed?.p1).toBe(true);
-    expect(result.healing?.p1).toBe(1);
+    expect(result.healing?.p1).toBe(5);
   });
 
   it("only resurrects Itzcoatl once per match", () => {
@@ -218,7 +229,7 @@ describe("resolveBattleTurn", () => {
     const secondLethal = resolveBattleTurn(firstLethal.after, null, "Poke", { p1CharacterId: "itzcoatl", p2CharacterId: "aton" });
 
     expect(firstLethal.finished).toBe(false);
-    expect(firstLethal.after.p1.health).toBe(1);
+    expect(firstLethal.after.p1.health).toBe(5);
     expect(secondLethal.finished).toBe(true);
     expect(secondLethal.matchWinner).toBe("p2");
     expect(secondLethal.after.p1.health).toBe(0);
@@ -233,9 +244,9 @@ describe("resolveBattleTurn", () => {
 
     expect(result.finished).toBe(true);
     expect(result.matchWinner).toBe("p1");
-    expect(result.after.p1.health).toBe(1);
+    expect(result.after.p1.health).toBe(5);
     expect(result.after.p2.health).toBe(0);
-    expect(result.healing?.p1).toBe(1);
+    expect(result.healing?.p1).toBe(5);
   });
 
   it("keeps the fight going when both Itzcoatl fighters take lethal damage", () => {
@@ -246,29 +257,29 @@ describe("resolveBattleTurn", () => {
 
     expect(result.finished).toBe(false);
     expect(result.matchWinner).toBeNull();
-    expect(result.after.p1.health).toBe(1);
-    expect(result.after.p2.health).toBe(1);
-    expect(result.healing?.p1).toBe(1);
-    expect(result.healing?.p2).toBe(1);
+    expect(result.after.p1.health).toBe(5);
+    expect(result.after.p2.health).toBe(5);
+    expect(result.healing?.p1).toBe(5);
+    expect(result.healing?.p2).toBe(5);
   });
 
-  it("keeps Aton special at 18 damage and knockdown", () => {
+  it("uses updated Aton special damage and knockdown", () => {
     const result = resolveBattleTurn(createInitialBattleState(), "Special", "Jump", { p1CharacterId: "aton", p2CharacterId: "ninja" });
 
     expect(result.type).toBe("hit");
     expect(result.winner).toBe("p1");
-    expect(result.after.p2.health).toBe(82);
+    expect(result.after.p2.health).toBe(75);
     expect(result.knockedDown).toEqual(["p2"]);
   });
 
-  it("keeps Aton ultimate at 25 damage on hit", () => {
+  it("uses updated Aton ultimate damage on hit", () => {
     const state = createInitialBattleState();
     state.p1.super = 3;
     const result = resolveBattleTurn(state, "Super", null, { p1CharacterId: "aton", p2CharacterId: "ninja" });
 
     expect(result.type).toBe("hit");
     expect(result.winner).toBe("p1");
-    expect(result.after.p2.health).toBe(75);
+    expect(result.after.p2.health).toBe(65);
     expect(result.knockedDown).toEqual(["p2"]);
   });
 
@@ -278,7 +289,7 @@ describe("resolveBattleTurn", () => {
     const result = resolveBattleTurn(state, "Special", "Block", { p1CharacterId: "aton", p2CharacterId: "ninja" });
 
     expect(result.type).toBe("blocked");
-    expect(result.after.p2.health).toBe(94);
+    expect(result.after.p2.health).toBe(91);
     expect(result.damaged).toEqual(["p2"]);
   });
 
@@ -297,7 +308,7 @@ describe("resolveBattleTurn", () => {
     const result = resolveBattleTurn(state, "Super", "Block", { p1CharacterId: "aton", p2CharacterId: "ninja" });
 
     expect(result.type).toBe("blocked");
-    expect(result.after.p2.health).toBe(93);
+    expect(result.after.p2.health).toBe(90);
     expect(result.after.p1.super).toBe(0);
     expect(result.after.activeGuaranteedTurn?.side).toBe("p2");
   });
@@ -324,29 +335,29 @@ describe("resolveBattleTurn", () => {
     tradeState.p1.super = 3;
     const trade = resolveBattleTurn(tradeState, "Special", "Special", { p1CharacterId: "aton", p2CharacterId: "ninja" });
 
-    expect(hit.after.p2.health).toBe(82);
+    expect(hit.after.p2.health).toBe(75);
     expect(evade.after.p2.health).toBe(100);
     expect(trade.after.p1.health).toBe(95);
     expect(trade.after.p2.health).toBe(95);
   });
 
-  it.each(["Jump", "Crouch"] as const)("makes Krampus special deal 13 damage against %s", (response) => {
+  it.each(["Jump", "Crouch"] as const)("makes Krampus special deal 17 damage against %s", (response) => {
     const result = resolveBattleTurn(createInitialBattleState(), "Special", response, { p1CharacterId: "ninja", p2CharacterId: "itzcoatl" });
 
     expect(result.type).toBe("hit");
     expect(result.winner).toBe("p1");
-    expect(result.after.p2.health).toBe(87);
+    expect(result.after.p2.health).toBe(83);
     expect(result.knockedDown).toEqual(["p2"]);
   });
 
-  it("makes Krampus ultimate deal 30 damage on hit", () => {
+  it("makes Krampus ultimate deal 40 damage on hit", () => {
     const state = createInitialBattleState();
     state.p1.super = 3;
     const result = resolveBattleTurn(state, "Super", null, { p1CharacterId: "ninja", p2CharacterId: "itzcoatl" });
 
     expect(result.type).toBe("hit");
     expect(result.winner).toBe("p1");
-    expect(result.after.p2.health).toBe(70);
+    expect(result.after.p2.health).toBe(60);
     expect(result.knockedDown).toEqual(["p2"]);
   });
 
@@ -385,13 +396,13 @@ describe("resolveBattleTurn", () => {
     expect(result.after.p1.super).toBe(3);
   });
 
-  it("keeps non-Krampus special and ultimate behavior unchanged", () => {
+  it("keeps non-Krampus block behavior while using updated hit damage", () => {
     const special = resolveBattleTurn(createInitialBattleState(), "Special", "Jump", { p1CharacterId: "itzcoatl", p2CharacterId: "ninja" });
     const ultimateState = createInitialBattleState();
     ultimateState.p1.super = 3;
     const ultimate = resolveBattleTurn(ultimateState, "Super", "Block", { p1CharacterId: "itzcoatl", p2CharacterId: "ninja" });
 
-    expect(special.after.p2.health).toBe(82);
+    expect(special.after.p2.health).toBe(75);
     expect(special.knockedDown).toEqual(["p2"]);
     expect(ultimate.type).toBe("blocked");
     expect(ultimate.after.p2.health).toBe(97);

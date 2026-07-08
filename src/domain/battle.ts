@@ -25,9 +25,9 @@ const actionNames: Record<Action | "Wait", string> = {
 };
 
 const actionData: Record<Action, { speed?: number; damage?: number; type?: "defense" | "movement" }> = {
-  Poke: { speed: 1, damage: 4 },
-  Combo: { speed: 2, damage: 12 },
-  Grab: { speed: 3, damage: 12 },
+  Poke: { speed: 1, damage: 6 },
+  Combo: { speed: 2, damage: 20 },
+  Grab: { speed: 3, damage: 16 },
   Special: { speed: 4, damage: 18 },
   Super: { speed: 5, damage: 25 },
   Block: { type: "defense" },
@@ -157,15 +157,19 @@ function causesKnockdown(action: Action | "Wait", targetAction: Action | "Wait",
 
 function actionDamage(side: Side, action: Action | "Wait", context: BattleCharacterContext): number {
   if (action === "Wait") return 0;
-  if (isDollSpecial(side, action, context)) return 10;
-  if (isKrampus(side, context) && action === "Special") return 13;
-  if (isKrampus(side, context) && action === "Super") return 30;
+  if (isDollSpecial(side, action, context)) return 15;
+  if (isItzcoatl(side, context) && action === "Special") return 25;
+  if (isItzcoatl(side, context) && action === "Super") return 35;
+  if (isAton(side, context) && action === "Special") return 25;
+  if (isAton(side, context) && action === "Super") return 35;
+  if (isKrampus(side, context) && action === "Special") return 17;
+  if (isKrampus(side, context) && action === "Super") return 40;
   return actionData[action].damage || 0;
 }
 
 function blockDamage(attacker: Side, attack: Action, beforeState: BattleState, context: BattleCharacterContext): number {
   const baseChip = blockChip[attack] || 0;
-  const atonBonus = isAton(attacker, context) && beforeState[attacker].super >= 3 ? 4 : 0;
+  const atonBonus = isAton(attacker, context) && beforeState[attacker].super >= 3 ? 7 : 0;
   return baseChip + atonBonus;
 }
 
@@ -188,13 +192,13 @@ function addHealingToResult<T extends { healed: Side[]; healing?: Partial<Record
   };
 }
 
-function applyDollTurnStartPassive<T extends { healed: Side[]; healing?: Partial<Record<Side, number>> }>(
+function applyDollKnockdownPassive<T extends { knockedDown: Side[]; healed: Side[]; healing?: Partial<Record<Side, number>> }>(
   state: BattleState,
   result: T,
   context: BattleCharacterContext,
 ): T {
   let nextResult = result;
-  (["p1", "p2"] as Side[]).forEach((side) => {
+  result.knockedDown.forEach((side) => {
     if (!isDoll(side, context) || state[side].health <= 0) return;
     const healedAmount = applyHeal(state, side, 1);
     nextResult = addHealingToResult(nextResult, side, healedAmount);
@@ -202,18 +206,27 @@ function applyDollTurnStartPassive<T extends { healed: Side[]; healing?: Partial
   return nextResult;
 }
 
-function applyItzcoatlResurrection<T extends { healed: Side[]; healing?: Partial<Record<Side, number>> }>(
+function applyItzcoatlResurrection<T extends { healed: Side[]; healing?: Partial<Record<Side, number>>; guaranteedTurn: GuaranteedTurn | null }>(
   state: BattleState,
   result: T,
   context: BattleCharacterContext,
 ): T {
   let nextResult = result;
+  let revived = false;
   (["p1", "p2"] as Side[]).forEach((side) => {
     if (!isItzcoatl(side, context) || state[side].health > 0 || state.itzcoatlResurrectionUsed?.[side]) return;
-    state[side].health = 1;
+    state[side].health = 5;
     state.itzcoatlResurrectionUsed = { ...state.itzcoatlResurrectionUsed, [side]: true };
-    nextResult = addHealingToResult(nextResult, side, 1);
+    nextResult = addHealingToResult(nextResult, side, 5);
+    revived = true;
   });
+
+  if (revived) {
+    state.advantage = null;
+    state.activeGuaranteedTurn = null;
+    nextResult = { ...nextResult, guaranteedTurn: null };
+  }
+
   return nextResult;
 }
 
@@ -244,7 +257,7 @@ function baseResult(state: BattleState, p1Action: Action | null, p2Action: Actio
 }
 
 function resolveDollUltimateHeal(state: BattleState, side: Side) {
-  const healedAmount = applyHeal(state, side, 30);
+  const healedAmount = applyHeal(state, side, 25);
   state.advantage = null;
 
   return {
@@ -262,8 +275,8 @@ function resolveDollUltimateHeal(state: BattleState, side: Side) {
 }
 
 function resolveBothDollUltimatesHeal(state: BattleState) {
-  const p1HealedAmount = applyHeal(state, "p1", 30);
-  const p2HealedAmount = applyHeal(state, "p2", 30);
+  const p1HealedAmount = applyHeal(state, "p1", 25);
+  const p2HealedAmount = applyHeal(state, "p2", 25);
   state.advantage = null;
 
   return {
@@ -297,7 +310,7 @@ function resolveHit(state: BattleState, winner: Side, p1Action: Action | "Wait",
 
   applyDamage(state, loser, damage, action, { comboKnockdown: knockedDown.length > 0 });
   applyKrampusKnockdownPassive(state, winner, knockedDown, context);
-  const healedAmount = isDollSpecialHit ? applyHeal(state, winner, 10) : 0;
+  const healedAmount = isDollSpecialHit ? applyHeal(state, winner, 2) : 0;
   state.advantage = winner;
 
   return {
@@ -513,7 +526,7 @@ export function resolveBattleTurn(currentState: BattleState, p1Action: Action | 
   const p1DeadAfterResurrection = state.p1.health <= 0;
   const p2DeadAfterResurrection = state.p2.health <= 0;
   if (!p1DeadAfterResurrection && !p2DeadAfterResurrection) {
-    partial = applyDollTurnStartPassive(state, partial, context);
+    partial = applyDollKnockdownPassive(state, partial, context);
   }
 
   const p1DeadAfterPassive = state.p1.health <= 0;
