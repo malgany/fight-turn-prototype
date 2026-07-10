@@ -4063,6 +4063,7 @@
       const comboHitEffectTimers = { p1: null, p2: null };
       let mobileUiActionLocked = false;
       let introSplashTimerId = null;
+      let comingSoonPopupShown = false;
       let cpuTokenRevealTimerId = null;
       let cpuTokenRevealGeneration = 0;
       const audioState = {
@@ -7720,6 +7721,11 @@
       }
 
       function showComingSoonPopup() {
+        if (comingSoonPopupShown) {
+          return;
+        }
+
+        comingSoonPopupShown = true;
         el.comingSoonPopup.classList.add("show");
         el.comingSoonPopup.setAttribute("aria-hidden", "false");
         el.comingSoonPopupClose.focus();
