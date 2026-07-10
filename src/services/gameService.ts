@@ -25,6 +25,7 @@ export interface GameService {
   heartbeat(status: PlayerProfile["presenceStatus"], matchId?: string): Promise<void>;
   getLeaderboard(): Promise<LeaderboardEntry[]>;
   getHistory(): Promise<MatchHistoryEntry[]>;
+  getCharacterUsage(): Promise<Record<string, number>>;
   joinRankedQueue(): Promise<QueueResult>;
   leaveRankedQueue(): Promise<void>;
   getMatch(matchId: string): Promise<GameMatch | null>;
@@ -34,7 +35,9 @@ export interface GameService {
   joinPrivateRoom(code: string): Promise<{ room: PrivateRoom; match: GameMatch | null }>;
   getPrivateRoom(code: string): Promise<{ room: PrivateRoom; match: GameMatch | null }>;
   selectMatchCharacter(matchId: string, characterId: string): Promise<GameMatch>;
-  submitAction(matchId: string, action: Action, turnNumber?: number): Promise<GameMatch>;
+  markMatchReady(matchId: string): Promise<GameMatch>;
+  markTurnReady(matchId: string, turnNumber: number): Promise<void>;
+  submitAction(matchId: string, action: Action, turnNumber?: number): Promise<GameMatch | null>;
   resolveTurn(matchId: string): Promise<GameMatch>;
   forfeitMatch(matchId: string): Promise<GameMatch>;
   postMatchChoice(matchId: string, choice: RematchChoice): Promise<GameMatch>;

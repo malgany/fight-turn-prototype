@@ -1223,6 +1223,12 @@
         pointer-events: none;
       }
 
+      body.online-bridge-start-gated .phone {
+        filter: grayscale(1);
+        pointer-events: none;
+        transition: filter 180ms linear;
+      }
+
       .online-bridge-start-layer.is-loading {
         background: #000;
       }
@@ -1258,6 +1264,11 @@
 
       .online-bridge-start-layer:not(.is-loading) .online-bridge-start-text {
         font-size: clamp(28px, 10cqw, 56px);
+      }
+
+      .online-bridge-start-layer.is-countdown .online-bridge-start-text {
+        font-size: clamp(70px, 25cqw, 138px);
+        text-shadow: 0 5px 0 #000, 0 0 20px rgba(255, 255, 255, 0.92);
       }
 
       .advanced-debug-selection {
@@ -2555,17 +2566,19 @@
       }
 
       .character-select-button.abilities {
+        width: 70%;
         aspect-ratio: 2048 / 682;
-        border: clamp(2px, 0.65cqw, 3px) solid rgba(255, 255, 255, 0.88);
+        justify-self: center;
+        border: clamp(1px, 0.45cqw, 2px) solid rgba(116, 218, 232, 0.9);
         border-radius: 5px;
         background:
           linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 32%),
-          linear-gradient(#df2d33, #73070c 68%, #360306);
+          linear-gradient(#318aa1, #145168 68%, #082c3a);
         color: #ffffff;
         font-size: clamp(7px, 2.25cqw, 12px);
         font-weight: 900;
         text-shadow: 0 2px 0 #000;
-        box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.26);
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3), 0 0 8px rgba(61, 174, 199, 0.2);
       }
 
       .character-select-button:disabled {
@@ -3469,7 +3482,7 @@
 
       <section class="state-popup-layer" id="statePopupLayer" aria-hidden="true"></section>
 
-      <section class="online-bridge-start-layer is-hidden" id="onlineBridgeStartLayer" aria-hidden="true">
+      <section class="online-bridge-start-layer is-hidden" id="onlineBridgeStartLayer" aria-hidden="true" aria-live="polite">
         <img class="online-bridge-loading-spinner" src="../../game-assets/ui/loading/loading-spinner.webp?v=20260622-key2" alt="">
         <div class="online-bridge-start-text" id="onlineBridgeStartText">CARREGANDO</div>
       </section>
@@ -6955,7 +6968,7 @@
         state[targetSide].health = clampPercent(state[targetSide].health - amount);
         showHealthDamageTrail(targetSide, previousHealth);
 
-        if (options.blocked || grantsDefenderSuper(sourceAction, options)) {
+        if (!options.blocked && grantsDefenderSuper(sourceAction, options)) {
           addUltimateCharge(targetSide);
         }
         grantUltimateForHealthThresholds(targetSide, previousHealth);
@@ -7268,6 +7281,9 @@
         if (response === "Block" && blockChip[attack] !== undefined) {
           const chip = blockDamage(attacker, attack, beforeSuper);
           applyDamage(defender, chip, attack, { blocked: true });
+          if (attack === "Poke" || attack === "Combo" || attack === "Special") {
+            addUltimateCharge(attacker);
+          }
           state.advantage = defender;
           return {
             type: "blocked",
@@ -7335,6 +7351,28 @@
         return result.winner === "p1" ? p1Action : p2Action;
       }
 
+      function applyAuthoritativeTurnResult(turn) {
+        const after = turn?.after;
+        if (!after) {
+          return null;
+        }
+
+        state.p1.health = clampPercent(after.p1?.health ?? state.p1.health);
+        state.p1.super = after.p1?.super ?? state.p1.super;
+        state.p2.health = clampPercent(after.p2?.health ?? state.p2.health);
+        state.p2.super = after.p2?.super ?? state.p2.super;
+        state.advantage = after.advantage || null;
+        state.itzcoatlResurrectionUsed = {
+          p1: Boolean(after.itzcoatlResurrectionUsed?.p1),
+          p2: Boolean(after.itzcoatlResurrectionUsed?.p2),
+        };
+        state.ultimateHealthThresholdsReached = {
+          p1: [...(after.ultimateHealthThresholdsReached?.p1 || [])],
+          p2: [...(after.ultimateHealthThresholdsReached?.p2 || [])],
+        };
+        return turn;
+      }
+
       async function resolveTurn(options = {}) {
         const resolutionId = ++state.resolutionId;
         const wasGuaranteedTurn = Boolean(state.activeGuaranteedTurn);
@@ -7355,60 +7393,65 @@
           p2: state.p2.super,
         };
 
-        consumeSuper("p1", p1Action);
-        consumeSuper("p2", p2Action);
-
-        let result;
-        const dollUltimateSide = isDollUltimate("p1", p1Action)
-          ? "p1"
-          : isDollUltimate("p2", p2Action)
-            ? "p2"
-            : null;
-        const p1DollUltimate = isDollUltimate("p1", p1Action);
-        const p2DollUltimate = isDollUltimate("p2", p2Action);
-
-        if (p1DollUltimate && p2DollUltimate) {
-          result = resolveBothDollUltimatesHeal();
-        } else if (p1DollUltimate && p2Action && attackActions.includes(p2Action)) {
-          result = resolveHit("p2", "Super", p2Action);
-        } else if (p2DollUltimate && p1Action && attackActions.includes(p1Action)) {
-          result = resolveHit("p1", p1Action, "Super");
-        } else if (dollUltimateSide) {
-          result = resolveDollUltimateHeal(dollUltimateSide);
-        } else if (!p1Action && !p2Action) {
-          state.advantage = null;
-          result = { type: "draw", winner: null, loser: null, primary: "TEMPO ESGOTADO", secondary: "Ninguém escolheu ataque", damaged: [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: null };
-        } else if (!p1Action) {
-          if (attackActions.includes(p2Action)) {
-            result = resolveHit("p2", "Wait", p2Action);
-            result.primary = "P1 SEM AÇÃO";
-          } else {
-            state.advantage = null;
-            result = { type: "draw", winner: null, loser: null, primary: "P1 SEM AÇÃO", secondary: "CPU também não atacou", damaged: [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: null };
-          }
-        } else if (!p2Action) {
-          if (attackActions.includes(p1Action)) {
-            result = resolveHit("p1", p1Action, "Wait");
-            result.primary = "GOLPE LIVRE";
-          } else {
-            state.advantage = null;
-            result = { type: "draw", winner: null, loser: null, primary: "NEUTRO", secondary: "Sem ataque direto", damaged: [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: null };
-          }
-        } else if (attackActions.includes(p1Action) && attackActions.includes(p2Action)) {
-          result = resolveAttackVsAttack(p1Action, p2Action);
-        } else if (attackActions.includes(p1Action)) {
-          result = resolveAttackVsResponse("p1", p1Action, p2Action, beforeSuper);
-        } else if (attackActions.includes(p2Action)) {
-          result = resolveAttackVsResponse("p2", p2Action, p1Action, beforeSuper);
-        } else {
-          state.advantage = null;
-          result = { type: "draw", winner: null, loser: null, primary: "NEUTRO", secondary: `${displayActionName(p1Action)} vs ${displayActionName(p2Action)}`, damaged: [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: null };
+        const authoritativeResult = applyAuthoritativeTurnResult(options.authoritativeResult);
+        if (!authoritativeResult) {
+          consumeSuper("p1", p1Action);
+          consumeSuper("p2", p2Action);
         }
 
-        result = applyItzcoatlResurrection(result);
+        let result = authoritativeResult;
+        if (!authoritativeResult) {
+          const dollUltimateSide = isDollUltimate("p1", p1Action)
+            ? "p1"
+            : isDollUltimate("p2", p2Action)
+              ? "p2"
+              : null;
+          const p1DollUltimate = isDollUltimate("p1", p1Action);
+          const p2DollUltimate = isDollUltimate("p2", p2Action);
 
-        if (state.p1.health > 0 && state.p2.health > 0) {
-          result = applyDollKnockdownPassive(result);
+          if (p1DollUltimate && p2DollUltimate) {
+            result = resolveBothDollUltimatesHeal();
+          } else if (p1DollUltimate && p2Action && attackActions.includes(p2Action)) {
+            result = resolveHit("p2", "Super", p2Action);
+          } else if (p2DollUltimate && p1Action && attackActions.includes(p1Action)) {
+            result = resolveHit("p1", p1Action, "Super");
+          } else if (dollUltimateSide) {
+            result = resolveDollUltimateHeal(dollUltimateSide);
+          } else if (!p1Action && !p2Action) {
+            state.advantage = null;
+            result = { type: "draw", winner: null, loser: null, primary: "TEMPO ESGOTADO", secondary: "Ninguém escolheu ataque", damaged: [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: null };
+          } else if (!p1Action) {
+            if (attackActions.includes(p2Action)) {
+              result = resolveHit("p2", "Wait", p2Action);
+              result.primary = "P1 SEM AÇÃO";
+            } else {
+              state.advantage = null;
+              result = { type: "draw", winner: null, loser: null, primary: "P1 SEM AÇÃO", secondary: "CPU também não atacou", damaged: [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: null };
+            }
+          } else if (!p2Action) {
+            if (attackActions.includes(p1Action)) {
+              result = resolveHit("p1", p1Action, "Wait");
+              result.primary = "GOLPE LIVRE";
+            } else {
+              state.advantage = null;
+              result = { type: "draw", winner: null, loser: null, primary: "NEUTRO", secondary: "Sem ataque direto", damaged: [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: null };
+            }
+          } else if (attackActions.includes(p1Action) && attackActions.includes(p2Action)) {
+            result = resolveAttackVsAttack(p1Action, p2Action);
+          } else if (attackActions.includes(p1Action)) {
+            result = resolveAttackVsResponse("p1", p1Action, p2Action, beforeSuper);
+          } else if (attackActions.includes(p2Action)) {
+            result = resolveAttackVsResponse("p2", p2Action, p1Action, beforeSuper);
+          } else {
+            state.advantage = null;
+            result = { type: "draw", winner: null, loser: null, primary: "NEUTRO", secondary: `${displayActionName(p1Action)} vs ${displayActionName(p2Action)}`, damaged: [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: null };
+          }
+
+          result = applyItzcoatlResurrection(result);
+
+          if (state.p1.health > 0 && state.p2.health > 0) {
+            result = applyDollKnockdownPassive(result);
+          }
         }
 
         if (!options.skipVisualPreload) {
@@ -8340,6 +8383,12 @@
         visualBusyKey: null,
         turnDeadlineKey: null,
         turnDeadlineMs: null,
+        startCountdownId: null,
+        startGatePayload: null,
+        lastSyncedPayload: null,
+        startGateClockOffsetMs: 0,
+        battleLoadedMatchId: null,
+        startReleasedMatchId: null,
       };
       const legacyResolveTurn = resolveTurn;
       const legacyStartTurn = startTurn;
@@ -8401,14 +8450,82 @@
       function onlineBridgeShowStartText(text, options = {}) {
         el.onlineBridgeStartText.textContent = text;
         el.onlineBridgeStartLayer.classList.toggle("is-loading", Boolean(options.loading));
+        el.onlineBridgeStartLayer.classList.toggle("is-countdown", Boolean(options.countdown));
         el.onlineBridgeStartLayer.classList.remove("is-hidden");
         el.onlineBridgeStartLayer.setAttribute("aria-hidden", "false");
       }
 
       function onlineBridgeHideStartText() {
         el.onlineBridgeStartLayer.classList.remove("is-loading");
+        el.onlineBridgeStartLayer.classList.remove("is-countdown");
         el.onlineBridgeStartLayer.classList.add("is-hidden");
         el.onlineBridgeStartLayer.setAttribute("aria-hidden", "true");
+      }
+
+      function onlineBridgeSetStartGate(active) {
+        document.body.classList.toggle("online-bridge-start-gated", Boolean(active));
+        if (active) {
+          onlineBridge.blockLocalStart = true;
+          onlineBridgeSetActionLock(true);
+        }
+      }
+
+      function onlineBridgeStopStartCountdown() {
+        if (onlineBridge.startCountdownId) {
+          window.clearInterval(onlineBridge.startCountdownId);
+          onlineBridge.startCountdownId = null;
+        }
+      }
+
+      function onlineBridgeReleaseSynchronizedStart(payload) {
+        if (onlineBridge.startReleasedMatchId === payload.matchId) {
+          return;
+        }
+
+        onlineBridge.startReleasedMatchId = payload.matchId;
+        onlineBridgeStopStartCountdown();
+        onlineBridgeSetStartGate(false);
+        onlineBridgeHideStartText();
+        onlineBridgePrepareTurn(payload, { force: true });
+      }
+
+      function onlineBridgeRenderSynchronizedStart(payload) {
+        const synchronizedMatch = payload.status === "loading" || Boolean(payload.battleStartAt);
+        if (!synchronizedMatch || onlineBridge.startReleasedMatchId === payload.matchId) {
+          return false;
+        }
+
+        onlineBridge.startGatePayload = payload;
+        const serverNowMs = payload.serverNow ? new Date(payload.serverNow).getTime() : Date.now();
+        onlineBridge.startGateClockOffsetMs = Date.now() - serverNowMs;
+        onlineBridgeSetStartGate(true);
+        onlineBridgeStopClock();
+
+        if (payload.status === "loading" || !payload.battleStartAt) {
+          onlineBridgeStopStartCountdown();
+          onlineBridgeShowStartText("AGUARDANDO ADVERSARIO");
+          return true;
+        }
+
+        const renderCountdown = () => {
+          const latestPayload = onlineBridge.startGatePayload || payload;
+          if (!latestPayload.battleStartAt || latestPayload.status !== "active") {
+            return;
+          }
+          const estimatedServerNow = Date.now() - onlineBridge.startGateClockOffsetMs;
+          const remainingMs = new Date(latestPayload.battleStartAt).getTime() - estimatedServerNow;
+          if (remainingMs <= 0) {
+            onlineBridgeReleaseSynchronizedStart(latestPayload);
+            return;
+          }
+          onlineBridgeShowStartText(String(Math.ceil(remainingMs / 1000)), { countdown: true });
+        };
+
+        renderCountdown();
+        if (!onlineBridge.startCountdownId && onlineBridge.startReleasedMatchId !== payload.matchId) {
+          onlineBridge.startCountdownId = window.setInterval(renderCountdown, 50);
+        }
+        return true;
       }
 
       function onlineBridgeApplyState(battleState) {
@@ -8477,10 +8594,12 @@
           onlineBridge.turnDeadlineKey = deadlineKey;
           onlineBridge.turnDeadlineMs = null;
         }
-        const candidateDeadlineMs = Number.isFinite(parsedDeadlineMs)
-          ? parsedDeadlineMs
-          : options.restartFromNow
-            ? Date.now() + duration
+        const candidateDeadlineMs = options.restartFromNow
+          ? Number.isFinite(parsedDeadlineMs)
+            ? Math.min(parsedDeadlineMs, serverNowMs + duration)
+            : serverNowMs + duration
+          : Number.isFinite(parsedDeadlineMs)
+            ? parsedDeadlineMs
             : serverNowMs + duration;
         const shouldKeepTurnOpen = payload.status === "active" && !payload.localAction;
         const deadlineMs = candidateDeadlineMs;
@@ -8581,6 +8700,9 @@
           payload.status,
           payload.currentTurn,
           payload.turnDeadlineAt || "none",
+          payload.battleStartAt || "no-start",
+          payload.localReady ? "local-ready" : "local-loading",
+          payload.opponentReady ? "opponent-loaded" : "opponent-loading",
           payload.localAction || "none",
           payload.opponentHasAction ? "opponent-ready" : "opponent-waiting",
           onlineBridgeStateKey(payload.battleState),
@@ -8768,6 +8890,9 @@
       }
 
       function onlineBridgeHoldFinishedState(payload) {
+        onlineBridgeStopStartCountdown();
+        onlineBridgeSetStartGate(false);
+        onlineBridgeHideStartText();
         onlineBridgeStopClock();
         onlineBridgeStopResolutionTimer();
         window.clearInterval(state.timerId);
@@ -8820,6 +8945,9 @@
 
         onlineBridge.lastPayloadKey = payloadKey;
         onlineBridgeSyncPendingLocalAction(payload);
+        if (!payload.battleState?.activeGuaranteedTurn) {
+          resetSequenceDamage();
+        }
         window.clearInterval(state.timerId);
         state.timerId = null;
         if (payload.status === "active") {
@@ -8873,9 +9001,7 @@
 
         if (pendingPayload.status === "active" || pendingPayload.status === "resolving") {
           onlineBridgePrepareTurn(pendingPayload, { force: true, restartClock: pendingPayload.status === "active" });
-          if (pendingPayload.status === "active") {
-            onlineBridgePostVisualReady(pendingPayload);
-          }
+          onlineBridgePostVisualReady(pendingPayload);
         } else if (pendingPayload.status === "finished" || pendingPayload.status === "forfeited") {
           onlineBridgeHoldFinishedState(pendingPayload);
           onlineBridgePostVisualReady(pendingPayload);
@@ -8934,6 +9060,10 @@
         onlineBridge.pendingLocalAction = null;
         onlineBridge.pendingLocalTurn = null;
         onlineBridgeStopResolutionTimer();
+        onlineBridgeStopStartCountdown();
+        onlineBridge.startGatePayload = null;
+        onlineBridge.battleLoadedMatchId = null;
+        onlineBridge.startReleasedMatchId = null;
         onlineBridge.blockLocalStart = true;
         state.debugAvailable = false;
         state.debugMode = false;
@@ -8944,7 +9074,7 @@
 
         onlineBridge.startupPromise = (async () => {
           onlineBridgeShowStartText("CARREGANDO PARTIDA", { loading: true });
-          if (payload.status === "active" || payload.status === "resolving") {
+          if ((payload.status === "active" || payload.status === "resolving") && !payload.battleStartAt) {
             onlineBridgePostVisualBusy(payload, ONLINE_BRIDGE_STARTUP_BUSY_MS + 3000);
           }
           const [loaded] = await Promise.all([
@@ -8970,6 +9100,16 @@
             return;
           }
           resetBattle();
+          const usesSynchronizedStart = payload.status === "loading" || Boolean(payload.battleStartAt);
+          if (usesSynchronizedStart) {
+            onlineBridgePrepareTurn(payload, { force: true, pauseClock: true });
+            onlineBridge.startupReady = true;
+            onlineBridge.battleLoadedMatchId = payload.matchId;
+            onlineBridgePost({ type: "battle-loaded", matchId: payload.matchId });
+            onlineBridgeRenderSynchronizedStart(payload);
+            return;
+          }
+
           const shouldPlayStartupSequence = onlineBridgeShouldPlayStartupSequence(payload);
           if (!shouldPlayStartupSequence) {
             onlineBridgeHideStartText();
@@ -9017,7 +9157,13 @@
           return;
         }
 
+        onlineBridge.lastSyncedPayload = payload;
+
         await onlineBridgeStart(payload);
+
+        if (onlineBridgeRenderSynchronizedStart(payload)) {
+          return;
+        }
 
         if (onlineBridge.isAnimatingTurn) {
           onlineBridge.pendingPayload = payload;
@@ -9053,7 +9199,7 @@
           el.noticePrimary.textContent = "RESOLVENDO";
           onlineBridge.allowLocalResolve = true;
           onlineBridge.blockLocalStart = true;
-          void legacyResolveTurn({ skipVisualPreload: true });
+          void legacyResolveTurn({ skipVisualPreload: true, authoritativeResult: payload.lastTurn });
           onlineBridge.allowLocalResolve = false;
           onlineBridge.resolutionTimerId = window.setTimeout(() => {
             void waitForActiveSpriteAnimations().then(() => onlineBridgeFinishResolution(payload));
@@ -9073,6 +9219,35 @@
         }
 
         onlineBridgePrepareTurn(payload);
+      }
+
+      function onlineBridgeResetPendingAction(message) {
+        if (
+          message?.type !== "action-reset"
+          || message.matchId !== onlineBridge.matchId
+          || Number(message.turnNumber) !== onlineBridge.pendingLocalTurn
+        ) {
+          return;
+        }
+
+        onlineBridge.pendingLocalAction = null;
+        onlineBridge.pendingLocalTurn = null;
+        state.selectedAction = null;
+        onlineBridge.lastPayloadKey = null;
+
+        const payload = onlineBridge.lastSyncedPayload;
+        if (
+          payload?.status === "active"
+          && payload.matchId === onlineBridge.matchId
+          && Number(payload.currentTurn) === Number(message.turnNumber)
+        ) {
+          onlineBridgePrepareTurn(payload, { force: true });
+          if (message.errorMessage) {
+            el.noticePrimary.textContent = String(message.errorMessage).toUpperCase();
+          }
+        } else {
+          updateHud();
+        }
       }
 
       if (onlineBridgeEnabled) {
@@ -9103,6 +9278,11 @@
 
         window.addEventListener("message", (event) => {
           if (event.origin !== window.location.origin) {
+            return;
+          }
+
+          if (event.data?.source === "final-genesis-online" && event.data?.type === "action-reset") {
+            onlineBridgeResetPendingAction(event.data);
             return;
           }
 

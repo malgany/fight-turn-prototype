@@ -25,6 +25,9 @@ verify_jwt = true
 [functions.select-match-character]
 verify_jwt = true
 
+[functions.match-start-ready]
+verify_jwt = true
+
 [functions.presence-heartbeat]
 verify_jwt = true
 

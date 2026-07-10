@@ -93,6 +93,10 @@ function makeMatch(profile: PlayerProfile, type: "ranked" | "private"): GameMatc
     currentTurn: battleState.turnNumber,
     turnDeadlineAt: new Date(Date.now() + turnDurationForState(battleState)).toISOString(),
     serverNow: new Date().toISOString(),
+    localReady: false,
+    opponentReady: false,
+    loadingDeadlineAt: null,
+    battleStartAt: null,
     localAction: null,
     opponentHasAction: false,
     lastTurn: null,
@@ -188,6 +192,13 @@ export class DemoGameService implements GameService {
     return this.state().history;
   }
 
+  async getCharacterUsage(): Promise<Record<string, number>> {
+    return this.state().history.reduce<Record<string, number>>((usage, entry) => {
+      usage[entry.characterId] = (usage[entry.characterId] || 0) + 1;
+      return usage;
+    }, {});
+  }
+
   async joinRankedQueue(): Promise<QueueResult> {
     const state = this.state();
     if (!state.profile) throw new Error("Entre no jogo antes de jogar ranked.");
@@ -267,9 +278,22 @@ export class DemoGameService implements GameService {
       p2: { ...match.p2, characterId: opponentCharacter.id },
       turnDeadlineAt: new Date(Date.now() + turnDurationForState(match.battleState)).toISOString(),
       serverNow: new Date().toISOString(),
+      localReady: true,
+      opponentReady: true,
     };
     this.commit({ ...state, currentMatch: nextMatch });
     return nextMatch;
+  }
+
+  async markMatchReady(matchId: string): Promise<GameMatch> {
+    const match = this.state().currentMatch;
+    if (!match || match.id !== matchId) throw new Error("Partida nao encontrada.");
+    return match;
+  }
+
+  async markTurnReady(matchId: string, _turnNumber: number): Promise<void> {
+    const match = this.state().currentMatch;
+    if (!match || match.id !== matchId) throw new Error("Partida nao encontrada.");
   }
 
   async submitAction(matchId: string, action: Action, _turnNumber?: number): Promise<GameMatch> {

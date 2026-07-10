@@ -22,17 +22,24 @@ describe("resolveBattleTurn", () => {
     expect(result.after.activeGuaranteedTurn?.side).toBe("p2");
   });
 
-  it("gives one ultimate bar when a defender takes chip damage while blocking", () => {
-    const result = resolveBattleTurn(createInitialBattleState(), "Special", "Block");
+  it.each(["Poke", "Combo", "Special"] as const)(
+    "gives the attacker one ultimate bar when %s is blocked",
+    (action) => {
+      const result = resolveBattleTurn(createInitialBattleState(), action, "Block");
 
-    expect(result.after.p2.health).toBe(98);
-    expect(result.after.p2.super).toBe(1);
-  });
+      expect(result.type).toBe("blocked");
+      expect(result.after.p1.super).toBe(1);
+      expect(result.after.p2.super).toBe(0);
+    },
+  );
 
-  it("does not give ultimate charge when blocking an attack that causes no damage", () => {
-    const result = resolveBattleTurn(createInitialBattleState(), "Poke", "Block");
+  it("does not grant block charge to either fighter when an ultimate is blocked", () => {
+    const state = createInitialBattleState();
+    state.p1.super = 3;
 
-    expect(result.after.p2.health).toBe(100);
+    const result = resolveBattleTurn(state, "Super", "Block");
+
+    expect(result.after.p1.super).toBe(0);
     expect(result.after.p2.super).toBe(0);
   });
 

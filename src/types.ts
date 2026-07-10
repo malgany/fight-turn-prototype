@@ -19,7 +19,7 @@ export type Division =
 export type Side = "p1" | "p2";
 export type Action = "Poke" | "Combo" | "Grab" | "Special" | "Super" | "Block" | "Crouch" | "Jump";
 export type MatchType = "ranked" | "private" | "casual";
-export type MatchStatus = "waiting" | "selecting" | "active" | "resolving" | "finished" | "forfeited";
+export type MatchStatus = "waiting" | "selecting" | "loading" | "active" | "resolving" | "finished" | "forfeited";
 export type MatchResult = "win" | "loss" | "draw";
 export type RematchChoice = "again" | "lobby";
 
@@ -134,8 +134,12 @@ export interface GameMatch {
   p2: MatchPlayer;
   battleState: BattleState;
   currentTurn: number;
-  turnDeadlineAt: string;
+  turnDeadlineAt: string | null;
   serverNow?: string;
+  localReady: boolean;
+  opponentReady: boolean;
+  loadingDeadlineAt: string | null;
+  battleStartAt: string | null;
   localAction: Action | null;
   opponentHasAction: boolean;
   lastTurn: TurnResolution | null;

@@ -128,7 +128,7 @@ function applyDamage(
 
   const previousHealth = state[targetSide].health;
   state[targetSide].health = clampPercent(state[targetSide].health - amount);
-  if (options.blocked || grantsDefenderSuper(sourceAction, options)) {
+  if (!options.blocked && grantsDefenderSuper(sourceAction, options)) {
     addUltimateCharge(state, targetSide);
   }
   grantUltimateForHealthThresholds(state, targetSide, previousHealth);
@@ -422,6 +422,9 @@ function resolveAttackVsResponse(state: BattleState, attacker: Side, attack: Act
   if (response === "Block" && blockChip[attack] !== undefined) {
     const chip = blockDamage(attacker, attack, beforeState, context);
     applyDamage(state, defender, chip, attack, { blocked: true });
+    if (attack === "Poke" || attack === "Combo" || attack === "Special") {
+      addUltimateCharge(state, attacker);
+    }
     state.advantage = defender;
     return {
       type: "blocked" as const,

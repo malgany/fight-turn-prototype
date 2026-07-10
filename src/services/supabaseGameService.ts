@@ -13,9 +13,31 @@ import type {
 } from "../types";
 import type { GameService, QueueResult } from "./gameService";
 
+const SESSION_LOOKUP_TIMEOUT_MS = 750;
+const DEFAULT_FUNCTION_TIMEOUT_MS = 10_000;
+const ACTION_FUNCTION_TIMEOUT_MS = 1_600;
+const SERVER_CLOCK_TIMEOUT_MS = 750;
+
+function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timerId = globalThis.setTimeout(() => reject(new Error(message)), timeoutMs);
+    Promise.resolve(promise).then(
+      (value) => {
+        globalThis.clearTimeout(timerId);
+        resolve(value);
+      },
+      (error) => {
+        globalThis.clearTimeout(timerId);
+        reject(error);
+      },
+    );
+  });
+}
+
 export class SupabaseGameService implements GameService {
   readonly mode = "supabase" as const;
   private channels = new Set<RealtimeChannel>();
+  private cachedAccessToken: string | null = null;
 
   private client() {
     if (!supabase) {
@@ -31,6 +53,13 @@ export class SupabaseGameService implements GameService {
     return `${supabaseUrl}/functions/v1/${encodeURIComponent(name)}`;
   }
 
+  private rpcUrl(name: string): string {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error("Supabase nao configurado.");
+    }
+    return `${supabaseUrl}/rest/v1/rpc/${encodeURIComponent(name)}`;
+  }
+
   private extractErrorMessage(payload: unknown): string | null {
     if (!payload || typeof payload !== "object") return null;
     const record = payload as Record<string, unknown>;
@@ -44,14 +73,22 @@ export class SupabaseGameService implements GameService {
     if (Array.isArray(payload)) return payload.some((item) => this.containsGameMatch(item));
 
     const record = payload as Record<string, unknown>;
-    if (typeof record.turnDeadlineAt === "string" && typeof record.battleState === "object") return true;
+    if (typeof record.id === "string" && "turnDeadlineAt" in record && typeof record.battleState === "object") return true;
     return Object.values(record).some((value) => this.containsGameMatch(value));
   }
 
   private async serverNow(): Promise<string> {
-    const { data, error } = await this.client().rpc("server_now");
-    if (error || !data) return new Date().toISOString();
-    return new Date(String(data)).toISOString();
+    try {
+      const { data, error } = await withTimeout(
+        this.client().rpc("server_now"),
+        SERVER_CLOCK_TIMEOUT_MS,
+        "Timeout ao sincronizar relogio.",
+      );
+      if (error || !data) return new Date().toISOString();
+      return new Date(String(data)).toISOString();
+    } catch {
+      return new Date().toISOString();
+    }
   }
 
   private attachServerNow<T>(payload: T, serverNow: string): T {
@@ -63,7 +100,7 @@ export class SupabaseGameService implements GameService {
       }
 
       const record = value as Record<string, unknown>;
-      if (typeof record.turnDeadlineAt === "string" && typeof record.battleState === "object") {
+      if (typeof record.id === "string" && "turnDeadlineAt" in record && typeof record.battleState === "object") {
         if (typeof record.serverNow !== "string") record.serverNow = serverNow;
       }
 
@@ -74,25 +111,49 @@ export class SupabaseGameService implements GameService {
     return payload;
   }
 
-  private async invoke<T>(name: string, body?: Record<string, unknown>): Promise<T> {
+  private async accessToken(): Promise<string> {
     const client = this.client();
-    const {
-      data: { session },
-      error: sessionError,
-    } = await client.auth.getSession();
+    try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await withTimeout(client.auth.getSession(), SESSION_LOOKUP_TIMEOUT_MS, "Timeout ao recuperar sessao.");
 
-    if (sessionError) throw sessionError;
-    if (!session) throw new Error("Sessao ausente.");
+      if (sessionError) throw sessionError;
+      if (!session) throw new Error("Sessao ausente.");
+      this.cachedAccessToken = session.access_token;
+      return session.access_token;
+    } catch (error) {
+      if (this.cachedAccessToken && error instanceof Error && /timeout/i.test(error.message)) {
+        return this.cachedAccessToken;
+      }
+      throw error;
+    }
+  }
 
-    const response = await fetch(this.functionUrl(name), {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        apikey: supabaseAnonKey!,
-        authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify(body || {}),
-    });
+  private async invoke<T>(name: string, body?: Record<string, unknown>, timeoutMs = DEFAULT_FUNCTION_TIMEOUT_MS): Promise<T> {
+    const accessToken = await this.accessToken();
+    const controller = new AbortController();
+    const timeoutId = globalThis.setTimeout(() => controller.abort(), timeoutMs);
+
+    let response: Response;
+    try {
+      response = await fetch(this.functionUrl(name), {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          apikey: supabaseAnonKey!,
+          authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(body || {}),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if (controller.signal.aborted) throw new Error(`Timeout em ${name}.`);
+      throw error;
+    } finally {
+      globalThis.clearTimeout(timeoutId);
+    }
 
     const text = await response.text();
     const data = text ? JSON.parse(text) : null;
@@ -107,6 +168,38 @@ export class SupabaseGameService implements GameService {
 
     const serverNow = await this.serverNow();
     return this.attachServerNow(data as T, serverNow);
+  }
+
+  private async invokeRpc<T>(name: string, body: Record<string, unknown>, timeoutMs: number): Promise<T> {
+    const accessToken = await this.accessToken();
+    const controller = new AbortController();
+    const timeoutId = globalThis.setTimeout(() => controller.abort(), timeoutMs);
+
+    let response: Response;
+    try {
+      response = await fetch(this.rpcUrl(name), {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          apikey: supabaseAnonKey!,
+          authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if (controller.signal.aborted) throw new Error(`Timeout em ${name}.`);
+      throw error;
+    } finally {
+      globalThis.clearTimeout(timeoutId);
+    }
+
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : null;
+    if (!response.ok) {
+      throw new Error(this.extractErrorMessage(data) || `Falha em ${name}.`);
+    }
+    return data as T;
   }
 
   private normalizePrivateRoom(room: PrivateRoom): PrivateRoom {
@@ -193,6 +286,27 @@ export class SupabaseGameService implements GameService {
     }));
   }
 
+  async getCharacterUsage(): Promise<Record<string, number>> {
+    const usage: Record<string, number> = {};
+    const pageSize = 1000;
+
+    for (let from = 0; ; from += pageSize) {
+      const { data, error } = await this.client()
+        .from("match_history")
+        .select("character_id")
+        .order("created_at", { ascending: false })
+        .range(from, from + pageSize - 1);
+      if (error) throw error;
+
+      for (const entry of data || []) {
+        usage[entry.character_id] = (usage[entry.character_id] || 0) + 1;
+      }
+      if ((data || []).length < pageSize) break;
+    }
+
+    return usage;
+  }
+
   joinRankedQueue(): Promise<QueueResult> {
     return this.invoke<QueueResult>("join-ranked-queue");
   }
@@ -231,7 +345,7 @@ export class SupabaseGameService implements GameService {
 
     if (error || !data?.match_id) return null;
     const match = await this.invoke<GameMatch>("finish-match", { matchId: data.match_id });
-    return match.status === "selecting" || match.status === "active" || match.status === "waiting" || match.status === "resolving" ? match : null;
+    return match.status === "selecting" || match.status === "loading" || match.status === "active" || match.status === "waiting" || match.status === "resolving" ? match : null;
   }
 
   async createPrivateRoom(): Promise<PrivateRoom> {
@@ -252,8 +366,31 @@ export class SupabaseGameService implements GameService {
     return this.invoke<GameMatch>("select-match-character", { matchId, characterId });
   }
 
-  submitAction(matchId: string, action: Action, turnNumber?: number): Promise<GameMatch> {
-    return this.invoke<GameMatch>("submit-action", { matchId, action, turnNumber });
+  markMatchReady(matchId: string): Promise<GameMatch> {
+    return this.invoke<GameMatch>("match-start-ready", { matchId });
+  }
+
+  async markTurnReady(matchId: string, turnNumber: number): Promise<void> {
+    await this.invokeRpc(
+      "mark_match_turn_ready",
+      { p_match_id: matchId, p_turn_number: turnNumber },
+      ACTION_FUNCTION_TIMEOUT_MS,
+    );
+  }
+
+  async submitAction(matchId: string, action: Action, turnNumber?: number): Promise<GameMatch | null> {
+    await this.invokeRpc(
+      "submit_match_action",
+      {
+        p_match_id: matchId,
+        p_action: action,
+        p_turn_number: turnNumber ?? null,
+      },
+      ACTION_FUNCTION_TIMEOUT_MS,
+    );
+    // The one-second match poll supplies the authoritative GameMatch. Returning
+    // immediately keeps the local choice pending without another Edge round trip.
+    return null;
   }
 
   resolveTurn(matchId: string): Promise<GameMatch> {
