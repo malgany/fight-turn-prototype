@@ -8489,8 +8489,20 @@
         onlineBridgePrepareTurn(payload, { force: true });
       }
 
+      function onlineBridgeUsesSynchronizedStart(payload) {
+        if (payload.status === "loading") {
+          return true;
+        }
+        if (payload.status !== "active" || !payload.battleStartAt) {
+          return false;
+        }
+
+        const serverNowMs = payload.serverNow ? new Date(payload.serverNow).getTime() : Date.now();
+        return new Date(payload.battleStartAt).getTime() > serverNowMs;
+      }
+
       function onlineBridgeRenderSynchronizedStart(payload) {
-        const synchronizedMatch = payload.status === "loading" || Boolean(payload.battleStartAt);
+        const synchronizedMatch = onlineBridgeUsesSynchronizedStart(payload);
         if (!synchronizedMatch || onlineBridge.startReleasedMatchId === payload.matchId) {
           return false;
         }
@@ -9100,7 +9112,7 @@
             return;
           }
           resetBattle();
-          const usesSynchronizedStart = payload.status === "loading" || Boolean(payload.battleStartAt);
+          const usesSynchronizedStart = onlineBridgeUsesSynchronizedStart(payload);
           if (usesSynchronizedStart) {
             onlineBridgePrepareTurn(payload, { force: true, pauseClock: true });
             onlineBridge.startupReady = true;
