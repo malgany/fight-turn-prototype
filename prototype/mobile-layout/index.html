@@ -1917,6 +1917,51 @@
         background: linear-gradient(#d42020, #891111);
       }
 
+      .coming-soon-popup {
+        position: absolute;
+        inset: 0;
+        z-index: 400;
+        display: none;
+        place-items: center;
+        padding: 5.5%;
+        background: rgba(3, 6, 11, 0.82);
+      }
+
+      .coming-soon-popup.show {
+        display: grid;
+      }
+
+      .coming-soon-popup-panel {
+        position: relative;
+        width: min(100%, 420px);
+        max-height: 100%;
+        filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.72));
+      }
+
+      .coming-soon-popup-image {
+        display: block;
+        width: 100%;
+        max-height: min(84dvh, 780px);
+        object-fit: contain;
+        border: 2px solid rgba(255, 231, 196, 0.8);
+        border-radius: 5px;
+      }
+
+      .coming-soon-popup-close {
+        position: absolute;
+        top: clamp(8px, 2.4cqw, 12px);
+        right: clamp(8px, 2.4cqw, 12px);
+        width: clamp(34px, 10cqw, 46px);
+        aspect-ratio: 1;
+        border: 2px solid #ffe3bb;
+        border-radius: 50%;
+        background: rgba(18, 8, 8, 0.9);
+        color: #ffffff;
+        font: 900 clamp(20px, 6cqw, 28px) / 1 Arial, sans-serif;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.68);
+        cursor: pointer;
+      }
+
       .splash-screen {
         place-items: center;
         padding: 9%;
@@ -2110,6 +2155,8 @@
       .help-back:focus-visible,
       .battle-over-button:focus-visible,
       .exit-confirm-action:focus-visible,
+      .coming-soon-popup-close:focus-visible,
+      .abilities-popup-close:focus-visible,
       .audio-toggle:focus-within {
         outline: 3px solid #ffffff;
         outline-offset: 5px;
@@ -2129,7 +2176,9 @@
         .character-select-button:hover:not(:disabled),
         .help-back:hover:not(:disabled),
         .battle-over-button:hover:not(:disabled),
-        .exit-confirm-action:hover:not(:disabled) {
+        .exit-confirm-action:hover:not(:disabled),
+        .coming-soon-popup-close:hover:not(:disabled),
+        .abilities-popup-close:hover:not(:disabled) {
           transform: translateY(-2px) scale(1.045);
           filter: brightness(1.08) drop-shadow(0 14px 10px rgba(0, 0, 0, 0.54));
         }
@@ -2474,9 +2523,9 @@
         position: relative;
         z-index: 4;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         align-items: end;
-        gap: clamp(16px, 4.5cqw, 26px);
+        gap: clamp(7px, 2cqw, 12px);
         width: 125%;
         margin-left: -12.5%;
         padding: 0;
@@ -2505,10 +2554,126 @@
         background-image: var(--character-select-confirm);
       }
 
+      .character-select-button.abilities {
+        aspect-ratio: 2048 / 682;
+        border: clamp(2px, 0.65cqw, 3px) solid rgba(255, 255, 255, 0.88);
+        border-radius: 5px;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 32%),
+          linear-gradient(#df2d33, #73070c 68%, #360306);
+        color: #ffffff;
+        font-size: clamp(7px, 2.25cqw, 12px);
+        font-weight: 900;
+        text-shadow: 0 2px 0 #000;
+        box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.26);
+      }
+
       .character-select-button:disabled {
         cursor: not-allowed;
         opacity: 0.48;
         filter: grayscale(1) brightness(0.78);
+      }
+
+      .abilities-popup {
+        position: absolute;
+        inset: 0;
+        z-index: 410;
+        display: none;
+        place-items: center;
+        padding: 5%;
+        background: rgba(2, 4, 8, 0.86);
+      }
+
+      .abilities-popup.show {
+        display: grid;
+      }
+
+      .abilities-popup-panel {
+        position: relative;
+        width: min(100%, 450px);
+        max-height: 92%;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: clamp(9px, 2.4cqw, 13px);
+        padding: clamp(14px, 4cqw, 20px);
+        border: 3px solid rgba(255, 255, 255, 0.72);
+        border-radius: 7px;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(224, 24, 24, 0.28), transparent 38%),
+          linear-gradient(145deg, rgba(21, 21, 25, 0.98), rgba(40, 5, 8, 0.98));
+        box-shadow: inset 0 0 0 2px rgba(224, 24, 24, 0.28), 0 18px 42px rgba(0, 0, 0, 0.72);
+      }
+
+      .abilities-popup-title {
+        margin: 0;
+        padding: 0 clamp(38px, 11cqw, 50px);
+        color: #ffffff;
+        font-size: clamp(18px, 5.4cqw, 28px);
+        line-height: 1;
+        text-align: center;
+        text-shadow: 0 3px 0 #000, 2px 2px 0 #d8171f;
+      }
+
+      .abilities-popup-close {
+        position: absolute;
+        top: clamp(7px, 2cqw, 10px);
+        right: clamp(7px, 2cqw, 10px);
+        width: clamp(32px, 9cqw, 42px);
+        aspect-ratio: 1;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        background: linear-gradient(#d82a30, #6f070b);
+        color: #ffffff;
+        font: 900 clamp(18px, 5.5cqw, 26px) / 1 Arial, sans-serif;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.58);
+        cursor: pointer;
+      }
+
+      .abilities-popup-content {
+        min-height: 0;
+        display: grid;
+        gap: clamp(8px, 2.2cqw, 12px);
+        overflow-y: auto;
+        padding-right: 2px;
+        scrollbar-color: #e01818 rgba(7, 7, 9, 0.86);
+      }
+
+      .ability-card {
+        display: grid;
+        gap: clamp(4px, 1.2cqw, 7px);
+        padding: clamp(10px, 2.8cqw, 14px);
+        border: 2px solid rgba(255, 255, 255, 0.42);
+        border-left-color: #e3262e;
+        background: rgba(5, 7, 11, 0.84);
+        box-shadow: inset 4px 0 0 rgba(224, 24, 24, 0.36);
+      }
+
+      .ability-card-label,
+      .ability-card-name,
+      .ability-card-description {
+        margin: 0;
+      }
+
+      .ability-card-label {
+        color: #ff4b51;
+        font-size: clamp(8px, 2.3cqw, 11px);
+        line-height: 1;
+        text-transform: uppercase;
+      }
+
+      .ability-card-name {
+        color: #ffffff;
+        font-size: clamp(12px, 3.4cqw, 17px);
+        line-height: 1.08;
+        text-shadow: 0 2px 0 #000;
+      }
+
+      .ability-card-description {
+        color: #e8edf5;
+        font-family: "Anime Ace BB", Arial, sans-serif;
+        font-size: clamp(9px, 2.55cqw, 13px);
+        font-weight: 400;
+        line-height: 1.35;
       }
 
       .help-screen,
@@ -2943,6 +3108,13 @@
         </div>
       </section>
 
+      <section class="coming-soon-popup" id="comingSoonPopup" aria-label="Personagens em breve" aria-modal="true" role="dialog" aria-hidden="true">
+        <div class="coming-soon-popup-panel">
+          <img class="coming-soon-popup-image" src="../../game-assets/ui/promotions/pacote-oriental-em-breve.png" alt="Pacote Oriental em breve: Cute Hong e Genjiro Musashi">
+          <button class="coming-soon-popup-close" type="button" id="comingSoonPopupClose" aria-label="Fechar aviso de personagens em breve">×</button>
+        </div>
+      </section>
+
       <section class="screen character-select-screen is-hidden" id="characterSelectScreen" aria-label="Seleção de personagem">
         <img class="character-select-title-art" src="../../game-assets/ui/menu/logo.webp?v=20260605-1630" alt="Final Genesis" draggable="false">
         <img class="character-select-subtitle-art" src="../../game-assets/ui/character-select/subtitle.webp?v=20260606-select" alt="Escolha seu lutador" draggable="false">
@@ -2995,8 +3167,33 @@
 
         <nav class="character-select-actions" aria-label="Ações da seleção de personagem">
           <button class="character-select-button back" type="button" id="characterBackButton">VOLTAR</button>
+          <button class="character-select-button abilities" type="button" id="characterAbilitiesButton">HABILIDADES</button>
           <button class="character-select-button confirm" type="button" id="characterConfirmButton">CONFIRMAR</button>
         </nav>
+      </section>
+
+      <section class="abilities-popup" id="abilitiesPopup" aria-label="Habilidades do personagem" aria-modal="true" role="dialog" aria-hidden="true">
+        <div class="abilities-popup-panel">
+          <h2 class="abilities-popup-title" id="abilitiesCharacterName">KRAMPUS</h2>
+          <button class="abilities-popup-close" type="button" id="abilitiesPopupClose" aria-label="Fechar habilidades">&times;</button>
+          <div class="abilities-popup-content">
+            <article class="ability-card" data-ability="passive">
+              <p class="ability-card-label">Passiva</p>
+              <h3 class="ability-card-name" data-ability-name></h3>
+              <p class="ability-card-description" data-ability-description></p>
+            </article>
+            <article class="ability-card" data-ability="special">
+              <p class="ability-card-label">Especial</p>
+              <h3 class="ability-card-name" data-ability-name></h3>
+              <p class="ability-card-description" data-ability-description></p>
+            </article>
+            <article class="ability-card" data-ability="ultimate">
+              <p class="ability-card-label">Ultimate</p>
+              <h3 class="ability-card-name" data-ability-name></h3>
+              <p class="ability-card-description" data-ability-description></p>
+            </article>
+          </div>
+        </div>
       </section>
 
       <section class="screen help-screen is-hidden" id="helpScreen" aria-label="Tutorial">
@@ -3472,6 +3669,68 @@
         aton: "../../game-assets/characters/urban/urban.json?v=20260608-aton-position-plus",
         doll: "../../game-assets/characters/doll/doll.json?v=20260620-doll-jump-odd-slow",
       };
+      const CHARACTER_ABILITIES = {
+        ninja: {
+          characterName: "KRAMPUS",
+          passive: {
+            name: "DÍVIDA DE SANGUE",
+            description: "A violência alimenta o poder adormecido dentro de Krampus. Sempre que ele derruba um oponente, ganha 1 barra do medidor de Ultimate.",
+          },
+          special: {
+            name: "IMPACTO DE HELLHOUNDS '88",
+            description: "Golpeia o solo com o taco comemorativo dos campeões, causando uma explosão de 17% de dano.",
+          },
+          ultimate: {
+            name: "RUPTURA RAVENFALL",
+            description: "Desperta em sua forma mais destrutiva a energia adquirida após seu desaparecimento e dispara um feixe devastador, causando 40% de dano.",
+          },
+        },
+        itzcoatl: {
+          characterName: "ITZCÓATL",
+          passive: {
+            name: "ENTRE A VIDA E A MORTE",
+            description: "Uma parte de sua alma jamais retornou completamente. Na primeira vez em que sua vida chega a 0, ressuscita com 5% de vida.",
+          },
+          special: {
+            name: "CRÂNIO RITUALÍSTICO",
+            description: "Arremessa um crânio impregnado por energia sobrenatural que explode ao atingir o alvo, causando 25% de dano.",
+          },
+          ultimate: {
+            name: "CHAMADO DA CAÇADA ETERNA",
+            description: "Os espíritos dos predadores despertados pela Singularidade respondem ao chamado de Itzcóatl, causando 35% de dano.",
+          },
+        },
+        doll: {
+          characterName: "DOLL.EXE",
+          passive: {
+            name: "MEMÓRIA DE ANYA",
+            description: "Nem o aço nem o tempo apagam suas lembranças. Quando é derrubada e sobrevive, recupera 1% de vida.",
+          },
+          special: {
+            name: "SUTURA MECÂNICA",
+            description: "Nanomáquinas reconectam circuitos e reforçam estruturas danificadas. Ao acertar, causa 15% de dano e recupera 2% de vida.",
+          },
+          ultimate: {
+            name: "NÚCLEO VOZROZHDENIE",
+            description: "Ativa o Núcleo Vozrozhdenie (Возрождение), a tecnologia experimental responsável por sua reconstrução. Quando não é interrompida por um ataque, restaura 25% de vida e não causa dano.",
+          },
+        },
+        aton: {
+          characterName: "ATON",
+          passive: {
+            name: "NO RITMO DE VITÓRIA",
+            description: "Quando o medidor de Ultimate está cheio, os ataques de Aton que atingem o BLOCK causam +7% de dano adicional na defesa.",
+          },
+          special: {
+            name: "VDC'S BREAK",
+            description: "Executa o movimento que lhe garantiu a vitória em um festival, criando um redemoinho que causa 25% de dano.",
+          },
+          ultimate: {
+            name: "FREQUÊNCIA MÁXIMA",
+            description: "Liga sua caixa de som no volume máximo e canaliza sua energia através das ondas sonoras, causando 35% de dano.",
+          },
+        },
+      };
       const ANIMATION_FRAME_LIMITS = Object.freeze({
         idle: 60,
         getUp: 90,
@@ -3551,6 +3810,13 @@
         activeStageMusicTrack = stage.musicTrack || "battle";
         activeStageBackground = randomArrayItem(stage.backgrounds);
         document.documentElement.style.setProperty("--arena-background", `url("${activeStageBackground}")`);
+      }
+
+      async function prepareRandomStageBackground() {
+        applyRandomStageBackground();
+        // The arena is a CSS background, so it would otherwise start downloading only
+        // after the fighters and the first-turn UI are already visible.
+        await waitForDecodedFrames([activeStageBackground], TURN_VISUAL_PRELOAD_TIMEOUT_MS);
       }
 
       applyRandomStageBackground();
@@ -3722,7 +3988,11 @@
         characterPreviewArt: document.querySelector("#characterPreviewArt"),
         characterCards: [...document.querySelectorAll(".character-card")],
         characterBackButton: document.querySelector("#characterBackButton"),
+        characterAbilitiesButton: document.querySelector("#characterAbilitiesButton"),
         characterConfirmButton: document.querySelector("#characterConfirmButton"),
+        abilitiesPopup: document.querySelector("#abilitiesPopup"),
+        abilitiesPopupClose: document.querySelector("#abilitiesPopupClose"),
+        abilitiesCharacterName: document.querySelector("#abilitiesCharacterName"),
         helpScreen: document.querySelector("#helpScreen"),
         optionsScreen: document.querySelector("#optionsScreen"),
         helpTabs: [...document.querySelectorAll(".help-tab")],
@@ -3735,6 +4005,8 @@
         exitConfirm: document.querySelector("#exitConfirm"),
         cancelExitButton: document.querySelector("#cancelExitButton"),
         confirmExitButton: document.querySelector("#confirmExitButton"),
+        comingSoonPopup: document.querySelector("#comingSoonPopup"),
+        comingSoonPopupClose: document.querySelector("#comingSoonPopupClose"),
         backFromHelpButton: document.querySelector("#backFromHelpButton"),
         backFromOptionsButton: document.querySelector("#backFromOptionsButton"),
         audioToggle: document.querySelector("#audioToggle"),
@@ -3789,6 +4061,8 @@
       const comboHitEffectTimers = { p1: null, p2: null };
       let mobileUiActionLocked = false;
       let introSplashTimerId = null;
+      let cpuTokenRevealTimerId = null;
+      let cpuTokenRevealGeneration = 0;
       const audioState = {
         context: null,
         masterGain: null,
@@ -6411,6 +6685,14 @@
         el.p2Token.classList.remove(...classes);
       }
 
+      function cancelCpuTokenReveal() {
+        cpuTokenRevealGeneration += 1;
+        if (cpuTokenRevealTimerId !== null) {
+          window.clearTimeout(cpuTokenRevealTimerId);
+          cpuTokenRevealTimerId = null;
+        }
+      }
+
       function actionImage(action) {
         return actionImages[action] || actionImages.Question;
       }
@@ -6418,6 +6700,9 @@
       function setTokenDisplay(revealCpu = false) {
         const p2CanAct = !state.activeGuaranteedTurn || state.activeGuaranteedTurn.side === "p2";
         const showCpuAction = revealCpu || state.debugMode;
+        if (!showCpuAction) {
+          cancelCpuTokenReveal();
+        }
         clearTokenAnimationClasses();
         el.p1TokenImage.src = actionImage(state.selectedAction || "Question");
         el.p2TokenImage.src = showCpuAction ? actionImage(state.aiAction || "Question") : actionImages.Question;
@@ -6433,14 +6718,22 @@
           return;
         }
 
+        cancelCpuTokenReveal();
+        const actionToReveal = state.aiAction;
+        const revealGeneration = cpuTokenRevealGeneration;
         el.p2Token.classList.remove("revealing");
         el.p2Token.classList.remove("is-action");
         void el.p2Token.offsetWidth;
         el.p2Token.classList.add("revealing");
 
-        window.setTimeout(() => {
-          el.p2TokenImage.src = actionImage(state.aiAction || "Question");
-          el.p2Token.classList.toggle("is-action", Boolean(state.aiAction));
+        cpuTokenRevealTimerId = window.setTimeout(() => {
+          cpuTokenRevealTimerId = null;
+          if (state.phase !== "resolving" || revealGeneration !== cpuTokenRevealGeneration) {
+            return;
+          }
+
+          el.p2TokenImage.src = actionImage(actionToReveal);
+          el.p2Token.classList.add("is-action");
         }, 230);
       }
 
@@ -7321,6 +7614,8 @@
         el.helpScreen.classList.add("is-hidden");
         el.optionsScreen.classList.add("is-hidden");
         hideExitConfirm();
+        hideComingSoonPopup();
+        hideAbilitiesPopup();
       }
 
       function markIntroCompleted() {
@@ -7374,6 +7669,7 @@
       function showStartScreen() {
         markIntroCompleted();
         hideIntroScreens();
+        hideAbilitiesPopup();
         leaveAdvancedDebugMode();
         window.clearInterval(state.timerId);
         clearUltimateCinematic();
@@ -7383,6 +7679,7 @@
         el.characterSelectScreen.classList.add("is-hidden");
         el.helpScreen.classList.add("is-hidden");
         el.optionsScreen.classList.add("is-hidden");
+        showComingSoonPopup();
         syncMusicForPhase();
         updateDebugPanel();
       }
@@ -7395,6 +7692,35 @@
       function hideExitConfirm() {
         el.exitConfirm.classList.remove("show");
         el.exitConfirm.setAttribute("aria-hidden", "true");
+      }
+
+      function showComingSoonPopup() {
+        el.comingSoonPopup.classList.add("show");
+        el.comingSoonPopup.setAttribute("aria-hidden", "false");
+        el.comingSoonPopupClose.focus();
+      }
+
+      function hideComingSoonPopup() {
+        el.comingSoonPopup.classList.remove("show");
+        el.comingSoonPopup.setAttribute("aria-hidden", "true");
+      }
+
+      function showAbilitiesPopup() {
+        const abilities = CHARACTER_ABILITIES[state.selectedCharacter] || CHARACTER_ABILITIES.ninja;
+        el.abilitiesCharacterName.textContent = abilities.characterName;
+        ["passive", "special", "ultimate"].forEach((abilityType) => {
+          const card = el.abilitiesPopup.querySelector(`[data-ability="${abilityType}"]`);
+          card.querySelector("[data-ability-name]").textContent = abilities[abilityType].name;
+          card.querySelector("[data-ability-description]").textContent = abilities[abilityType].description;
+        });
+        el.abilitiesPopup.classList.add("show");
+        el.abilitiesPopup.setAttribute("aria-hidden", "false");
+        el.abilitiesPopupClose.focus();
+      }
+
+      function hideAbilitiesPopup() {
+        el.abilitiesPopup.classList.remove("show");
+        el.abilitiesPopup.setAttribute("aria-hidden", "true");
       }
 
       async function closeNativeApp() {
@@ -7495,6 +7821,7 @@
 
       function showCharacterSelectScreen() {
         hideIntroScreens();
+        hideAbilitiesPopup();
         leaveAdvancedDebugMode();
         window.clearInterval(state.timerId);
         state.phase = "character-select";
@@ -7596,7 +7923,7 @@
       }
 
       function setCharacterSelectButtonsDisabled(disabled) {
-        [el.characterBackButton, el.characterConfirmButton, ...el.characterCards].forEach((button) => {
+        [el.characterBackButton, el.characterAbilitiesButton, el.characterConfirmButton, ...el.characterCards].forEach((button) => {
           button.disabled = disabled;
         });
       }
@@ -7682,11 +8009,11 @@
       }
 
       function playGame() {
+        hideAbilitiesPopup();
         el.startScreen.classList.add("is-hidden");
         el.characterSelectScreen.classList.add("is-hidden");
         el.helpScreen.classList.add("is-hidden");
         el.optionsScreen.classList.add("is-hidden");
-        applyRandomStageBackground();
         resetBattle();
       }
 
@@ -7705,7 +8032,10 @@
         playSound("ui");
 
         try {
-          const charactersLoaded = await activateSelectedCharacters();
+          const [charactersLoaded] = await Promise.all([
+            activateSelectedCharacters(),
+            prepareRandomStageBackground(),
+          ]);
           if (!charactersLoaded) {
             return;
           }
@@ -7852,8 +8182,16 @@
       el.characterBackButton.addEventListener("click", () => {
         runUiButtonAction(el.characterBackButton, showStartScreen);
       });
+      el.characterAbilitiesButton.addEventListener("click", () => {
+        runUiButtonAction(el.characterAbilitiesButton, showAbilitiesPopup);
+      });
       el.characterConfirmButton.addEventListener("click", () => {
         runUiButtonAction(el.characterConfirmButton, startGameFromSelection, { sound: false });
+      });
+      el.abilitiesPopupClose.addEventListener("click", () => {
+        playSound("ui");
+        hideAbilitiesPopup();
+        el.characterAbilitiesButton.focus();
       });
       el.helpButton.addEventListener("click", () => {
         runUiButtonAction(el.helpButton, () => {
@@ -7890,6 +8228,10 @@
       el.confirmExitButton.addEventListener("click", () => {
         playSound("ui");
         confirmExitApp();
+      });
+      el.comingSoonPopupClose.addEventListener("click", () => {
+        playSound("ui");
+        hideComingSoonPopup();
       });
       el.helpTabs.forEach((tab) => {
         tab.addEventListener("click", () => {
@@ -8570,7 +8912,10 @@
           if (payload.status === "active" || payload.status === "resolving") {
             onlineBridgePostVisualBusy(payload, ONLINE_BRIDGE_STARTUP_BUSY_MS + 3000);
           }
-          const loaded = await activateSelectedCharacters();
+          const [loaded] = await Promise.all([
+            activateSelectedCharacters(),
+            prepareRandomStageBackground(),
+          ]);
           if (!loaded) {
             onlineBridgeHideStartText();
             onlineBridgePost({ type: "error", message: "character-load-failed" });
@@ -8585,7 +8930,6 @@
           el.characterSelectScreen.classList.add("is-hidden");
           el.helpScreen.classList.add("is-hidden");
           el.optionsScreen.classList.add("is-hidden");
-          applyRandomStageBackground();
           await onlineBridgePreloadMatchVisuals();
           if (onlineBridge.matchId !== payload.matchId) {
             return;

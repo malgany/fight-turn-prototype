@@ -19,11 +19,11 @@ const defaultCharacterRows = [
 ];
 
 const defaultCharacterUnlockRules = [
-  { character_id: "ninja", required_division: "Bronze", required_points: 0, description: "Disponivel desde o inicio" },
-  { character_id: "itzcoatl", required_division: "Bronze", required_points: 0, description: "Disponivel desde o inicio" },
-  { character_id: "aton", required_division: "Bronze", required_points: 0, description: "Disponivel desde o inicio" },
-  { character_id: "doll", required_division: "Bronze", required_points: 0, description: "Disponivel desde o inicio" },
-  { character_id: "coming-soon", required_division: "Gold", required_points: 800, description: "Personagem futuro por ranking" },
+  { character_id: "ninja", required_division: "Alto Primata III", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "itzcoatl", required_division: "Alto Primata III", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "aton", required_division: "Alto Primata III", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "doll", required_division: "Alto Primata III", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "coming-soon", required_division: "Prata III", required_points: 800, description: "Personagem futuro por ranking" },
 ];
 
 const attackActions: Action[] = ["Poke", "Combo", "Grab", "Special", "Super"];
@@ -44,6 +44,7 @@ const actionData: Record<Action, { speed?: number; damage?: number }> = {
 const blockChip: Partial<Record<Action, number>> = { Poke: 0, Combo: 2, Special: 2, Super: 3 };
 const tradeDamage: Partial<Record<Action, number>> = { Poke: 3, Combo: 4, Grab: 0, Special: 5, Super: 8 };
 const nonAttackActions: Action[] = ["Block", "Crouch", "Jump"];
+const ultimateHealthThresholds = [75, 50, 25];
 
 function json(body: unknown, init: ResponseInit = {}) {
   return new Response(JSON.stringify(body), {
@@ -58,6 +59,30 @@ function json(body: unknown, init: ResponseInit = {}) {
 
 function fail(message: string, status = 400) {
   return json({ error: message }, { status });
+}
+
+function trimTrailingSlashes(value: string) {
+  return value.replace(/\/+$/, "");
+}
+
+function publicAppOrigin(req: Request) {
+  const configured = Deno.env.get("PUBLIC_APP_URL") || Deno.env.get("APP_PUBLIC_URL") || Deno.env.get("SITE_URL");
+  if (configured) return trimTrailingSlashes(configured);
+
+  const origin = req.headers.get("origin") || "";
+  try {
+    const url = new URL(origin);
+    const localHosts = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"]);
+    if (url.protocol === "http:" && localHosts.has(url.hostname)) return "https://final-genesis-web.vercel.app";
+    if (url.protocol === "capacitor:" || url.protocol === "ionic:") return "https://final-genesis-web.vercel.app";
+    return trimTrailingSlashes(url.origin);
+  } catch {
+    return "https://final-genesis-web.vercel.app";
+  }
+}
+
+function privateRoomInviteUrl(req: Request, code: string) {
+  return new URL(`online/?room=${encodeURIComponent(code)}`, `${publicAppOrigin(req)}/`).href;
 }
 
 function serviceClient() {
@@ -103,12 +128,33 @@ function avatarForUser(user: User) {
   return user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
 }
 
+const rankRules = [
+  { division: "Alto Primata III", minimumPoints: 0, winPoints: 50, lossPoints: 10 },
+  { division: "Alto Primata II", minimumPoints: 100, winPoints: 40, lossPoints: 10 },
+  { division: "Alto Primata I", minimumPoints: 200, winPoints: 30, lossPoints: 10 },
+  { division: "Bronze III", minimumPoints: 300, winPoints: 50, lossPoints: 10 },
+  { division: "Bronze II", minimumPoints: 450, winPoints: 40, lossPoints: 10 },
+  { division: "Bronze I", minimumPoints: 600, winPoints: 30, lossPoints: 10 },
+  { division: "Prata III", minimumPoints: 750, winPoints: 50, lossPoints: 20 },
+  { division: "Prata II", minimumPoints: 950, winPoints: 40, lossPoints: 20 },
+  { division: "Prata I", minimumPoints: 1150, winPoints: 30, lossPoints: 20 },
+  { division: "Ouro III", minimumPoints: 1350, winPoints: 50, lossPoints: 20 },
+  { division: "Ouro II", minimumPoints: 1650, winPoints: 40, lossPoints: 20 },
+  { division: "Ouro I", minimumPoints: 1950, winPoints: 30, lossPoints: 20 },
+  { division: "Desperto", minimumPoints: 2250, winPoints: 30, lossPoints: 30 },
+  { division: "Arcanjo", minimumPoints: 2650, winPoints: 20, lossPoints: 30 },
+  { division: "Primordial", minimumPoints: 3150, winPoints: 20, lossPoints: 30 },
+];
+
+function rankRuleForPoints(points: number) {
+  for (let index = rankRules.length - 1; index >= 0; index -= 1) {
+    if (points >= rankRules[index].minimumPoints) return rankRules[index];
+  }
+  return rankRules[0];
+}
+
 function divisionForPoints(points: number) {
-  if (points >= 1600) return "Diamond";
-  if (points >= 1200) return "Platinum";
-  if (points >= 800) return "Gold";
-  if (points >= 400) return "Silver";
-  return "Bronze";
+  return rankRuleForPoints(points).division;
 }
 
 function initialBattleState() {
@@ -118,6 +164,7 @@ function initialBattleState() {
     advantage: null,
     activeGuaranteedTurn: null,
     itzcoatlResurrectionUsed: { p1: false, p2: false },
+    ultimateHealthThresholdsReached: { p1: [], p2: [] },
     turnNumber: 1,
   };
 }
@@ -147,12 +194,30 @@ function grantsDefenderSuper(source: Action | "Wait", options: { comboKnockdown?
   return ["Grab", "Special", "Super"].includes(source);
 }
 
+function addUltimateCharge(state: any, side: Side, amount = 1) {
+  state[side].super = Math.min(3, state[side].super + amount);
+}
+
+function grantUltimateForHealthThresholds(state: any, side: Side, previousHealth: number) {
+  const reachedThresholds = state.ultimateHealthThresholdsReached?.[side] || [];
+  const crossedThresholds = ultimateHealthThresholds.filter(
+    (threshold) => previousHealth > threshold && state[side].health <= threshold && !reachedThresholds.includes(threshold),
+  );
+  if (crossedThresholds.length === 0) return;
+
+  addUltimateCharge(state, side, crossedThresholds.length);
+  state.ultimateHealthThresholdsReached = {
+    ...state.ultimateHealthThresholdsReached,
+    [side]: [...reachedThresholds, ...crossedThresholds],
+  };
+}
+
 function applyDamage(state: any, target: Side, amount: number, source: Action | "Wait", options: { blocked?: boolean; comboKnockdown?: boolean } = {}) {
   if (!Number.isFinite(amount) || amount <= 0) return;
+  const previousHealth = state[target].health;
   state[target].health = clamp(state[target].health - amount);
-  if (grantsDefenderSuper(source, options) && !options.blocked) {
-    state[target].super = Math.min(3, state[target].super + 1);
-  }
+  if (options.blocked || grantsDefenderSuper(source, options)) addUltimateCharge(state, target);
+  grantUltimateForHealthThresholds(state, target, previousHealth);
 }
 
 function applyHeal(state: any, side: Side, amount: number) {
@@ -472,7 +537,7 @@ async function ensureProfile(db: SupabaseClient, user: User) {
     .from("profiles")
     .update({ display_name: profile.display_name, avatar_url: profile.avatar_url, account_type: profile.account_type })
     .eq("id", user.id);
-  await db.from("player_rank").upsert({ user_id: user.id, division: "Bronze" }, { onConflict: "user_id", ignoreDuplicates: true });
+  await db.from("player_rank").upsert({ user_id: user.id, division: "Alto Primata III" }, { onConflict: "user_id", ignoreDuplicates: true });
 
   const { data: defaultCharacters } = await db.from("characters").select("id").eq("is_default", true).eq("enabled", true);
   if (defaultCharacters?.length) {
@@ -637,14 +702,16 @@ async function applyUnlocks(db: SupabaseClient, userId: string, points: number) 
   if (rows.length) await db.from("player_unlocked_characters").upsert(rows, { onConflict: "user_id,character_id", ignoreDuplicates: true });
 }
 
-async function updateRankForFinishedMatch(db: SupabaseClient, match: any, winnerId: string | null, loserId: string | null, loserDelta = -20) {
+async function updateRankForFinishedMatch(db: SupabaseClient, match: any, winnerId: string | null, loserId: string | null) {
   if (match.match_type !== "ranked" || !winnerId || !loserId) return {};
   const { data: ranks } = await db.from("player_rank").select("*").in("user_id", [winnerId, loserId]);
   const map = new Map((ranks || []).map((rank: any) => [rank.user_id, rank]));
   const winner = map.get(winnerId);
   const loser = map.get(loserId);
   if (!winner || !loser) return {};
-  const winnerPoints = winner.rank_points + 25;
+  const winnerDelta = rankRuleForPoints(winner.rank_points).winPoints;
+  const loserDelta = -rankRuleForPoints(loser.rank_points).lossPoints;
+  const winnerPoints = winner.rank_points + winnerDelta;
   const loserPoints = Math.max(0, loser.rank_points + loserDelta);
   await db.from("player_rank").update({
     rank_points: winnerPoints,
@@ -660,7 +727,7 @@ async function updateRankForFinishedMatch(db: SupabaseClient, match: any, winner
     streak: 0,
   }).eq("user_id", loserId);
   await applyUnlocks(db, winnerId, winnerPoints);
-  return { [winnerId]: 25, [loserId]: loserDelta };
+  return { [winnerId]: winnerDelta, [loserId]: loserDelta };
 }
 
 async function addHistory(db: SupabaseClient, match: any, winnerId: string | null, delta: Record<string, number>) {
@@ -685,7 +752,7 @@ async function addHistory(db: SupabaseClient, match: any, winnerId: string | nul
 async function finishMatch(db: SupabaseClient, match: any, winnerSide: Side | null, reason: string) {
   const winnerId = winnerSide ? (winnerSide === "p1" ? match.player1_id : match.player2_id) : null;
   const loserId = winnerSide ? (winnerSide === "p1" ? match.player2_id : match.player1_id) : null;
-  const rankDelta = await updateRankForFinishedMatch(db, match, winnerId, loserId, reason === "forfeit" ? -25 : -20);
+  const rankDelta = await updateRankForFinishedMatch(db, match, winnerId, loserId);
   let privateScore: any = null;
   if (match.match_type === "private" && winnerId) {
     const low = match.player1_id < match.player2_id ? match.player1_id : match.player2_id;
@@ -961,7 +1028,7 @@ async function operation(req: Request, name: string) {
     const { data: profile } = await db.from("profiles").select("*").eq("id", user.id).single();
     const { data: room, error } = await db.from("private_rooms").insert({ code, host_id: user.id }).select("*").single();
     if (error) throw error;
-    return { code: room.code, status: room.status, hostName: profile.display_name, guestName: null, matchId: null, inviteUrl: `${req.headers.get("origin") || ""}/online/?room=${code}` };
+    return { code: room.code, status: room.status, hostName: profile.display_name, guestName: null, matchId: null, inviteUrl: privateRoomInviteUrl(req, code) };
   }
 
   if (name === "join-private-room") {
@@ -976,7 +1043,7 @@ async function operation(req: Request, name: string) {
     const match = await createMatch(db, "private", host, guest, code);
     await db.from("private_rooms").update({ guest_id: user.id, match_id: match.id, status: "active" }).eq("code", code);
     return {
-      room: { code, status: "active", hostName: host.display_name, guestName: guest.display_name, matchId: match.id, inviteUrl: `${req.headers.get("origin") || ""}/online/?room=${code}` },
+      room: { code, status: "active", hostName: host.display_name, guestName: guest.display_name, matchId: match.id, inviteUrl: privateRoomInviteUrl(req, code) },
       match: await toGameMatch(db, match, user.id),
     };
   }
@@ -990,7 +1057,7 @@ async function operation(req: Request, name: string) {
     const profiles = await profileMap(db, ids);
     const match = room.match_id ? await db.from("matches").select("*").eq("id", room.match_id).maybeSingle() : { data: null };
     return {
-      room: { code, status: room.status, hostName: profiles.get(room.host_id)?.display_name || "Host", guestName: room.guest_id ? profiles.get(room.guest_id)?.display_name || "Visitante" : null, matchId: room.match_id, inviteUrl: `${req.headers.get("origin") || ""}/online/?room=${code}` },
+      room: { code, status: room.status, hostName: profiles.get(room.host_id)?.display_name || "Host", guestName: room.guest_id ? profiles.get(room.guest_id)?.display_name || "Visitante" : null, matchId: room.match_id, inviteUrl: privateRoomInviteUrl(req, code) },
       match: match.data ? await toGameMatch(db, match.data, user.id) : null,
     };
   }

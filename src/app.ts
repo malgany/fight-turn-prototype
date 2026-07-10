@@ -598,6 +598,10 @@ export class App {
         p1: Boolean(state.itzcoatlResurrectionUsed?.[match.playerSide]),
         p2: Boolean(state.itzcoatlResurrectionUsed?.[opponentSide]),
       },
+      ultimateHealthThresholdsReached: {
+        p1: [...(state.ultimateHealthThresholdsReached?.[match.playerSide] || [])],
+        p2: [...(state.ultimateHealthThresholdsReached?.[opponentSide] || [])],
+      },
       turnNumber: state.turnNumber,
     };
   }

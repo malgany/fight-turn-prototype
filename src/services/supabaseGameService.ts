@@ -1,5 +1,5 @@
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import { authRedirectUrl, isNativeMobileApp, supabaseAnonKey, supabaseUrl } from "../lib/config";
+import { authRedirectUrl, isNativeMobileApp, privateRoomInviteUrl, supabaseAnonKey, supabaseUrl } from "../lib/config";
 import { signInWithGoogleOnMobile } from "../lib/mobileAuth";
 import { supabase } from "../lib/supabase";
 import type {
@@ -107,6 +107,10 @@ export class SupabaseGameService implements GameService {
 
     const serverNow = await this.serverNow();
     return this.attachServerNow(data as T, serverNow);
+  }
+
+  private normalizePrivateRoom(room: PrivateRoom): PrivateRoom {
+    return { ...room, inviteUrl: privateRoomInviteUrl(room.code) };
   }
 
   async getSnapshot(): Promise<AppSnapshot> {
@@ -230,16 +234,18 @@ export class SupabaseGameService implements GameService {
     return match.status === "selecting" || match.status === "active" || match.status === "waiting" || match.status === "resolving" ? match : null;
   }
 
-  createPrivateRoom(): Promise<PrivateRoom> {
-    return this.invoke<PrivateRoom>("create-private-room");
+  async createPrivateRoom(): Promise<PrivateRoom> {
+    return this.normalizePrivateRoom(await this.invoke<PrivateRoom>("create-private-room"));
   }
 
-  joinPrivateRoom(code: string): Promise<{ room: PrivateRoom; match: GameMatch | null }> {
-    return this.invoke<{ room: PrivateRoom; match: GameMatch | null }>("join-private-room", { code });
+  async joinPrivateRoom(code: string): Promise<{ room: PrivateRoom; match: GameMatch | null }> {
+    const response = await this.invoke<{ room: PrivateRoom; match: GameMatch | null }>("join-private-room", { code });
+    return { ...response, room: this.normalizePrivateRoom(response.room) };
   }
 
-  getPrivateRoom(code: string): Promise<{ room: PrivateRoom; match: GameMatch | null }> {
-    return this.invoke<{ room: PrivateRoom; match: GameMatch | null }>("private-room", { code });
+  async getPrivateRoom(code: string): Promise<{ room: PrivateRoom; match: GameMatch | null }> {
+    const response = await this.invoke<{ room: PrivateRoom; match: GameMatch | null }>("private-room", { code });
+    return { ...response, room: this.normalizePrivateRoom(response.room) };
   }
 
   selectMatchCharacter(matchId: string, characterId: string): Promise<GameMatch> {

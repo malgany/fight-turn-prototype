@@ -118,6 +118,7 @@ Configure:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+- `VITE_PUBLIC_APP_URL` com a URL publica usada em links compartilhados, por exemplo `https://final-genesis-web.vercel.app`
 
 ## Scripts
 
@@ -214,6 +215,7 @@ Fluxo esperado:
 - Variaveis configuradas em Production e Development:
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
+  - `VITE_PUBLIC_APP_URL`
 
 Validacoes realizadas no remoto:
 

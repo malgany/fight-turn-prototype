@@ -38,6 +38,7 @@ const actionData: Record<Action, { speed?: number; damage?: number; type?: "defe
 const blockChip: Partial<Record<Action, number>> = { Poke: 0, Combo: 2, Special: 2, Super: 3 };
 const tradeDamage: Partial<Record<Action, number>> = { Poke: 3, Combo: 4, Grab: 0, Special: 5, Super: 8 };
 const nonAttackActions: Action[] = ["Block", "Crouch", "Jump"];
+const ultimateHealthThresholds = [75, 50, 25];
 
 export function createInitialBattleState(): BattleState {
   return {
@@ -46,6 +47,7 @@ export function createInitialBattleState(): BattleState {
     advantage: null,
     activeGuaranteedTurn: null,
     itzcoatlResurrectionUsed: { p1: false, p2: false },
+    ultimateHealthThresholdsReached: { p1: [], p2: [] },
     turnNumber: 1,
   };
 }
@@ -76,6 +78,10 @@ function cloneState(state: BattleState): BattleState {
     advantage: state.advantage,
     activeGuaranteedTurn: state.activeGuaranteedTurn ? { ...state.activeGuaranteedTurn, allowedActions: [...state.activeGuaranteedTurn.allowedActions] } : null,
     itzcoatlResurrectionUsed: { ...(state.itzcoatlResurrectionUsed || {}) },
+    ultimateHealthThresholdsReached: {
+      p1: [...(state.ultimateHealthThresholdsReached?.p1 || [])],
+      p2: [...(state.ultimateHealthThresholdsReached?.p2 || [])],
+    },
     turnNumber: state.turnNumber,
   };
 }
@@ -93,6 +99,24 @@ function grantsDefenderSuper(sourceAction: Action | "Wait", options: { comboKnoc
   return ["Grab", "Special", "Super"].includes(sourceAction);
 }
 
+function addUltimateCharge(state: BattleState, side: Side, amount = 1): void {
+  state[side].super = Math.min(3, state[side].super + amount);
+}
+
+function grantUltimateForHealthThresholds(state: BattleState, side: Side, previousHealth: number): void {
+  const reachedThresholds = state.ultimateHealthThresholdsReached?.[side] || [];
+  const crossedThresholds = ultimateHealthThresholds.filter(
+    (threshold) => previousHealth > threshold && state[side].health <= threshold && !reachedThresholds.includes(threshold),
+  );
+  if (crossedThresholds.length === 0) return;
+
+  addUltimateCharge(state, side, crossedThresholds.length);
+  state.ultimateHealthThresholdsReached = {
+    ...state.ultimateHealthThresholdsReached,
+    [side]: [...reachedThresholds, ...crossedThresholds],
+  };
+}
+
 function applyDamage(
   state: BattleState,
   targetSide: Side,
@@ -102,10 +126,12 @@ function applyDamage(
 ): void {
   if (!Number.isFinite(amount) || amount <= 0) return;
 
+  const previousHealth = state[targetSide].health;
   state[targetSide].health = clampPercent(state[targetSide].health - amount);
-  if (grantsDefenderSuper(sourceAction, options) && !options.blocked) {
-    state[targetSide].super = Math.min(3, state[targetSide].super + 1);
+  if (options.blocked || grantsDefenderSuper(sourceAction, options)) {
+    addUltimateCharge(state, targetSide);
   }
+  grantUltimateForHealthThresholds(state, targetSide, previousHealth);
 }
 
 function applyHeal(state: BattleState, side: Side, amount: number): number {

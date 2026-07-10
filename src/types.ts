@@ -1,6 +1,21 @@
 export type AccountType = "guest" | "google";
 export type PresenceStatus = "online" | "in_queue" | "in_match" | "offline";
-export type Division = "Bronze" | "Silver" | "Gold" | "Platinum" | "Diamond";
+export type Division =
+  | "Alto Primata III"
+  | "Alto Primata II"
+  | "Alto Primata I"
+  | "Bronze III"
+  | "Bronze II"
+  | "Bronze I"
+  | "Prata III"
+  | "Prata II"
+  | "Prata I"
+  | "Ouro III"
+  | "Ouro II"
+  | "Ouro I"
+  | "Desperto"
+  | "Arcanjo"
+  | "Primordial";
 export type Side = "p1" | "p2";
 export type Action = "Poke" | "Combo" | "Grab" | "Special" | "Super" | "Block" | "Crouch" | "Jump";
 export type MatchType = "ranked" | "private" | "casual";
@@ -80,6 +95,7 @@ export interface BattleState {
   advantage: Side | null;
   activeGuaranteedTurn: GuaranteedTurn | null;
   itzcoatlResurrectionUsed?: Partial<Record<Side, boolean>>;
+  ultimateHealthThresholdsReached?: Partial<Record<Side, number[]>>;
   turnNumber: number;
 }
 

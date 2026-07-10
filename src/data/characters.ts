@@ -9,7 +9,7 @@ export const characters: CharacterDefinition[] = [
     isDefault: true,
     unlockDescription: "Disponivel desde o inicio",
     requiredPoints: 0,
-    requiredDivision: "Bronze",
+    requiredDivision: "Alto Primata III",
   },
   {
     id: "itzcoatl",
@@ -19,7 +19,7 @@ export const characters: CharacterDefinition[] = [
     isDefault: true,
     unlockDescription: "Disponivel desde o inicio",
     requiredPoints: 0,
-    requiredDivision: "Bronze",
+    requiredDivision: "Alto Primata III",
   },
   {
     id: "aton",
@@ -29,7 +29,7 @@ export const characters: CharacterDefinition[] = [
     isDefault: true,
     unlockDescription: "Disponivel desde o inicio",
     requiredPoints: 0,
-    requiredDivision: "Bronze",
+    requiredDivision: "Alto Primata III",
   },
   {
     id: "doll",
@@ -39,7 +39,7 @@ export const characters: CharacterDefinition[] = [
     isDefault: true,
     unlockDescription: "Disponivel desde o inicio",
     requiredPoints: 0,
-    requiredDivision: "Bronze",
+    requiredDivision: "Alto Primata III",
   },
   {
     id: "coming-soon",
@@ -49,7 +49,7 @@ export const characters: CharacterDefinition[] = [
     isDefault: false,
     unlockDescription: "Personagem futuro por ranking",
     requiredPoints: 800,
-    requiredDivision: "Gold",
+    requiredDivision: "Prata III",
   },
 ];
 

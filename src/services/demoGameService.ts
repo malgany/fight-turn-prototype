@@ -1,6 +1,7 @@
 import { createInitialBattleState, resolveBattleTurn, selectableActions, turnDurationForState } from "../domain/battle";
-import { applyRankedResult, createInitialRank } from "../domain/ranking";
+import { applyRankedResult, createInitialRank, divisionForPoints, rankedDeltaForResult } from "../domain/ranking";
 import { characters, defaultCharacterIds } from "../data/characters";
+import { privateRoomInviteUrl } from "../lib/config";
 import type {
   Action,
   AppSnapshot,
@@ -49,7 +50,10 @@ function loadState(): DemoState {
 
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    return stored ? { ...fallback, ...JSON.parse(stored) } : fallback;
+    if (!stored) return fallback;
+    const loaded = { ...fallback, ...JSON.parse(stored) } as DemoState;
+    if (loaded.rank) loaded.rank.division = divisionForPoints(loaded.rank.rankPoints);
+    return loaded;
   } catch {
     return fallback;
   }
@@ -101,9 +105,9 @@ function makeMatch(profile: PlayerProfile, type: "ranked" | "private"): GameMatc
 
 function createLeaderboard(currentRank: PlayerRank | null, profile: PlayerProfile | null): LeaderboardEntry[] {
   const base: LeaderboardEntry[] = [
-    { position: 1, userId: "demo-1", displayName: "Astra", avatarUrl: null, rankPoints: 1640, division: "Diamond", wins: 91, losses: 34, streak: 8 },
-    { position: 2, userId: "demo-2", displayName: "Khan", avatarUrl: null, rankPoints: 1225, division: "Platinum", wins: 61, losses: 25, streak: 3 },
-    { position: 3, userId: "demo-3", displayName: "Iara", avatarUrl: null, rankPoints: 850, division: "Gold", wins: 47, losses: 31, streak: 5 },
+    { position: 1, userId: "demo-1", displayName: "Astra", avatarUrl: null, rankPoints: 3160, division: "Primordial", wins: 91, losses: 34, streak: 8 },
+    { position: 2, userId: "demo-2", displayName: "Khan", avatarUrl: null, rankPoints: 2700, division: "Arcanjo", wins: 61, losses: 25, streak: 3 },
+    { position: 3, userId: "demo-3", displayName: "Iara", avatarUrl: null, rankPoints: 2300, division: "Desperto", wins: 47, losses: 31, streak: 5 },
   ];
 
   if (currentRank && profile) {
@@ -220,7 +224,7 @@ export class DemoGameService implements GameService {
       hostName: state.profile.displayName,
       guestName: null,
       matchId: null,
-      inviteUrl: `${window.location.origin}/online/?room=${code}`,
+      inviteUrl: privateRoomInviteUrl(code),
     };
     this.commit({ ...state, privateRoom: room });
     return room;
@@ -236,7 +240,7 @@ export class DemoGameService implements GameService {
       hostName: "Host Demo",
       guestName: state.profile.displayName,
       matchId: match.id,
-      inviteUrl: `${window.location.origin}/online/?room=${code.toUpperCase()}`,
+      inviteUrl: privateRoomInviteUrl(code),
     };
     this.commit({ ...state, privateRoom: room, currentMatch: match, profile: { ...state.profile, presenceStatus: "in_match" } });
     return { room, match };
@@ -297,8 +301,10 @@ export class DemoGameService implements GameService {
     if (result.finished && state.profile && state.rank) {
       const playerWon = nextMatch.winnerId === state.profile.id;
       if (match.matchType === "ranked") {
-        const rank = applyRankedResult(state.rank, playerWon ? "win" : "loss");
-        nextMatch = { ...nextMatch, rankDelta: playerWon ? 25 : -20 };
+        const rankedResult = playerWon ? "win" : "loss";
+        const rankDelta = rankedDeltaForResult(state.rank.rankPoints, rankedResult);
+        const rank = applyRankedResult(state.rank, rankedResult);
+        nextMatch = { ...nextMatch, rankDelta };
         nextState.rank = rank;
         nextState.currentMatch = nextMatch;
       } else {
@@ -342,7 +348,10 @@ export class DemoGameService implements GameService {
     const state = this.state();
     const match = state.currentMatch;
     if (!match || match.id !== matchId || !state.profile) throw new Error("Partida nao encontrada.");
-    const nextMatch = { ...match, status: "forfeited" as const, winnerId: match.p2.userId };
+    const rankDelta = match.matchType === "ranked" && state.rank
+      ? rankedDeltaForResult(state.rank.rankPoints, "forfeit")
+      : 0;
+    const nextMatch = { ...match, status: "forfeited" as const, winnerId: match.p2.userId, rankDelta };
     const history: MatchHistoryEntry = {
       id: crypto.randomUUID(),
       matchId,
@@ -351,10 +360,13 @@ export class DemoGameService implements GameService {
       characterId: match.p1.characterId || "ninja",
       opponentCharacterId: match.p2.characterId || "ninja",
       result: "loss",
-      rankDelta: match.matchType === "ranked" ? -25 : 0,
+      rankDelta,
       createdAt: new Date().toISOString(),
     };
-    this.commit({ ...state, currentMatch: nextMatch, history: [history, ...state.history], profile: { ...state.profile, presenceStatus: "online" } });
+    const rank = match.matchType === "ranked" && state.rank
+      ? applyRankedResult(state.rank, "forfeit")
+      : state.rank;
+    this.commit({ ...state, rank, currentMatch: nextMatch, history: [history, ...state.history], profile: { ...state.profile, presenceStatus: "online" } });
     return nextMatch;
   }
 

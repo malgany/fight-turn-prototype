@@ -22,6 +22,44 @@ describe("resolveBattleTurn", () => {
     expect(result.after.activeGuaranteedTurn?.side).toBe("p2");
   });
 
+  it("gives one ultimate bar when a defender takes chip damage while blocking", () => {
+    const result = resolveBattleTurn(createInitialBattleState(), "Special", "Block");
+
+    expect(result.after.p2.health).toBe(98);
+    expect(result.after.p2.super).toBe(1);
+  });
+
+  it("does not give ultimate charge when blocking an attack that causes no damage", () => {
+    const result = resolveBattleTurn(createInitialBattleState(), "Poke", "Block");
+
+    expect(result.after.p2.health).toBe(100);
+    expect(result.after.p2.super).toBe(0);
+  });
+
+  it("gives one ultimate bar for each health threshold crossed", () => {
+    const state = createInitialBattleState();
+    state.p2.health = 80;
+    const firstHit = resolveBattleTurn(state, "Special", null, { p1CharacterId: "itzcoatl" });
+    const secondHit = resolveBattleTurn(firstHit.after, "Special", null, { p1CharacterId: "itzcoatl" });
+    const thirdHit = resolveBattleTurn(secondHit.after, "Special", null, { p1CharacterId: "itzcoatl" });
+
+    expect(firstHit.after.p2.super).toBe(2);
+    expect(thirdHit.after.p2.health).toBe(5);
+    expect(thirdHit.after.ultimateHealthThresholdsReached?.p2).toEqual([75, 50, 25]);
+  });
+
+  it("awards all crossed health thresholds only once, even after healing", () => {
+    const state = createInitialBattleState();
+    state.p2.health = 80;
+    const firstHit = resolveBattleTurn(state, "Special", null);
+    const secondHit = resolveBattleTurn(firstHit.after, "Special", null);
+    const recoveredState = { ...secondHit.after, p2: { ...secondHit.after.p2, health: 80 } };
+    const thirdHit = resolveBattleTurn(recoveredState, "Special", null);
+
+    expect(secondHit.after.ultimateHealthThresholdsReached?.p2).toEqual([75, 50]);
+    expect(thirdHit.after.ultimateHealthThresholdsReached?.p2).toEqual([75, 50]);
+  });
+
   it("resolves timeout as free hit when only one player acts", () => {
     const result = resolveBattleTurn(createInitialBattleState(), "Combo", null);
 
