@@ -3893,6 +3893,7 @@
       };
       const blockChip = { Poke: 0, Combo: 2, Special: 2, Super: 3 };
       const tradeDamage = { Poke: 3, Combo: 4, Grab: 0, Special: 5, Super: 8 };
+      const ultimateHealthThresholds = [75, 50, 25];
       const state = {
         phase: "choosing",
         debugAvailable,
@@ -3916,6 +3917,7 @@
         p1: { health: 100, super: 0 },
         p2: { health: 100, super: 0 },
         itzcoatlResurrectionUsed: { p1: false, p2: false },
+        ultimateHealthThresholdsReached: { p1: [], p2: [] },
         healthTrail: { p1: 100, p2: 100 },
         healthTrailTimers: { p1: null, p2: null },
         sequenceDamage: { p1: 0, p2: 0 },
@@ -6921,6 +6923,28 @@
         return ["Grab", "Special", "Super"].includes(sourceAction);
       }
 
+      function addUltimateCharge(side, amount = 1) {
+        state[side].super = Math.min(3, state[side].super + amount);
+      }
+
+      function grantUltimateForHealthThresholds(side, previousHealth) {
+        const reachedThresholds = state.ultimateHealthThresholdsReached?.[side] || [];
+        const crossedThresholds = ultimateHealthThresholds.filter((threshold) => (
+          previousHealth > threshold
+          && state[side].health <= threshold
+          && !reachedThresholds.includes(threshold)
+        ));
+        if (crossedThresholds.length === 0) {
+          return;
+        }
+
+        addUltimateCharge(side, crossedThresholds.length);
+        state.ultimateHealthThresholdsReached = {
+          ...state.ultimateHealthThresholdsReached,
+          [side]: [...reachedThresholds, ...crossedThresholds],
+        };
+      }
+
       function applyDamage(targetSide, amount, sourceAction, options = {}) {
         if (!Number.isFinite(amount) || amount <= 0) {
           return;
@@ -6930,10 +6954,10 @@
         state[targetSide].health = clampPercent(state[targetSide].health - amount);
         showHealthDamageTrail(targetSide, previousHealth);
 
-        const grantsSuper = grantsDefenderSuper(sourceAction, options);
-        if (grantsSuper && !options.blocked && !state.debugMode) {
-          state[targetSide].super = Math.min(3, state[targetSide].super + 1);
+        if (options.blocked || grantsDefenderSuper(sourceAction, options)) {
+          addUltimateCharge(targetSide);
         }
+        grantUltimateForHealthThresholds(targetSide, previousHealth);
       }
 
       function applyHeal(side, amount) {
@@ -7568,6 +7592,7 @@
         state.p1.super = 0;
         state.p2.super = 0;
         state.itzcoatlResurrectionUsed = { p1: false, p2: false };
+        state.ultimateHealthThresholdsReached = { p1: [], p2: [] };
         state.advantage = null;
         state.guaranteedTurn = null;
         state.activeGuaranteedTurn = null;
@@ -8392,6 +8417,10 @@
         state.itzcoatlResurrectionUsed = {
           p1: Boolean(battleState.itzcoatlResurrectionUsed?.p1),
           p2: Boolean(battleState.itzcoatlResurrectionUsed?.p2),
+        };
+        state.ultimateHealthThresholdsReached = {
+          p1: [...(battleState.ultimateHealthThresholdsReached?.p1 || [])],
+          p2: [...(battleState.ultimateHealthThresholdsReached?.p2 || [])],
         };
         state.advantage = battleState.advantage || null;
         state.activeGuaranteedTurn = battleState.activeGuaranteedTurn || null;
