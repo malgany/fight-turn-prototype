@@ -2749,6 +2749,10 @@
         box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.18), 0 7px 0 rgba(0, 0, 0, 0.45), 0 0 16px rgba(224, 24, 24, 0.34);
       }
 
+      .help-guide-tab {
+        grid-column: 1 / -1;
+      }
+
       .help-panel {
         display: none;
       }
@@ -2756,6 +2760,21 @@
       .help-panel.is-active {
         display: grid;
         gap: clamp(10px, 2.8cqw, 16px);
+      }
+
+      .help-choice-guide {
+        margin: 0;
+        border: 2px solid rgba(170, 115, 255, 0.72);
+        border-radius: 10px;
+        overflow: hidden;
+        background: #050509;
+        box-shadow: 0 0 18px rgba(126, 74, 220, 0.26), 0 7px 0 rgba(0, 0, 0, 0.38);
+      }
+
+      .help-choice-guide img {
+        display: block;
+        width: 100%;
+        height: auto;
       }
 
       .help-intro,
@@ -3217,6 +3236,13 @@
             <button class="help-tab" type="button" role="tab" aria-selected="false" aria-controls="helpMovesPanel" id="helpMovesTab" data-help-tab="moves">GOLPES</button>
             <button class="help-tab" type="button" role="tab" aria-selected="false" aria-controls="helpGuaranteedPanel" id="helpGuaranteedTab" data-help-tab="guaranteed">GARANTIDOS</button>
             <button class="help-tab" type="button" role="tab" aria-selected="false" aria-controls="helpStatesPanel" id="helpStatesTab" data-help-tab="states">ESTADOS</button>
+            <button class="help-tab help-guide-tab" type="button" role="tab" aria-selected="false" aria-controls="helpGuidePanel" id="helpGuideTab" data-help-tab="guide">GUIA</button>
+          </div>
+
+          <div class="help-panel" id="helpGuidePanel" role="tabpanel" aria-labelledby="helpGuideTab" data-help-panel="guide" hidden>
+            <figure class="help-choice-guide">
+              <img src="../../game-assets/ui/help/combat-choice-guide.png?v=20260711" alt="Guia de melhores escolhas no combate em neutro, vantagem e contra opcoes defensivas">
+            </figure>
           </div>
 
           <div class="help-panel is-active" id="helpBasicPanel" role="tabpanel" aria-labelledby="helpBasicTab" data-help-panel="basic">
@@ -7799,6 +7825,13 @@
 
       async function closeNativeApp() {
         const appPlugin = capacitorBridge?.Plugins?.App || window.Capacitor?.Plugins?.App;
+        const finalGenesisExit = capacitorBridge?.Plugins?.FinalGenesisExit
+          || window.Capacitor?.Plugins?.FinalGenesisExit;
+        if (finalGenesisExit?.exitAndRemoveTask) {
+          await finalGenesisExit.exitAndRemoveTask();
+          return;
+        }
+
         if (appPlugin?.exitApp) {
           await appPlugin.exitApp();
           return;
@@ -7935,7 +7968,7 @@
         el.characterSelectScreen.classList.add("is-hidden");
         el.helpScreen.classList.remove("is-hidden");
         el.optionsScreen.classList.add("is-hidden");
-        setHelpTab("basic");
+        setHelpTab("guide");
         syncMusicForPhase();
         updateDebugPanel();
       }

@@ -1,5 +1,5 @@
 alter table public.player_rank
-alter column division set default 'Alto Primata III';
+alter column division set default 'Altoprimata III';
 
 update public.player_rank
 set division = case
@@ -15,9 +15,9 @@ set division = case
   when rank_points >= 600 then 'Bronze I'
   when rank_points >= 450 then 'Bronze II'
   when rank_points >= 300 then 'Bronze III'
-  when rank_points >= 200 then 'Alto Primata I'
-  when rank_points >= 100 then 'Alto Primata II'
-  else 'Alto Primata III'
+  when rank_points >= 200 then 'Altoprimata I'
+  when rank_points >= 100 then 'Altoprimata II'
+  else 'Altoprimata III'
 end;
 
 update public.character_unlock_rules
@@ -34,7 +34,7 @@ set required_division = case
   when required_points >= 600 then 'Bronze I'
   when required_points >= 450 then 'Bronze II'
   when required_points >= 300 then 'Bronze III'
-  when required_points >= 200 then 'Alto Primata I'
-  when required_points >= 100 then 'Alto Primata II'
-  else 'Alto Primata III'
+  when required_points >= 200 then 'Altoprimata I'
+  when required_points >= 100 then 'Altoprimata II'
+  else 'Altoprimata III'
 end;

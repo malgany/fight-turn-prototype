@@ -1,0 +1,4 @@
+interface:
+  display_name: "Android Release"
+  short_description: "Commit, build AAB, open Play internal release"
+  default_prompt: "Use $android-release to commit, push, build a new AAB, and open the Play Console internal release screen."

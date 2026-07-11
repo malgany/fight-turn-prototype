@@ -19,10 +19,10 @@ const defaultCharacterRows = [
 ];
 
 const defaultCharacterUnlockRules = [
-  { character_id: "ninja", required_division: "Alto Primata III", required_points: 0, description: "Disponivel desde o inicio" },
-  { character_id: "itzcoatl", required_division: "Alto Primata III", required_points: 0, description: "Disponivel desde o inicio" },
-  { character_id: "aton", required_division: "Alto Primata III", required_points: 0, description: "Disponivel desde o inicio" },
-  { character_id: "doll", required_division: "Alto Primata III", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "ninja", required_division: "Altoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "itzcoatl", required_division: "Altoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "aton", required_division: "Altoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "doll", required_division: "Altoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
   { character_id: "coming-soon", required_division: "Prata III", required_points: 800, description: "Personagem futuro por ranking" },
 ];
 
@@ -129,9 +129,9 @@ function avatarForUser(user: User) {
 }
 
 const rankRules = [
-  { division: "Alto Primata III", minimumPoints: 0, winPoints: 50, lossPoints: 10 },
-  { division: "Alto Primata II", minimumPoints: 100, winPoints: 40, lossPoints: 10 },
-  { division: "Alto Primata I", minimumPoints: 200, winPoints: 30, lossPoints: 10 },
+  { division: "Altoprimata III", minimumPoints: 0, winPoints: 50, lossPoints: 10 },
+  { division: "Altoprimata II", minimumPoints: 100, winPoints: 40, lossPoints: 10 },
+  { division: "Altoprimata I", minimumPoints: 200, winPoints: 30, lossPoints: 10 },
   { division: "Bronze III", minimumPoints: 300, winPoints: 50, lossPoints: 10 },
   { division: "Bronze II", minimumPoints: 450, winPoints: 40, lossPoints: 10 },
   { division: "Bronze I", minimumPoints: 600, winPoints: 30, lossPoints: 10 },
@@ -155,6 +155,13 @@ function rankRuleForPoints(points: number) {
 
 function divisionForPoints(points: number) {
   return rankRuleForPoints(points).division;
+}
+
+function rankedWinPointsForOpponent(winnerPoints: number, loserPoints: number) {
+  const winnerRule = rankRuleForPoints(winnerPoints);
+  const loserRule = rankRuleForPoints(loserPoints);
+  if (winnerRule.division !== "Altoprimata III" && loserRule.division === "Altoprimata III") return 0;
+  return winnerRule.winPoints;
 }
 
 function initialBattleState() {
@@ -516,7 +523,7 @@ async function ensureProfile(db: SupabaseClient, user: User) {
     .from("profiles")
     .update({ display_name: profile.display_name, avatar_url: profile.avatar_url, account_type: profile.account_type })
     .eq("id", user.id);
-  await db.from("player_rank").upsert({ user_id: user.id, division: "Alto Primata III" }, { onConflict: "user_id", ignoreDuplicates: true });
+  await db.from("player_rank").upsert({ user_id: user.id, division: "Altoprimata III" }, { onConflict: "user_id", ignoreDuplicates: true });
 
   const { data: defaultCharacters } = await db.from("characters").select("id").eq("is_default", true).eq("enabled", true);
   if (defaultCharacters?.length) {
@@ -729,7 +736,7 @@ async function updateRankForFinishedMatch(db: SupabaseClient, match: any, winner
   const winner = map.get(winnerId);
   const loser = map.get(loserId);
   if (!winner || !loser) return {};
-  const winnerDelta = rankRuleForPoints(winner.rank_points).winPoints;
+  const winnerDelta = rankedWinPointsForOpponent(winner.rank_points, loser.rank_points);
   const loserDelta = -rankRuleForPoints(loser.rank_points).lossPoints;
   const winnerPoints = winner.rank_points + winnerDelta;
   const loserPoints = Math.max(0, loser.rank_points + loserDelta);

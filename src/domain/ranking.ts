@@ -10,9 +10,9 @@ export interface RankRule {
 }
 
 export const RANK_RULES: readonly RankRule[] = [
-  { division: "Alto Primata III", minimumPoints: 0, winPoints: 50, lossPoints: 10 },
-  { division: "Alto Primata II", minimumPoints: 100, winPoints: 40, lossPoints: 10 },
-  { division: "Alto Primata I", minimumPoints: 200, winPoints: 30, lossPoints: 10 },
+  { division: "Altoprimata III", minimumPoints: 0, winPoints: 50, lossPoints: 10 },
+  { division: "Altoprimata II", minimumPoints: 100, winPoints: 40, lossPoints: 10 },
+  { division: "Altoprimata I", minimumPoints: 200, winPoints: 30, lossPoints: 10 },
   { division: "Bronze III", minimumPoints: 300, winPoints: 50, lossPoints: 10 },
   { division: "Bronze II", minimumPoints: 450, winPoints: 40, lossPoints: 10 },
   { division: "Bronze I", minimumPoints: 600, winPoints: 30, lossPoints: 10 },
@@ -38,8 +38,9 @@ export function divisionForPoints(points: number): Division {
   return rankRuleForPoints(points).division;
 }
 
-export function rankedDeltaForResult(points: number, result: RankedResult): number {
+export function rankedDeltaForResult(points: number, result: RankedResult, opponentDivision?: Division): number {
   const rule = rankRuleForPoints(points);
+  if (result === "win" && rule.division !== "Altoprimata III" && opponentDivision === "Altoprimata III") return 0;
   return result === "win" ? rule.winPoints : -rule.lossPoints;
 }
 
@@ -47,7 +48,7 @@ export function createInitialRank(userId: string): PlayerRank {
   return {
     userId,
     rankPoints: 0,
-    division: "Alto Primata III",
+    division: "Altoprimata III",
     wins: 0,
     losses: 0,
     streak: 0,
@@ -55,8 +56,8 @@ export function createInitialRank(userId: string): PlayerRank {
   };
 }
 
-export function applyRankedResult(rank: PlayerRank, result: RankedResult): PlayerRank {
-  const delta = rankedDeltaForResult(rank.rankPoints, result);
+export function applyRankedResult(rank: PlayerRank, result: RankedResult, opponentDivision?: Division): PlayerRank {
+  const delta = rankedDeltaForResult(rank.rankPoints, result, opponentDivision);
   const rankPoints = Math.max(0, rank.rankPoints + delta);
   const wins = result === "win" ? rank.wins + 1 : rank.wins;
   const losses = result === "win" ? rank.losses : rank.losses + 1;

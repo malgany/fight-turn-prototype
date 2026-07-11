@@ -1,4 +1,5 @@
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { divisionForPoints } from "../domain/ranking";
 import { authRedirectUrl, isNativeMobileApp, privateRoomInviteUrl, supabaseAnonKey, supabaseUrl } from "../lib/config";
 import { signInWithGoogleOnMobile } from "../lib/mobileAuth";
 import { supabase } from "../lib/supabase";
@@ -206,6 +207,17 @@ export class SupabaseGameService implements GameService {
     return { ...room, inviteUrl: privateRoomInviteUrl(room.code) };
   }
 
+  private normalizeSnapshot(snapshot: AppSnapshot): AppSnapshot {
+    if (!snapshot.rank) return snapshot;
+    return {
+      ...snapshot,
+      rank: {
+        ...snapshot.rank,
+        division: divisionForPoints(snapshot.rank.rankPoints),
+      },
+    };
+  }
+
   async getSnapshot(): Promise<AppSnapshot> {
     const { data } = await this.client().auth.getSession();
     if (!data.session) {
@@ -234,12 +246,12 @@ export class SupabaseGameService implements GameService {
     if (error) throw error;
   }
 
-  bootstrapProfile(): Promise<AppSnapshot> {
-    return this.invoke<AppSnapshot>("bootstrap-profile");
+  async bootstrapProfile(): Promise<AppSnapshot> {
+    return this.normalizeSnapshot(await this.invoke<AppSnapshot>("bootstrap-profile"));
   }
 
-  selectCharacter(characterId: string): Promise<AppSnapshot> {
-    return this.invoke<AppSnapshot>("select-character", { characterId });
+  async selectCharacter(characterId: string): Promise<AppSnapshot> {
+    return this.normalizeSnapshot(await this.invoke<AppSnapshot>("select-character", { characterId }));
   }
 
   async heartbeat(status: PlayerProfile["presenceStatus"], matchId?: string): Promise<void> {
@@ -259,7 +271,9 @@ export class SupabaseGameService implements GameService {
       displayName: entry.display_name,
       avatarUrl: entry.avatar_url,
       rankPoints: entry.rank_points,
-      division: entry.division,
+      // Points are the source of truth. This also keeps the leaderboard
+      // correct while older rows are being backfilled to the new progression.
+      division: divisionForPoints(entry.rank_points),
       wins: entry.wins,
       losses: entry.losses,
       streak: entry.streak,

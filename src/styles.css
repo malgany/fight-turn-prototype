@@ -1964,12 +1964,15 @@ p {
   border-radius: 0 8px 8px 0;
 }
 
+.ranking-table tr.current {
+  background:
+    linear-gradient(90deg, rgba(242, 182, 51, 0.2), rgba(145, 107, 32, 0.16) 55%, rgba(28, 39, 55, 0.92));
+}
+
 .ranking-table tr.current th,
 .ranking-table tr.current td {
   border-color: rgba(242, 182, 51, 0.92);
-  background:
-    linear-gradient(90deg, rgba(242, 182, 51, 0.14), rgba(28, 39, 55, 0.92) 38%),
-    rgba(28, 39, 55, 0.92);
+  background: transparent;
 }
 
 .ranking-player {
