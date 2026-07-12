@@ -10,9 +10,9 @@ export interface RankRule {
 }
 
 export const RANK_RULES: readonly RankRule[] = [
-  { division: "Altoprimata III", minimumPoints: 0, winPoints: 50, lossPoints: 10 },
-  { division: "Altoprimata II", minimumPoints: 100, winPoints: 40, lossPoints: 10 },
-  { division: "Altoprimata I", minimumPoints: 200, winPoints: 30, lossPoints: 10 },
+  { division: "Autoprimata III", minimumPoints: 0, winPoints: 50, lossPoints: 10 },
+  { division: "Autoprimata II", minimumPoints: 100, winPoints: 40, lossPoints: 10 },
+  { division: "Autoprimata I", minimumPoints: 200, winPoints: 30, lossPoints: 10 },
   { division: "Bronze III", minimumPoints: 300, winPoints: 50, lossPoints: 10 },
   { division: "Bronze II", minimumPoints: 450, winPoints: 40, lossPoints: 10 },
   { division: "Bronze I", minimumPoints: 600, winPoints: 30, lossPoints: 10 },
@@ -40,7 +40,7 @@ export function divisionForPoints(points: number): Division {
 
 export function rankedDeltaForResult(points: number, result: RankedResult, opponentDivision?: Division): number {
   const rule = rankRuleForPoints(points);
-  if (result === "win" && rule.division !== "Altoprimata III" && opponentDivision === "Altoprimata III") return 0;
+  if (result === "win" && rule.division !== "Autoprimata III" && opponentDivision === "Autoprimata III") return 0;
   return result === "win" ? rule.winPoints : -rule.lossPoints;
 }
 
@@ -48,7 +48,7 @@ export function createInitialRank(userId: string): PlayerRank {
   return {
     userId,
     rankPoints: 0,
-    division: "Altoprimata III",
+    division: "Autoprimata III",
     wins: 0,
     losses: 0,
     streak: 0,

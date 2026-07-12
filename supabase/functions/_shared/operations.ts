@@ -19,10 +19,10 @@ const defaultCharacterRows = [
 ];
 
 const defaultCharacterUnlockRules = [
-  { character_id: "ninja", required_division: "Altoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
-  { character_id: "itzcoatl", required_division: "Altoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
-  { character_id: "aton", required_division: "Altoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
-  { character_id: "doll", required_division: "Altoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "ninja", required_division: "Autoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "itzcoatl", required_division: "Autoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "aton", required_division: "Autoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "doll", required_division: "Autoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
   { character_id: "coming-soon", required_division: "Prata III", required_points: 800, description: "Personagem futuro por ranking" },
 ];
 
@@ -129,9 +129,9 @@ function avatarForUser(user: User) {
 }
 
 const rankRules = [
-  { division: "Altoprimata III", minimumPoints: 0, winPoints: 50, lossPoints: 10 },
-  { division: "Altoprimata II", minimumPoints: 100, winPoints: 40, lossPoints: 10 },
-  { division: "Altoprimata I", minimumPoints: 200, winPoints: 30, lossPoints: 10 },
+  { division: "Autoprimata III", minimumPoints: 0, winPoints: 50, lossPoints: 10 },
+  { division: "Autoprimata II", minimumPoints: 100, winPoints: 40, lossPoints: 10 },
+  { division: "Autoprimata I", minimumPoints: 200, winPoints: 30, lossPoints: 10 },
   { division: "Bronze III", minimumPoints: 300, winPoints: 50, lossPoints: 10 },
   { division: "Bronze II", minimumPoints: 450, winPoints: 40, lossPoints: 10 },
   { division: "Bronze I", minimumPoints: 600, winPoints: 30, lossPoints: 10 },
@@ -160,7 +160,7 @@ function divisionForPoints(points: number) {
 function rankedWinPointsForOpponent(winnerPoints: number, loserPoints: number) {
   const winnerRule = rankRuleForPoints(winnerPoints);
   const loserRule = rankRuleForPoints(loserPoints);
-  if (winnerRule.division !== "Altoprimata III" && loserRule.division === "Altoprimata III") return 0;
+  if (winnerRule.division !== "Autoprimata III" && loserRule.division === "Autoprimata III") return 0;
   return winnerRule.winPoints;
 }
 
@@ -523,7 +523,7 @@ async function ensureProfile(db: SupabaseClient, user: User) {
     .from("profiles")
     .update({ display_name: profile.display_name, avatar_url: profile.avatar_url, account_type: profile.account_type })
     .eq("id", user.id);
-  await db.from("player_rank").upsert({ user_id: user.id, division: "Altoprimata III" }, { onConflict: "user_id", ignoreDuplicates: true });
+  await db.from("player_rank").upsert({ user_id: user.id, division: "Autoprimata III" }, { onConflict: "user_id", ignoreDuplicates: true });
 
   const { data: defaultCharacters } = await db.from("characters").select("id").eq("is_default", true).eq("enabled", true);
   if (defaultCharacters?.length) {
@@ -886,6 +886,16 @@ function randomCode() {
 }
 
 async function createMatch(db: SupabaseClient, type: "ranked" | "private", p1: any, p2: any, roomCode?: string) {
+  if (type === "private") {
+    const low = p1.id < p2.id ? p1.id : p2.id;
+    const high = p1.id < p2.id ? p2.id : p1.id;
+    const { error: resetError } = await db
+      .from("private_match_scores")
+      .delete()
+      .eq("player_low_id", low)
+      .eq("player_high_id", high);
+    if (resetError) throw resetError;
+  }
   const state = initialBattleState();
   const { data, error } = await db.from("matches").insert({
     match_type: type,
@@ -951,6 +961,16 @@ async function choosePostMatch(db: SupabaseClient, matchId: string, userId: stri
     if (!updated) continue;
 
     if (choice !== "again") {
+      if (updated.match_type === "private") {
+        const low = updated.player1_id < updated.player2_id ? updated.player1_id : updated.player2_id;
+        const high = updated.player1_id < updated.player2_id ? updated.player2_id : updated.player1_id;
+        const { error: resetError } = await db
+          .from("private_match_scores")
+          .delete()
+          .eq("player_low_id", low)
+          .eq("player_high_id", high);
+        if (resetError) throw resetError;
+      }
       await updatePresence(db, userId, "online");
       return updated;
     }

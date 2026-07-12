@@ -9,7 +9,7 @@ export const characters: CharacterDefinition[] = [
     isDefault: true,
     unlockDescription: "Disponivel desde o inicio",
     requiredPoints: 0,
-    requiredDivision: "Altoprimata III",
+    requiredDivision: "Autoprimata III",
   },
   {
     id: "itzcoatl",
@@ -19,7 +19,7 @@ export const characters: CharacterDefinition[] = [
     isDefault: true,
     unlockDescription: "Disponivel desde o inicio",
     requiredPoints: 0,
-    requiredDivision: "Altoprimata III",
+    requiredDivision: "Autoprimata III",
   },
   {
     id: "aton",
@@ -29,7 +29,7 @@ export const characters: CharacterDefinition[] = [
     isDefault: true,
     unlockDescription: "Disponivel desde o inicio",
     requiredPoints: 0,
-    requiredDivision: "Altoprimata III",
+    requiredDivision: "Autoprimata III",
   },
   {
     id: "doll",
@@ -39,7 +39,7 @@ export const characters: CharacterDefinition[] = [
     isDefault: true,
     unlockDescription: "Disponivel desde o inicio",
     requiredPoints: 0,
-    requiredDivision: "Altoprimata III",
+    requiredDivision: "Autoprimata III",
   },
   {
     id: "coming-soon",

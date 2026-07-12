@@ -1,9 +1,9 @@
 export type AccountType = "guest" | "google";
 export type PresenceStatus = "online" | "in_queue" | "in_match" | "offline";
 export type Division =
-  | "Altoprimata III"
-  | "Altoprimata II"
-  | "Altoprimata I"
+  | "Autoprimata III"
+  | "Autoprimata II"
+  | "Autoprimata I"
   | "Bronze III"
   | "Bronze II"
   | "Bronze I"

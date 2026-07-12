@@ -1736,7 +1736,7 @@ export class App {
       { name: "Ouro", divisions: ["Ouro I", "Ouro II", "Ouro III"] },
       { name: "Prata", divisions: ["Prata I", "Prata II", "Prata III"] },
       { name: "Bronze", divisions: ["Bronze I", "Bronze II", "Bronze III"] },
-      { name: "Altoprimata", divisions: ["Altoprimata I", "Altoprimata II", "Altoprimata III"] },
+      { name: "Autoprimata", divisions: ["Autoprimata I", "Autoprimata II", "Autoprimata III"] },
     ];
 
     return `
@@ -1787,7 +1787,7 @@ export class App {
             <div class="rank-ladder" aria-label="Progressao das divisoes">
               <div class="rank-ladder-intro">
                 <span>Sua posição</span>
-                <strong>${rank?.division ?? "Altoprimata III"}</strong>
+                <strong>${rank?.division ?? "Autoprimata III"}</strong>
                 <b>${rank?.rankPoints ?? 0} pts</b>
               </div>
               ${rankGroups.map((group) => `

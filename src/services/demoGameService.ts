@@ -332,11 +332,12 @@ export class DemoGameService implements GameService {
         nextState.rank = rank;
         nextState.currentMatch = nextMatch;
       } else {
+        const currentScore = match.privateScore || { playerWins: 0, opponentWins: 0 };
         nextMatch = {
           ...nextMatch,
           privateScore: {
-            playerWins: playerWon ? 1 : 0,
-            opponentWins: playerWon ? 0 : 1,
+            playerWins: currentScore.playerWins + (playerWon ? 1 : 0),
+            opponentWins: currentScore.opponentWins + (playerWon ? 0 : 1),
           },
         };
         nextState.currentMatch = nextMatch;
@@ -399,7 +400,11 @@ export class DemoGameService implements GameService {
     const match = state.currentMatch;
     if (!match || match.id !== matchId) throw new Error("Partida nao encontrada.");
     if (choice === "lobby") {
-      const nextMatch = { ...match, rematch: { ...match.rematch, localChoice: "lobby" as const } };
+      const nextMatch = {
+        ...match,
+        privateScore: match.matchType === "private" ? { playerWins: 0, opponentWins: 0 } : match.privateScore,
+        rematch: { ...match.rematch, localChoice: "lobby" as const },
+      };
       this.commit({ ...state, currentMatch: nextMatch });
       return nextMatch;
     }
@@ -410,6 +415,7 @@ export class DemoGameService implements GameService {
       p2: { ...match.p2 },
       battleState: createInitialBattleState(),
       status: "active" as const,
+      privateScore: match.matchType === "private" ? match.privateScore : null,
       rematch: { localChoice: "again" as const, opponentChoice: "again" as const, nextMatchId: null },
     };
     this.commit({ ...state, currentMatch: nextMatch });

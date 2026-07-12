@@ -4,9 +4,9 @@ import { applyRankedResult, createInitialRank, divisionForPoints, rankedDeltaFor
 describe("ranking", () => {
   it("maps points to divisions", () => {
     const boundaries = [
-      [0, "Altoprimata III"],
-      [100, "Altoprimata II"],
-      [200, "Altoprimata I"],
+      [0, "Autoprimata III"],
+      [100, "Autoprimata II"],
+      [200, "Autoprimata I"],
       [300, "Bronze III"],
       [450, "Bronze II"],
       [600, "Bronze I"],
@@ -49,19 +49,19 @@ describe("ranking", () => {
     expect(rankedDeltaForResult(3150, "loss")).toBe(-30);
   });
 
-  it("records a win but awards no points when a higher division defeats Altoprimata III", () => {
+  it("records a win but awards no points when a higher division defeats Autoprimata III", () => {
     const startingRank = { ...createInitialRank("u1"), rankPoints: 300, division: "Bronze III" as const, streak: 4, bestStreak: 4 };
-    const rank = applyRankedResult(startingRank, "win", "Altoprimata III");
+    const rank = applyRankedResult(startingRank, "win", "Autoprimata III");
 
-    expect(rankedDeltaForResult(300, "win", "Altoprimata III")).toBe(0);
+    expect(rankedDeltaForResult(300, "win", "Autoprimata III")).toBe(0);
     expect(rank.rankPoints).toBe(300);
     expect(rank.wins).toBe(1);
     expect(rank.streak).toBe(5);
     expect(rank.bestStreak).toBe(5);
   });
 
-  it("still awards points when an Altoprimata III player defeats another Altoprimata III player", () => {
-    expect(rankedDeltaForResult(0, "win", "Altoprimata III")).toBe(50);
+  it("still awards points when an Autoprimata III player defeats another Autoprimata III player", () => {
+    expect(rankedDeltaForResult(0, "win", "Autoprimata III")).toBe(50);
   });
 
   it("adds win points, promotes and updates streak", () => {
@@ -69,7 +69,7 @@ describe("ranking", () => {
     const rank = applyRankedResult(startingRank, "win");
 
     expect(rank.rankPoints).toBe(130);
-    expect(rank.division).toBe("Altoprimata II");
+    expect(rank.division).toBe("Autoprimata II");
     expect(rank.wins).toBe(1);
     expect(rank.streak).toBe(1);
     expect(rank.bestStreak).toBe(1);
@@ -91,10 +91,10 @@ describe("ranking", () => {
     expect(rank.streak).toBe(0);
   });
 
-  it("creates a new player in Altoprimata III", () => {
+  it("creates a new player in Autoprimata III", () => {
     const rank = applyRankedResult(createInitialRank("u1"), "win");
 
-    expect(createInitialRank("u1").division).toBe("Altoprimata III");
+    expect(createInitialRank("u1").division).toBe("Autoprimata III");
     expect(rank.rankPoints).toBe(50);
     expect(rank.wins).toBe(1);
   });
