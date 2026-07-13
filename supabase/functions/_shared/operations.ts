@@ -401,7 +401,7 @@ function resolveHit(state: any, winner: Side, p1Action: Action | "Wait", p2Actio
   };
 }
 
-function resolveTurn(stateInput: any, p1Action: Action | null, p2Action: Action | null, matchContext: any = {}) {
+export function resolveTurn(stateInput: any, p1Action: Action | null, p2Action: Action | null, matchContext: any = {}) {
   const before = structuredClone(stateInput);
   const state = structuredClone(stateInput);
   const context = {
@@ -481,6 +481,9 @@ function resolveTurn(stateInput: any, p1Action: Action | null, p2Action: Action 
       } else {
         state.advantage = null;
       }
+    } else {
+      // Two non-offensive actions do not award PLUS to either player.
+      state.advantage = null;
     }
   }
 
@@ -521,8 +524,13 @@ async function ensureProfile(db: SupabaseClient, user: User) {
   await db.from("profiles").upsert(profile, { onConflict: "id", ignoreDuplicates: true });
   await db
     .from("profiles")
-    .update({ display_name: profile.display_name, avatar_url: profile.avatar_url, account_type: profile.account_type })
+    .update({ avatar_url: profile.avatar_url, account_type: profile.account_type })
     .eq("id", user.id);
+  await db
+    .from("profiles")
+    .update({ display_name: profile.display_name })
+    .eq("id", user.id)
+    .is("display_name_updated_at", null);
   await db.from("player_rank").upsert({ user_id: user.id, division: "Autoprimata III" }, { onConflict: "user_id", ignoreDuplicates: true });
 
   const { data: defaultCharacters } = await db.from("characters").select("id").eq("is_default", true).eq("enabled", true);
@@ -543,7 +551,7 @@ async function ensureDefaultCharacters(db: SupabaseClient) {
 
 async function snapshot(db: SupabaseClient, userId: string) {
   const [{ data: profile }, { data: rank }, { data: unlocks }] = await Promise.all([
-    db.from("profiles").select("id,display_name,avatar_url,account_type,selected_character_id,presence_status").eq("id", userId).single(),
+    db.from("profiles").select("id,display_name,display_name_updated_at,avatar_url,account_type,selected_character_id,presence_status").eq("id", userId).single(),
     db.from("player_rank").select("user_id,rank_points,division,wins,losses,streak,best_streak").eq("user_id", userId).single(),
     db.from("player_unlocked_characters").select("character_id").eq("user_id", userId),
   ]);
@@ -553,6 +561,7 @@ async function snapshot(db: SupabaseClient, userId: string) {
       ? {
           id: profile.id,
           displayName: profile.display_name,
+          displayNameUpdatedAt: profile.display_name_updated_at,
           avatarUrl: profile.avatar_url,
           accountType: profile.account_type,
           selectedCharacterId: profile.selected_character_id,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateLocalTurnDeadlineMs, canForwardOnlineAction, hasAuthoritativeBattleStarted, isRetryableOnlineActionError } from "./app";
+import { calculateLocalTurnDeadlineMs, canForwardOnlineAction, hasAuthoritativeBattleStarted, isMatchRefreshStillRelevant, isRetryableOnlineActionError, MATCH_FOUND_REVEAL_DELAY_MS, rankAfterFinishedMatch, rankHudVisual, shouldPreserveMatchFoundRevealDom, shouldShowMatchFoundReveal, validateProfileDisplayName } from "./app";
 import { createInitialBattleState } from "./domain/battle";
 
 describe("calculateLocalTurnDeadlineMs", () => {
@@ -72,5 +72,111 @@ describe("isRetryableOnlineActionError", () => {
   it("does not retry permanent gameplay rejections", () => {
     expect(isRetryableOnlineActionError(new Error("Acao nao permitida neste turno."))).toBe(false);
     expect(isRetryableOnlineActionError(new Error("Sessao ausente."))).toBe(false);
+  });
+});
+
+describe("validateProfileDisplayName", () => {
+  it("accepts names with 4 to 15 letters and numbers", () => {
+    expect(validateProfileDisplayName("Tony2026")).toBeNull();
+    expect(validateProfileDisplayName("Abc1")).toBeNull();
+    expect(validateProfileDisplayName("ABCDEFGHIJKLMNO")).toBeNull();
+  });
+
+  it("rejects spaces, symbols and lengths outside the allowed range", () => {
+    expect(validateProfileDisplayName("Tony Barbosa")).not.toBeNull();
+    expect(validateProfileDisplayName("Tony_Barbosa")).not.toBeNull();
+    expect(validateProfileDisplayName("Ab1")).not.toBeNull();
+    expect(validateProfileDisplayName("ABCDEFGHIJKLMNOP")).not.toBeNull();
+  });
+});
+
+describe("rankHudVisual", () => {
+  it("maps numbered divisions to their color family and badge numeral", () => {
+    expect(rankHudVisual("Autoprimata II")).toEqual({ className: "rank-hud-autoprimata", badge: "II" });
+    expect(rankHudVisual("Bronze III")).toEqual({ className: "rank-hud-bronze", badge: "III" });
+    expect(rankHudVisual("Prata I")).toEqual({ className: "rank-hud-prata", badge: "I" });
+    expect(rankHudVisual("Ouro II")).toEqual({ className: "rank-hud-ouro", badge: "II" });
+  });
+
+  it("uses distinct emblems for the transcendent divisions", () => {
+    expect(rankHudVisual("Desperto")).toEqual({ className: "rank-hud-desperto", badge: "D" });
+    expect(rankHudVisual("Arcanjo")).toEqual({ className: "rank-hud-arcanjo", badge: "A" });
+    expect(rankHudVisual("Primordial")).toEqual({ className: "rank-hud-primordial", badge: "P" });
+  });
+});
+
+describe("rankAfterFinishedMatch", () => {
+  const rank = {
+    userId: "player-1",
+    rankPoints: 90,
+    division: "Autoprimata III" as const,
+    wins: 4,
+    losses: 2,
+    streak: 2,
+    bestStreak: 3,
+  };
+
+  it("shows the updated points, division, wins and streak after a ranked victory", () => {
+    expect(rankAfterFinishedMatch(rank, { matchType: "ranked", winnerId: "player-1", rankDelta: 40 }, "player-1")).toEqual({
+      ...rank,
+      rankPoints: 130,
+      division: "Autoprimata II",
+      wins: 5,
+      streak: 3,
+    });
+  });
+
+  it("shows the updated loss and resets the streak after a ranked defeat", () => {
+    expect(rankAfterFinishedMatch(rank, { matchType: "ranked", winnerId: "player-2", rankDelta: -10 }, "player-1")).toEqual({
+      ...rank,
+      rankPoints: 80,
+      losses: 3,
+      streak: 0,
+    });
+  });
+});
+
+describe("isMatchRefreshStillRelevant", () => {
+  it("rejects a delayed refresh after the player has returned to the lobby", () => {
+    expect(isMatchRefreshStillRelevant("match-1", null)).toBe(false);
+  });
+
+  it("rejects a delayed refresh from a previous match", () => {
+    expect(isMatchRefreshStillRelevant("match-1", { id: "match-2" })).toBe(false);
+  });
+
+  it("accepts a refresh for the match that is still open", () => {
+    expect(isMatchRefreshStillRelevant("match-1", { id: "match-1" })).toBe(true);
+  });
+});
+
+describe("shouldShowMatchFoundReveal", () => {
+  const rankedMatch = { id: "match-1", matchType: "ranked" as const };
+
+  it("shows the opponent reveal when ranked matchmaking finds a new match", () => {
+    expect(shouldShowMatchFoundReveal("ranked-queue", null, rankedMatch)).toBe(true);
+    expect(shouldShowMatchFoundReveal("online", null, rankedMatch)).toBe(true);
+    expect(MATCH_FOUND_REVEAL_DELAY_MS).toBe(10_000);
+  });
+
+  it("does not repeat the reveal for refreshes of the same match", () => {
+    expect(shouldShowMatchFoundReveal("match-found", "match-1", rankedMatch)).toBe(false);
+    expect(shouldShowMatchFoundReveal("match-character-select", "match-1", rankedMatch)).toBe(false);
+  });
+
+  it("keeps private-room matchmaking on its existing flow", () => {
+    expect(shouldShowMatchFoundReveal("private-room", null, { id: "private-1", matchType: "private" })).toBe(false);
+  });
+});
+
+describe("shouldPreserveMatchFoundRevealDom", () => {
+  it("keeps the opponent card mounted during refreshes inside the reveal window", () => {
+    expect(shouldPreserveMatchFoundRevealDom("match-found", "match-1", "match-1", true)).toBe(true);
+  });
+
+  it("allows rendering after the reveal ends or the match changes", () => {
+    expect(shouldPreserveMatchFoundRevealDom("match-found", "match-1", "match-1", false)).toBe(false);
+    expect(shouldPreserveMatchFoundRevealDom("match-found", "match-1", "match-2", true)).toBe(false);
+    expect(shouldPreserveMatchFoundRevealDom("match-character-select", "match-1", "match-1", true)).toBe(false);
   });
 });

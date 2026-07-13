@@ -75,6 +75,18 @@ describe("resolveBattleTurn", () => {
     expect(result.after.p2.health).toBe(80);
   });
 
+  it("returns to neutral after Jump versus Block when a player had advantage", () => {
+    const state = createInitialBattleState();
+    state.advantage = "p1";
+
+    const result = resolveBattleTurn(state, "Jump", "Block");
+
+    expect(result.type).toBe("draw");
+    expect(result.winner).toBeNull();
+    expect(result.primary).toBe("NEUTRO");
+    expect(result.after.advantage).toBeNull();
+  });
+
   it("does not give the opponent ultimate bar when Combo hits without knockdown", () => {
     const result = resolveBattleTurn(createInitialBattleState(), "Combo", "Special");
 

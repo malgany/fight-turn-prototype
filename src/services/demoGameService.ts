@@ -31,6 +31,7 @@ function makeGoogleLikeProfile(): PlayerProfile {
   return {
     id: `google-${crypto.randomUUID()}`,
     displayName: "Jogador Demo",
+    displayNameUpdatedAt: null,
     avatarUrl: null,
     accountType: "google",
     selectedCharacterId: "ninja",
@@ -168,6 +169,20 @@ export class DemoGameService implements GameService {
     return this.getSnapshot();
   }
 
+  async updateDisplayName(displayName: string): Promise<AppSnapshot> {
+    const state = this.state();
+    if (!state.profile) throw new Error("Entre no jogo antes de editar o perfil.");
+    const previousChange = state.profile.displayNameUpdatedAt ? new Date(state.profile.displayNameUpdatedAt).getTime() : 0;
+    if (previousChange && Date.now() - previousChange < 24 * 60 * 60 * 1000) {
+      throw new Error("O nome só pode ser alterado uma vez a cada 24 horas.");
+    }
+    this.commit({
+      ...state,
+      profile: { ...state.profile, displayName, displayNameUpdatedAt: new Date().toISOString() },
+    });
+    return this.getSnapshot();
+  }
+
   async selectCharacter(characterId: string): Promise<AppSnapshot> {
     const state = this.state();
     if (!state.profile) throw new Error("Entre no jogo antes de selecionar personagem.");
@@ -183,9 +198,41 @@ export class DemoGameService implements GameService {
     this.commit({ ...state, profile: { ...state.profile, presenceStatus: status } });
   }
 
+  async cancelMatchSelection(matchId: string): Promise<void> {
+    const state = this.state();
+    if (!state.currentMatch || state.currentMatch.id !== matchId) return;
+    this.commit({
+      ...state,
+      currentMatch: {
+        ...state.currentMatch,
+        status: "forfeited",
+        winnerId: null,
+        finishedReason: "selection_cancelled",
+      },
+      privateRoom: null,
+      profile: state.profile ? { ...state.profile, presenceStatus: "online" } : null,
+    });
+  }
+
   async getLeaderboard(): Promise<LeaderboardEntry[]> {
     const state = this.state();
     return createLeaderboard(state.rank, state.profile);
+  }
+
+  async getLeaderboardEntry(userId: string): Promise<LeaderboardEntry | null> {
+    const knownEntry = (await this.getLeaderboard()).find((entry) => entry.userId === userId);
+    if (knownEntry) return knownEntry;
+    return {
+      position: 4,
+      userId,
+      displayName: this.state().currentMatch?.p2.displayName || "Adversário",
+      avatarUrl: null,
+      rankPoints: 460,
+      division: "Bronze II",
+      wins: 12,
+      losses: 8,
+      streak: 2,
+    };
   }
 
   async getHistory(): Promise<MatchHistoryEntry[]> {

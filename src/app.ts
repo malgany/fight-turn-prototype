@@ -1,14 +1,20 @@
 import { characterById, characters } from "./data/characters";
 import { selectableActions, turnDurationForState } from "./domain/battle";
-import { RANK_RULES } from "./domain/ranking";
+import { divisionForPoints, RANK_RULES } from "./domain/ranking";
 import { appRouteUrl } from "./lib/config";
-import type { Action, AppSnapshot, BattleState, GameMatch, GuaranteedTurn, LeaderboardEntry, MatchHistoryEntry, PrivateRoom, RematchChoice, Side, TurnResolution } from "./types";
+import type { Action, AppSnapshot, BattleState, Division, GameMatch, GuaranteedTurn, LeaderboardEntry, MatchHistoryEntry, PlayerRank, PrivateRoom, RematchChoice, Side, TurnResolution } from "./types";
 import type { GameService } from "./services/gameService";
 
 const ACTION_SUBMIT_GRACE_MS = 1200;
 const ACTION_SUBMIT_RETRY_DELAYS_MS = [0, 100] as const;
 const POST_MATCH_REVEAL_DELAY_MS = 10_000;
 const MATCH_START_REVEAL_DELAY_MS = 4_000;
+export const MATCH_FOUND_REVEAL_DELAY_MS = 10_000;
+const MATCH_EVENT_SOUND_PATH = "/game-assets/audio/match-found-ultimate-hit.mp3";
+const AUDIO_STORAGE_KEY = "fightTurn.audioEnabled";
+const SFX_VOLUME_STORAGE_KEY = "fightTurn.sfxVolume";
+const DISPLAY_NAME_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+const DISPLAY_NAME_PATTERN = /^[A-Za-z0-9]{4,15}$/;
 
 type Screen =
   | "login"
@@ -17,6 +23,7 @@ type Screen =
   | "character-select"
   | "online"
   | "ranked-queue"
+  | "match-found"
   | "private-room"
   | "match-character-select"
   | "battle"
@@ -35,6 +42,7 @@ interface AppState {
   characterUsage: Record<string, number>;
   room: PrivateRoom | null;
   match: GameMatch | null;
+  matchedOpponentRank: LeaderboardEntry | null;
 }
 
 const emptySnapshot: AppSnapshot = {
@@ -57,6 +65,36 @@ function formatDate(value: string): string {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+export function validateProfileDisplayName(value: string): string | null {
+  if (!DISPLAY_NAME_PATTERN.test(value)) {
+    return "Use de 4 a 15 caracteres, somente letras e números, sem espaços.";
+  }
+  return null;
+}
+
+function displayNameAvailableAt(lastChangedAt: string | null): number | null {
+  if (!lastChangedAt) return null;
+  const timestamp = new Date(lastChangedAt).getTime();
+  return Number.isFinite(timestamp) ? timestamp + DISPLAY_NAME_COOLDOWN_MS : null;
+}
+
+function displayNameCooldownLabel(availableAt: number): string {
+  const remainingMs = Math.max(0, availableAt - Date.now());
+  const remainingHours = Math.max(1, Math.ceil(remainingMs / (60 * 60 * 1000)));
+  return remainingHours === 1 ? "Disponível em 1 hora" : `Disponível em ${remainingHours} horas`;
+}
+
+function effectAudioSettings(): { enabled: boolean; volume: number } {
+  try {
+    const enabled = window.localStorage.getItem(AUDIO_STORAGE_KEY) !== "false";
+    const storedVolume = Number(window.localStorage.getItem(SFX_VOLUME_STORAGE_KEY));
+    const volume = Number.isFinite(storedVolume) ? Math.max(0, Math.min(100, storedVolume)) / 100 : 0.8;
+    return { enabled, volume };
+  } catch {
+    return { enabled: true, volume: 0.8 };
+  }
 }
 
 function mostUsedCharacter(usage: Record<string, number>, fallbackId: string) {
@@ -130,6 +168,7 @@ function usesMobileStage(screen: Screen): boolean {
     "character-select",
     "online",
     "ranked-queue",
+    "match-found",
     "private-room",
     "match-character-select",
     "battle",
@@ -147,6 +186,66 @@ function characterVisualClass(characterId: string): string {
   return "ninja";
 }
 
+export function rankHudVisual(division: Division): { className: string; badge: string } {
+  const numeral = division.match(/\b(III|II|I)$/)?.[1];
+  if (division.startsWith("Autoprimata")) return { className: "rank-hud-autoprimata", badge: numeral || "A" };
+  if (division.startsWith("Bronze")) return { className: "rank-hud-bronze", badge: numeral || "B" };
+  if (division.startsWith("Prata")) return { className: "rank-hud-prata", badge: numeral || "P" };
+  if (division.startsWith("Ouro")) return { className: "rank-hud-ouro", badge: numeral || "O" };
+  if (division === "Desperto") return { className: "rank-hud-desperto", badge: "D" };
+  if (division === "Arcanjo") return { className: "rank-hud-arcanjo", badge: "A" };
+  return { className: "rank-hud-primordial", badge: "P" };
+}
+
+export function rankAfterFinishedMatch(
+  rank: PlayerRank,
+  match: Pick<GameMatch, "matchType" | "winnerId" | "rankDelta">,
+  playerId: string,
+): PlayerRank {
+  if (match.matchType !== "ranked" || !match.winnerId) return rank;
+
+  const playerWon = match.winnerId === playerId;
+  const rankPoints = Math.max(0, rank.rankPoints + match.rankDelta);
+  const streak = playerWon ? rank.streak + 1 : 0;
+  return {
+    ...rank,
+    rankPoints,
+    division: divisionForPoints(rankPoints),
+    wins: rank.wins + (playerWon ? 1 : 0),
+    losses: rank.losses + (playerWon ? 0 : 1),
+    streak,
+    bestStreak: Math.max(rank.bestStreak, streak),
+  };
+}
+
+export function isMatchRefreshStillRelevant(
+  requestedMatchId: string,
+  currentMatch: Pick<GameMatch, "id"> | null,
+): boolean {
+  return currentMatch?.id === requestedMatchId;
+}
+
+export function shouldShowMatchFoundReveal(
+  previousScreen: Screen,
+  previousMatchId: string | null,
+  match: Pick<GameMatch, "id" | "matchType">,
+): boolean {
+  return match.matchType === "ranked"
+    && previousMatchId !== match.id
+    && (previousScreen === "online" || previousScreen === "ranked-queue");
+}
+
+export function shouldPreserveMatchFoundRevealDom(
+  screen: Screen,
+  revealMatchId: string | null,
+  refreshedMatchId: string,
+  revealTimerActive: boolean,
+): boolean {
+  return screen === "match-found"
+    && revealMatchId === refreshedMatchId
+    && revealTimerActive;
+}
+
 export class App {
   private state: AppState = {
     screen: "login",
@@ -159,6 +258,7 @@ export class App {
     characterUsage: {},
     room: null,
     match: null,
+    matchedOpponentRank: null,
   };
 
   private heartbeatId: number | null = null;
@@ -182,19 +282,73 @@ export class App {
   private postMatchOverlayVisibleKey: string | null = null;
   private matchStartRevealTimerId: number | null = null;
   private matchStartRevealKey: string | null = null;
+  private matchFoundRevealTimerId: number | null = null;
+  private matchFoundRevealKey: string | null = null;
   private legacyBattleLoadedMatchId: string | null = null;
   private matchReadyRequestMatchId: string | null = null;
   private matchActionRequestKey: string | null = null;
   private rankingTab: "leaderboard" | "progression" = "leaderboard";
+  private profileNameEditing = false;
+  private matchEventAudio: HTMLAudioElement | null = null;
+  private matchEventAudioPriming: Promise<void> | null = null;
+  private rankedMatchesAppliedToSnapshot = new Set<string>();
 
   constructor(
     private readonly root: HTMLElement,
     private readonly service: GameService,
   ) {}
 
+  private getMatchEventAudio(): HTMLAudioElement {
+    if (!this.matchEventAudio) {
+      this.matchEventAudio = new Audio(MATCH_EVENT_SOUND_PATH);
+      this.matchEventAudio.preload = "auto";
+    }
+    return this.matchEventAudio;
+  }
+
+  private primeMatchEventSound(): void {
+    const settings = effectAudioSettings();
+    if (!settings.enabled || settings.volume <= 0 || this.matchEventAudioPriming) return;
+
+    const audio = this.getMatchEventAudio();
+    audio.muted = true;
+    this.matchEventAudioPriming = audio.play()
+      .then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+      })
+      .catch(() => undefined)
+      .then(() => {
+        audio.muted = false;
+        audio.volume = settings.volume;
+      })
+      .finally(() => {
+        this.matchEventAudioPriming = null;
+      });
+  }
+
+  private playMatchEventSound(): void {
+    const play = () => {
+      const settings = effectAudioSettings();
+      if (!settings.enabled || settings.volume <= 0) return;
+
+      const audio = this.getMatchEventAudio();
+      audio.muted = false;
+      audio.volume = settings.volume;
+      audio.currentTime = 0;
+      void audio.play().catch(() => undefined);
+    };
+
+    if (this.matchEventAudioPriming) {
+      void this.matchEventAudioPriming.then(play);
+      return;
+    }
+    play();
+  }
+
   async start(): Promise<void> {
     this.bindEvents();
-    await this.run("Carregando sessao...", async () => {
+    await this.run("Carregando sessão...", async () => {
       this.state.snapshot = await this.service.getSnapshot();
       if (this.state.snapshot.profile?.accountType === "guest") {
         await this.service.signOut();
@@ -238,6 +392,11 @@ export class App {
       if (form.dataset.form === "join-private") {
         const code = new FormData(form).get("code");
         void this.joinPrivate(String(code || ""));
+        return;
+      }
+      if (form.dataset.form === "profile-name") {
+        const displayName = String(new FormData(form).get("displayName") || "").trim();
+        void this.saveProfileDisplayName(displayName);
       }
     });
   }
@@ -282,6 +441,7 @@ export class App {
     this.clearPolling();
     this.clearPostMatchOverlayState();
     this.clearMatchStartRevealTimer();
+    this.clearMatchFoundRevealTimer();
     this.state.error = null;
     this.state.info = null;
 
@@ -305,6 +465,7 @@ export class App {
     if (screen === "profile") {
       await this.run("Carregando perfil...", async () => {
         this.state.characterUsage = await this.service.getCharacterUsage();
+        this.profileNameEditing = false;
         this.state.screen = "profile";
       });
       return;
@@ -333,6 +494,17 @@ export class App {
           await this.service.signOut();
           this.state = { ...this.state, screen: "login", snapshot: emptySnapshot, match: null, room: null };
         });
+        break;
+      case "edit-profile-name":
+        this.profileNameEditing = true;
+        this.state.error = null;
+        this.render();
+        window.requestAnimationFrame(() => this.root.querySelector<HTMLInputElement>(".profile-name-input")?.focus());
+        break;
+      case "cancel-profile-name":
+        this.profileNameEditing = false;
+        this.state.error = null;
+        this.render();
         break;
       case "select-character":
         if (characterId) {
@@ -365,16 +537,23 @@ export class App {
         break;
       case "copy-room":
         if (this.state.room) {
-          await navigator.clipboard.writeText(this.state.room.inviteUrl);
-          this.state.info = "Link copiado.";
+          await navigator.clipboard.writeText(this.state.room.code.toUpperCase());
+          this.state.info = "Código copiado.";
           this.render();
         }
         break;
       case "forfeit":
         await this.forfeit();
         break;
+      case "leave-match-selection":
+        await this.leaveMatchSelection();
+        break;
       case "play-again":
         await this.choosePostMatch("again");
+        break;
+      case "next-ranked-match":
+        this.leaveFinishedMatch("online");
+        await this.joinRanked();
         break;
       case "post-match-lobby":
         this.leaveFinishedMatch("online");
@@ -398,6 +577,28 @@ export class App {
         });
         break;
     }
+  }
+
+  private async saveProfileDisplayName(displayName: string): Promise<void> {
+    const currentName = this.state.snapshot.profile?.displayName;
+    const validationError = validateProfileDisplayName(displayName);
+    if (validationError) {
+      this.state.error = validationError;
+      this.render();
+      return;
+    }
+    if (displayName === currentName) {
+      this.state.error = "Digite um nome diferente do atual.";
+      this.render();
+      return;
+    }
+
+    await this.run("Salvando nome...", async () => {
+      this.state.snapshot = await this.service.updateDisplayName(displayName);
+      this.profileNameEditing = false;
+      this.state.info = "Nome atualizado.";
+      this.state.screen = "profile";
+    });
   }
 
   private async handleLegacyBattleMessage(data: unknown): Promise<void> {
@@ -519,8 +720,30 @@ export class App {
     return match.status === "finished" && match.finishedReason === "load_timeout";
   }
 
+  private isSelectionCancelled(match: GameMatch): boolean {
+    return match.status === "forfeited" && match.finishedReason === "selection_cancelled";
+  }
+
   private isFinishedMatch(match: GameMatch): boolean {
     return match.status === "finished" || match.status === "forfeited";
+  }
+
+  private applyFinishedMatchRankToSnapshot(match: GameMatch): void {
+    const { profile, rank } = this.state.snapshot;
+    if (
+      match.matchType !== "ranked"
+      || !this.isFinishedMatch(match)
+      || !match.winnerId
+      || !profile
+      || !rank
+      || this.rankedMatchesAppliedToSnapshot.has(match.id)
+    ) return;
+
+    this.state.snapshot = {
+      ...this.state.snapshot,
+      rank: rankAfterFinishedMatch(rank, match, profile.id),
+    };
+    this.rankedMatchesAppliedToSnapshot.add(match.id);
   }
 
   private postMatchKey(match: GameMatch): string {
@@ -542,6 +765,49 @@ export class App {
     if (this.matchStartRevealTimerId) window.clearTimeout(this.matchStartRevealTimerId);
     this.matchStartRevealTimerId = null;
     this.matchStartRevealKey = null;
+  }
+
+  private clearMatchFoundRevealTimer(): void {
+    if (this.matchFoundRevealTimerId) window.clearTimeout(this.matchFoundRevealTimerId);
+    this.matchFoundRevealTimerId = null;
+    this.matchFoundRevealKey = null;
+    this.state.matchedOpponentRank = null;
+  }
+
+  private isMatchFoundRevealActive(matchId: string): boolean {
+    return shouldPreserveMatchFoundRevealDom(
+      this.state.screen,
+      this.matchFoundRevealKey,
+      matchId,
+      this.matchFoundRevealTimerId !== null,
+    );
+  }
+
+  private startMatchFoundReveal(match: GameMatch): void {
+    this.clearMatchFoundRevealTimer();
+    this.matchFoundRevealKey = match.id;
+    this.state.screen = "match-found";
+
+    const opponent = match[oppositeSide(match.playerSide)];
+    void this.service.getLeaderboardEntry(opponent.userId)
+      .then((entry) => {
+        if (!this.isMatchFoundRevealActive(match.id)) return;
+        this.state.matchedOpponentRank = entry;
+        this.render();
+      })
+      .catch(() => undefined);
+
+    this.matchFoundRevealTimerId = window.setTimeout(() => {
+      if (!this.isMatchFoundRevealActive(match.id)) return;
+      const currentMatch = this.state.match;
+      this.matchFoundRevealTimerId = null;
+      this.matchFoundRevealKey = null;
+      this.state.matchedOpponentRank = null;
+      if (!currentMatch || currentMatch.id !== match.id) return;
+      this.enterMatch(currentMatch);
+      this.render();
+    }, MATCH_FOUND_REVEAL_DELAY_MS);
+    this.render();
   }
 
   private matchStartKey(match: GameMatch): string {
@@ -606,6 +872,7 @@ export class App {
 
   private returnToLobbyAfterInactivityDraw(match: GameMatch): void {
     this.clearPolling();
+    this.clearMatchFoundRevealTimer();
     this.unsubscribeMatch?.();
     this.unsubscribeMatch = null;
     this.state.match = null;
@@ -618,6 +885,7 @@ export class App {
 
   private returnToLobbyAfterLoadingTimeout(): void {
     this.clearPolling();
+    this.clearMatchFoundRevealTimer();
     this.unsubscribeMatch?.();
     this.unsubscribeMatch = null;
     this.legacyBattleLoadedMatchId = null;
@@ -628,7 +896,24 @@ export class App {
     this.state.match = null;
     this.state.screen = "online";
     this.state.error = null;
-    this.state.info = "Partida cancelada: um dos jogadores nao terminou de carregar.";
+    this.state.info = "Partida cancelada: um dos jogadores não terminou de carregar.";
+    void this.service.heartbeat("online").catch(() => undefined);
+    this.render();
+  }
+
+  private returnToLobbyAfterSelectionCancel(): void {
+    this.clearPolling();
+    this.clearMatchFoundRevealTimer();
+    this.unsubscribeMatch?.();
+    this.unsubscribeMatch = null;
+    this.clearPostMatchOverlayState();
+    this.clearMatchStartRevealTimer();
+    this.legacyBattleLoadedMatchId = null;
+    this.state.match = null;
+    this.state.room = null;
+    this.state.screen = "online";
+    this.state.error = null;
+    this.state.info = "Partida cancelada: um jogador saiu da seleção.";
     void this.service.heartbeat("online").catch(() => undefined);
     this.render();
   }
@@ -636,6 +921,7 @@ export class App {
   private async joinRanked(): Promise<void> {
     const { profile } = this.state.snapshot;
     if (!profile) return;
+    this.primeMatchEventSound();
 
     await this.run("Entrando na fila ranked...", async () => {
       await this.service.heartbeat("in_queue");
@@ -650,6 +936,7 @@ export class App {
   }
 
   private async createPrivate(): Promise<void> {
+    this.primeMatchEventSound();
     await this.run("Criando sala privada...", async () => {
       this.state.room = await this.service.createPrivateRoom();
       this.state.screen = "private-room";
@@ -660,10 +947,11 @@ export class App {
   private async joinPrivate(code: string): Promise<void> {
     const normalizedCode = code.trim().toUpperCase();
     if (!normalizedCode) {
-      this.state.error = "Digite um codigo de sala.";
+      this.state.error = "Digite um código de sala.";
       this.render();
       return;
     }
+    this.primeMatchEventSound();
 
     await this.run("Entrando na sala...", async () => {
       const response = await this.service.joinPrivateRoom(normalizedCode);
@@ -829,6 +1117,10 @@ export class App {
   }
 
   private enterMatch(match: GameMatch): void {
+    if (this.isSelectionCancelled(match)) {
+      this.returnToLobbyAfterSelectionCancel();
+      return;
+    }
     if (this.isLoadingTimeout(match)) {
       this.returnToLobbyAfterLoadingTimeout();
       return;
@@ -841,6 +1133,10 @@ export class App {
     const previousScreen = this.state.screen;
     const previousMatchId = this.state.match?.id || null;
     const previousBattleMatchId = previousScreen === "battle" ? this.state.match?.id : null;
+    const showMatchFoundReveal = shouldShowMatchFoundReveal(previousScreen, previousMatchId, match);
+    const foundNewOpponent = previousMatchId !== match.id
+      && (previousScreen === "online" || previousScreen === "ranked-queue" || previousScreen === "private-room");
+    if (foundNewOpponent) this.playMatchEventSound();
     if (previousMatchId !== match.id) {
       this.legacyBattleLoadedMatchId = null;
       this.matchReadyRequestMatchId = null;
@@ -854,10 +1150,15 @@ export class App {
     }
     this.syncLocalTurnClock(match);
     this.state.match = match;
+    this.applyFinishedMatchRankToSnapshot(match);
     if (!this.isFinishedMatch(match)) {
       this.clearPostMatchOverlayState();
     }
-    if (this.shouldDelayPostMatchReveal(match, previousScreen)) {
+    if (showMatchFoundReveal) {
+      this.clearMatchStartRevealTimer();
+      this.clearPostMatchOverlayState();
+      this.startMatchFoundReveal(match);
+    } else if (this.shouldDelayPostMatchReveal(match, previousScreen)) {
       this.clearMatchStartRevealTimer();
       this.state.screen = "battle";
       this.schedulePostMatchReveal(match);
@@ -872,7 +1173,7 @@ export class App {
     this.unsubscribeMatch = this.service.watchMatch(match.id, () => {
       void this.refreshMatch();
     });
-    if (this.state.screen === "battle" || this.state.screen === "match-character-select" || this.state.screen === "post-match") {
+    if (this.state.screen === "battle" || this.state.screen === "match-character-select" || this.state.screen === "match-found" || this.state.screen === "post-match") {
       this.pollId = window.setInterval(() => {
         void this.refreshMatch().catch(() => undefined);
       }, 1_000);
@@ -897,10 +1198,14 @@ export class App {
 
   private async refreshMatch(): Promise<void> {
     const currentMatchId = this.state.match?.id;
-    const match = currentMatchId ? await this.service.getMatch(currentMatchId) : await this.service.getCurrentMatch();
+    if (!currentMatchId) return;
+
+    const match = await this.service.getMatch(currentMatchId);
+    if (!isMatchRefreshStillRelevant(currentMatchId, this.state.match)) return;
     if (match) {
       if (match.rematch?.nextMatchId && this.isFinishedMatch(match)) {
         const nextMatch = await this.service.getMatch(match.rematch.nextMatchId).catch(() => null);
+        if (!isMatchRefreshStillRelevant(currentMatchId, this.state.match)) return;
         if (nextMatch && isLiveMatchStatus(nextMatch.status)) {
           this.enterMatch(nextMatch);
           return;
@@ -909,6 +1214,11 @@ export class App {
 
       if (this.isLoadingTimeout(match)) {
         this.returnToLobbyAfterLoadingTimeout();
+        return;
+      }
+
+      if (this.isSelectionCancelled(match)) {
+        this.returnToLobbyAfterSelectionCancel();
         return;
       }
 
@@ -923,6 +1233,12 @@ export class App {
       }
       this.syncLocalTurnClock(match);
       this.state.match = match;
+      this.applyFinishedMatchRankToSnapshot(match);
+      if (this.isMatchFoundRevealActive(match.id)) {
+        // Keep the reveal DOM mounted. Rebuilding it on every one-second poll
+        // restarts the card entrance animation and makes the opponent HUD blink.
+        return;
+      }
       if (this.isFinishedMatch(match)) {
         if (this.shouldDelayPostMatchReveal(match, previousScreen)) {
           this.state.screen = "battle";
@@ -1007,7 +1323,7 @@ export class App {
         this.state.error = lastError instanceof Error ? lastError.message : String(lastError);
         console.error("[online-action] submit failed", this.state.error);
       }
-      this.resetLegacyPendingAction(currentMatch.id, requestedTurn, this.state.error || "Acao nao confirmada pelo servidor.");
+      this.resetLegacyPendingAction(currentMatch.id, requestedTurn, this.state.error || "Ação não confirmada pelo servidor.");
       void this.refreshMatch().catch(() => undefined);
     } finally {
       if (this.matchActionRequestKey === requestKey) this.matchActionRequestKey = null;
@@ -1020,6 +1336,34 @@ export class App {
       const match = await this.service.forfeitMatch(this.state.match!.id);
       this.enterMatch(match);
     });
+  }
+
+  private async leaveMatchSelection(): Promise<void> {
+    const matchId = this.state.match?.id;
+    if (!matchId) return;
+
+    this.clearPolling();
+    this.unsubscribeMatch?.();
+    this.unsubscribeMatch = null;
+    this.clearPostMatchOverlayState();
+    this.clearMatchStartRevealTimer();
+    this.clearMatchFoundRevealTimer();
+    this.state.match = null;
+    this.state.room = null;
+    this.state.screen = "online";
+    this.state.error = null;
+    this.state.info = "Saindo da partida...";
+    this.render();
+
+    try {
+      await this.service.cancelMatchSelection(matchId);
+      this.state.info = "Você saiu da partida.";
+      await this.service.heartbeat("online").catch(() => undefined);
+    } catch (error) {
+      this.state.info = null;
+      this.state.error = error instanceof Error ? error.message : String(error);
+    }
+    this.render();
   }
 
   private async choosePostMatch(choice: RematchChoice): Promise<void> {
@@ -1050,6 +1394,7 @@ export class App {
     this.unsubscribeMatch = null;
     this.clearPostMatchOverlayState();
     this.clearMatchStartRevealTimer();
+    this.clearMatchFoundRevealTimer();
     this.state.match = null;
     this.state.error = null;
     this.state.info = null;
@@ -1066,7 +1411,7 @@ export class App {
   private startHeartbeat(): void {
     this.stopHeartbeat();
     this.heartbeatId = window.setInterval(() => {
-      const status = this.state.screen === "ranked-queue" ? "in_queue" : this.state.screen === "battle" || this.state.screen === "match-character-select" ? "in_match" : "online";
+      const status = this.state.screen === "ranked-queue" ? "in_queue" : this.state.screen === "battle" || this.state.screen === "match-character-select" || this.state.screen === "match-found" ? "in_match" : "online";
       void this.service.heartbeat(status, this.state.match?.id).catch(() => undefined);
     }, 30_000);
   }
@@ -1267,36 +1612,90 @@ export class App {
       ? Math.max(0, Math.min(100, ((rank.rankPoints - currentRule.minimumPoints) / (nextRule.minimumPoints - currentRule.minimumPoints)) * 100))
       : 100;
     const pointsRemaining = rank && nextRule ? Math.max(0, nextRule.minimumPoints - rank.rankPoints) : 0;
+    const rankVisual = rankHudVisual(currentRule.division);
 
     return `
       <header class="top-bar">
         <button class="brand-button" data-nav="menu" type="button">
           <img src="/game-assets/ui/menu/logo.webp" alt="Final Genesis">
         </button>
-        <div class="player-chip rank-hud">
+        <div class="player-chip rank-hud top-rank-hud ${rankVisual.className}">
+          <div class="rank-hud-content">
+            <div class="rank-hud-heading">
+              <span class="rank-player-identity">
+                <span class="presence-dot ${profile.presenceStatus}"></span>
+                <strong class="player-chip-name">${escapeHtml(profile.displayName)}</strong>
+              </span>
+              ${rank ? `<b class="rank-current-points">${rank.rankPoints} pts</b>` : ""}
+            </div>
+            ${rank ? `
+              <div class="rank-progress-labels">
+                <strong>${currentRule.division}</strong>
+              </div>
+              <div class="rank-progress-track" role="progressbar" aria-label="Progresso no ranking" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(progress)}">
+                <span class="rank-progress-fill" style="width: ${progress.toFixed(2)}%"></span>
+              </div>
+              <div class="rank-hud-stats">
+                <span>${nextRule ? `<b>${pointsRemaining}</b> pts para subir` : `<b>Primordial</b> alcançado`}</span>
+                <span><b>${rank.wins}</b> ${rank.wins === 1 ? "vitória" : "vitórias"}</span>
+                <span><b>${rank.streak}</b> sequência</span>
+              </div>
+            ` : ""}
+          </div>
+          ${rank ? `
+            <div class="rank-division-emblem" aria-label="Divisão ${currentRule.division}" title="${currentRule.division}">
+              <span>${rankVisual.badge}</span>
+            </div>
+          ` : ""}
+        </div>
+      </header>
+    `;
+  }
+
+  private renderPostMatchRankHud(match: GameMatch): string {
+    const { profile, rank } = this.state.snapshot;
+    if (match.matchType !== "ranked" || !profile || !rank) return "";
+
+    const updatedRank = rank;
+    const firstHigherRuleIndex = RANK_RULES.findIndex((rule) => updatedRank.rankPoints < rule.minimumPoints);
+    const currentRuleIndex = firstHigherRuleIndex === -1
+      ? RANK_RULES.length - 1
+      : Math.max(0, firstHigherRuleIndex - 1);
+    const currentRule = RANK_RULES[currentRuleIndex];
+    const nextRule = RANK_RULES[currentRuleIndex + 1] ?? null;
+    const progress = nextRule
+      ? Math.max(0, Math.min(100, ((updatedRank.rankPoints - currentRule.minimumPoints) / (nextRule.minimumPoints - currentRule.minimumPoints)) * 100))
+      : 100;
+    const pointsRemaining = nextRule ? Math.max(0, nextRule.minimumPoints - updatedRank.rankPoints) : 0;
+    const rankVisual = rankHudVisual(currentRule.division);
+
+    return `
+      <div class="player-chip rank-hud ${rankVisual.className} post-match-rank-hud">
+        <div class="rank-hud-content">
           <div class="rank-hud-heading">
             <span class="rank-player-identity">
               <span class="presence-dot ${profile.presenceStatus}"></span>
               <strong class="player-chip-name">${escapeHtml(profile.displayName)}</strong>
             </span>
-            ${rank ? `<b class="rank-current-points">${rank.rankPoints} pts</b>` : ""}
+            <b class="rank-current-points">${updatedRank.rankPoints} pts</b>
           </div>
-          ${rank ? `
-            <div class="rank-progress-labels">
-              <span>${currentRule.division}</span>
-              <span>${nextRule ? nextRule.division : "Ranking máximo"}</span>
-            </div>
-            <div class="rank-progress-track" role="progressbar" aria-label="Progresso no ranking" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(progress)}">
-              <span class="rank-progress-fill" style="width: ${progress.toFixed(2)}%"></span>
-            </div>
-            <div class="rank-hud-stats">
-              <span>${nextRule ? `<b>${pointsRemaining}</b> pts para subir` : `<b>Primordial</b> alcançado`}</span>
-              <span><b>${rank.wins}</b> ${rank.wins === 1 ? "vitória" : "vitórias"}</span>
-              <span><b>${rank.streak}</b> sequência</span>
-            </div>
-          ` : ""}
+          <div class="rank-progress-labels">
+            <strong>${currentRule.division}</strong>
+            <span>${nextRule ? nextRule.division : "Ranking máximo"}</span>
+          </div>
+          <div class="rank-progress-track" role="progressbar" aria-label="Progresso no ranking após a partida" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(progress)}">
+            <span class="rank-progress-fill" style="width: ${progress.toFixed(2)}%"></span>
+          </div>
+          <div class="rank-hud-stats">
+            <span>${nextRule ? `<b>${pointsRemaining}</b> pts para subir` : `<b>Primordial</b> alcançado`}</span>
+            <span><b>${updatedRank.wins}</b> ${updatedRank.wins === 1 ? "vitória" : "vitórias"}</span>
+            <span><b>${updatedRank.streak}</b> sequência</span>
+          </div>
         </div>
-      </header>
+        <div class="rank-division-emblem" aria-label="Divisão ${currentRule.division}" title="${currentRule.division}">
+          <span>${rankVisual.badge}</span>
+        </div>
+      </div>
     `;
   }
 
@@ -1329,6 +1728,8 @@ export class App {
         return this.renderOnlineLobby();
       case "ranked-queue":
         return this.renderRankedQueue();
+      case "match-found":
+        return this.renderMatchFound();
       case "private-room":
         return this.renderPrivateRoom();
       case "match-character-select":
@@ -1368,7 +1769,7 @@ export class App {
           <button class="image-command ranking" data-nav="ranking" type="button">Ranking</button>
           <button class="image-command profile" data-nav="profile" type="button">Perfil</button>
         </nav>
-        <nav class="mobile-bottom-actions menu-bottom-actions" aria-label="Navegacao">
+        <nav class="mobile-bottom-actions menu-bottom-actions" aria-label="Navegação">
           <button class="danger-command simple-back-command" data-action="legacy-menu" type="button">Voltar</button>
         </nav>
       </section>
@@ -1380,6 +1781,27 @@ export class App {
     if (!profile || !rank) return "";
     const mostUsed = mostUsedCharacter(this.state.characterUsage, profile.selectedCharacterId);
     const selected = mostUsed.character;
+    const nameAvailableAt = displayNameAvailableAt(profile.displayNameUpdatedAt);
+    const canEditName = !nameAvailableAt || nameAvailableAt <= Date.now();
+    const nameEditor = this.profileNameEditing && canEditName
+      ? `
+        <form class="profile-name-form" data-form="profile-name">
+          <label for="profileDisplayName">Nome do perfil</label>
+          <input class="profile-name-input" id="profileDisplayName" name="displayName" type="text" value="${escapeHtml(profile.displayName)}" minlength="4" maxlength="15" pattern="[A-Za-z0-9]{4,15}" autocomplete="off" autocapitalize="none" spellcheck="false" required>
+          <small>De 4 a 15 caracteres, somente letras e números, sem espaços.</small>
+          <div class="profile-name-actions">
+            <button class="primary-command" type="submit">Salvar</button>
+            <button class="ghost-command" data-action="cancel-profile-name" type="button">Cancelar</button>
+          </div>
+        </form>
+      `
+      : `
+        <div class="profile-name-display">
+          <h2>${escapeHtml(profile.displayName)}</h2>
+          <button class="ghost-command profile-name-edit-command" data-action="edit-profile-name" type="button" ${canEditName ? "" : "disabled"}>Editar nome</button>
+          ${nameAvailableAt && !canEditName ? `<small>${displayNameCooldownLabel(nameAvailableAt)}.</small>` : ""}
+        </div>
+      `;
     return `
       <section class="screen-band profile-screen">
         <div class="section-heading">
@@ -1388,8 +1810,8 @@ export class App {
         <div class="profile-layout">
           <div class="profile-panel">
             <img class="profile-avatar" src="${selected.portraitUrl}" alt="">
-            <div>
-              <h2>${escapeHtml(profile.displayName)}</h2>
+            <div class="profile-details">
+              ${nameEditor}
               <p>Conta Google</p>
               <p>${rank.division} · ${rank.rankPoints} pontos · streak ${rank.streak}</p>
             </div>
@@ -1404,7 +1826,7 @@ export class App {
             <button class="ghost-command profile-logout-command" data-action="logout" type="button">Desconectar da conta Google</button>
           </div>
         </div>
-        <nav class="mobile-bottom-actions" aria-label="Navegacao">
+        <nav class="mobile-bottom-actions" aria-label="Navegação">
           <button class="danger-command simple-back-command" data-nav="menu" type="button">Voltar</button>
         </nav>
       </section>
@@ -1442,25 +1864,50 @@ export class App {
         <div class="section-heading">
           <h1>Online</h1>
         </div>
-        <div class="mobile-scroll-body">
+        <div class="mobile-scroll-body online-lobby-scroll">
           <div class="online-grid">
-            <article class="mode-panel">
-              <h2>Partida Ranked</h2>
-              <p>Procura adversario automaticamente, atualiza divisao, pontos e streak.</p>
-              <button class="primary-command" data-action="join-ranked" type="button">Entrar na fila</button>
+            <article class="mode-panel online-mode-card ranked-mode-card">
+              <div class="online-mode-art" aria-hidden="true">
+                <img class="online-mode-image ranked-mode-image" src="/game-assets/ui/online/ranked-crest.webp" alt="">
+              </div>
+              <div class="online-mode-content">
+                <h2><span>Partida</span><strong>Ranqueada</strong></h2>
+                <p>Procura adversário automaticamente, atualiza divisão, pontos e streak.</p>
+                <button class="primary-command online-mode-main-command" data-action="join-ranked" type="button">
+                  <span>Entrar na fila</span><b aria-hidden="true">»</b>
+                </button>
+              </div>
             </article>
-            <article class="mode-panel">
-              <h2>Partida Privada</h2>
-              <p>Crie um codigo/link para jogar sem alterar ranking.</p>
-              <button class="secondary-command" data-action="create-private" type="button">Criar sala</button>
-              <form class="join-form" data-form="join-private">
-                <input name="code" inputmode="text" autocomplete="off" placeholder="CODIGO">
-                <button class="secondary-command" type="submit">Entrar</button>
-              </form>
+            <article class="mode-panel online-mode-card private-mode-card">
+              <div class="online-mode-art" aria-hidden="true">
+                <img class="online-mode-image private-mode-image" src="/game-assets/ui/online/private-fighters.webp" alt="">
+              </div>
+              <div class="online-mode-content">
+                <h2><span>Partida</span><strong>Privada</strong></h2>
+                <p>Crie um código/link para jogar sem alterar ranking.</p>
+                <button class="secondary-command create-room-command" data-action="create-private" type="button">
+                  <span>Criar sala</span>
+                </button>
+                <form class="join-form private-join-form" data-form="join-private">
+                  <label class="private-code-field">
+                    <span aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="m9.5 14.5-2 2a3.5 3.5 0 0 1-5-5l3-3a3.5 3.5 0 0 1 5 0"></path>
+                        <path d="m14.5 9.5 2-2a3.5 3.5 0 0 1 5 5l-3 3a3.5 3.5 0 0 1-5 0"></path>
+                        <path d="m8.5 15.5 7-7"></path>
+                      </svg>
+                    </span>
+                    <input name="code" inputmode="text" autocomplete="off" aria-label="Código da sala" placeholder="CÓDIGO">
+                  </label>
+                  <button class="secondary-command online-mode-main-command" type="submit">
+                    <span>Entrar</span><b aria-hidden="true">»</b>
+                  </button>
+                </form>
+              </div>
             </article>
           </div>
         </div>
-        <nav class="mobile-bottom-actions" aria-label="Navegacao">
+        <nav class="mobile-bottom-actions" aria-label="Navegação">
           <button class="danger-command simple-back-command" data-nav="menu" type="button">Voltar</button>
         </nav>
       </section>
@@ -1471,9 +1918,82 @@ export class App {
     return `
       <section class="queue-screen">
         <div class="queue-pulse"></div>
-        <h1>Procurando adversario</h1>
+        <h1>Procurando adversário</h1>
         <p>Quando a partida for encontrada, os dois jogadores escolhem personagem.</p>
         <button class="danger-command" data-action="cancel-queue" type="button">Cancelar fila</button>
+      </section>
+    `;
+  }
+
+  private renderMatchFound(): string {
+    const match = this.state.match;
+    if (!match) return "";
+    const opponent = match[oppositeSide(match.playerSide)];
+    const rank = this.state.matchedOpponentRank;
+
+    let opponentCard: string;
+    if (!rank) {
+      opponentCard = `
+        <div class="player-chip rank-hud rank-hud-autoprimata opponent-found-rank-hud opponent-found-rank-loading">
+          <div class="rank-hud-content">
+            <div class="rank-hud-heading">
+              <span class="rank-player-identity">
+                <span class="presence-dot in_match"></span>
+                <strong class="player-chip-name">${escapeHtml(opponent.displayName)}</strong>
+              </span>
+              <b class="rank-current-points">Encontrado</b>
+            </div>
+            <div class="opponent-rank-loading-line" aria-label="Carregando ranking do adversário"></div>
+          </div>
+        </div>
+      `;
+    } else {
+      const firstHigherRuleIndex = RANK_RULES.findIndex((rule) => rank.rankPoints < rule.minimumPoints);
+      const currentRuleIndex = firstHigherRuleIndex === -1
+        ? RANK_RULES.length - 1
+        : Math.max(0, firstHigherRuleIndex - 1);
+      const currentRule = RANK_RULES[currentRuleIndex];
+      const nextRule = RANK_RULES[currentRuleIndex + 1] ?? null;
+      const progress = nextRule
+        ? Math.max(0, Math.min(100, ((rank.rankPoints - currentRule.minimumPoints) / (nextRule.minimumPoints - currentRule.minimumPoints)) * 100))
+        : 100;
+      const pointsRemaining = nextRule ? Math.max(0, nextRule.minimumPoints - rank.rankPoints) : 0;
+      const rankVisual = rankHudVisual(currentRule.division);
+
+      opponentCard = `
+        <div class="player-chip rank-hud top-rank-hud ${rankVisual.className} opponent-found-rank-hud opponent-found-rank-loaded">
+          <div class="rank-hud-content">
+            <div class="rank-hud-heading">
+              <span class="rank-player-identity">
+                <span class="presence-dot in_match"></span>
+                <strong class="player-chip-name">${escapeHtml(opponent.displayName)}</strong>
+              </span>
+              <b class="rank-current-points">${rank.rankPoints} pts</b>
+            </div>
+            <div class="rank-progress-labels">
+              <strong>${currentRule.division}</strong>
+            </div>
+            <div class="rank-progress-track" role="progressbar" aria-label="Progresso do adversário no ranking" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(progress)}">
+              <span class="rank-progress-fill" style="width: ${progress.toFixed(2)}%"></span>
+            </div>
+            <div class="rank-hud-stats">
+              <span>${nextRule ? `<b>${pointsRemaining}</b> pts para subir` : `<b>Primordial</b> alcançado`}</span>
+              <span><b>${rank.wins}</b> ${rank.wins === 1 ? "vitória" : "vitórias"}</span>
+              <span><b>${rank.streak}</b> sequência</span>
+            </div>
+          </div>
+          <div class="rank-division-emblem" aria-label="Divisão ${currentRule.division}" title="${currentRule.division}">
+            <span>${rankVisual.badge}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <section class="queue-screen match-found-screen">
+        <div class="queue-pulse"></div>
+        <h1>Adversário encontrado</h1>
+        ${opponentCard}
       </section>
     `;
   }
@@ -1489,14 +2009,14 @@ export class App {
         <div class="mobile-scroll-body">
         <div class="room-panel">
           <span class="room-code">${escapeHtml(room.code)}</span>
-          <p>Envie este codigo ou link para o adversario entrar.</p>
+          <p>Envie este código para o adversário entrar.</p>
           <p>Host: ${escapeHtml(room.hostName)} · Visitante: ${room.guestName ? escapeHtml(room.guestName) : "aguardando"}</p>
           <div class="button-row">
-            <button class="secondary-command" data-action="copy-room" type="button">Copiar link</button>
+            <button class="secondary-command" data-action="copy-room" type="button">Copiar código</button>
           </div>
         </div>
         </div>
-        <nav class="mobile-bottom-actions" aria-label="Navegacao">
+        <nav class="mobile-bottom-actions" aria-label="Navegação">
           <button class="image-back-command menu-back" data-nav="online" type="button">Voltar</button>
         </nav>
       </section>
@@ -1558,7 +2078,7 @@ export class App {
           }).join("")}
         </div>
         <nav class="character-select-actions" aria-label="Acoes da selecao de personagem">
-          <button class="character-select-button back" data-action="forfeit" type="button">Abandonar</button>
+          <button class="character-select-button back" data-action="leave-match-selection" type="button">Voltar</button>
         </nav>
       </section>
     `;
@@ -1606,7 +2126,7 @@ export class App {
           <img class="fighter-art left" src="${localCharacter.portraitUrl}" alt="">
           <div class="versus-column">
             <span>${match.lastTurn ? escapeHtml(match.lastTurn.primary) : "READY"}</span>
-            <small>${match.localAction ? "Voce escolheu" : "Escolha sua acao"} · ${match.opponentHasAction ? "adversario escolheu" : "aguardando adversario"}</small>
+            <small>${match.localAction ? "Você escolheu" : "Escolha sua ação"} · ${match.opponentHasAction ? "adversário escolheu" : "aguardando adversário"}</small>
           </div>
           <img class="fighter-art right" src="${opponentCharacter.portraitUrl}" alt="">
         </div>
@@ -1638,12 +2158,16 @@ export class App {
   }
 
   private renderRematchButton(match: GameMatch): string {
+    if (match.matchType === "ranked") {
+      return `<button class="primary-command rematch-command" data-action="next-ranked-match" type="button">Próxima luta</button>`;
+    }
+
     const rematch = match.rematch || { localChoice: null, opponentChoice: null, nextMatchId: null };
     const opponentLeft = rematch.opponentChoice === "lobby";
     const localReady = !opponentLeft && rematch.localChoice === "again";
     const opponentReady = !opponentLeft && rematch.opponentChoice === "again";
     if (opponentLeft || localReady) {
-      const label = opponentLeft ? "Adversario saiu" : "Aguardando...";
+      const label = opponentLeft ? "Adversário saiu" : "Aguardando...";
       return `<div class="rematch-status" role="status" aria-live="polite">${label}</div>`;
     }
 
@@ -1680,7 +2204,7 @@ export class App {
 
     const playerWon = match.winnerId === profile.id;
     const privateScore = match.privateScore;
-    const title = playerWon ? "VOCE VENCEU" : match.winnerId ? "VOCE PERDEU" : "EMPATE";
+    const title = playerWon ? "VOCÊ VENCEU" : match.winnerId ? "VOCÊ PERDEU" : "EMPATE";
     const rankDelta = match.rankDelta >= 0 ? `+${match.rankDelta}` : String(match.rankDelta);
 
     return `
@@ -1691,6 +2215,7 @@ export class App {
             ${match.matchType === "ranked" ? `<p>${rankDelta} pontos</p><span>Streak atualizado</span>` : ""}
             ${privateScore ? `<p>Placar privado ${privateScore.playerWins} x ${privateScore.opponentWins}</p>` : ""}
           </div>
+          ${this.renderPostMatchRankHud(match)}
           <nav class="post-match-actions" aria-label="Acoes da partida">
             ${this.renderRematchButton(match)}
             <button class="secondary-command" data-action="post-match-lobby" type="button">Voltar ao lobby</button>
@@ -1717,7 +2242,7 @@ export class App {
     const privateScore = match.privateScore;
     return `
       <section class="post-screen">
-        <h1>${playerWon ? "Voce venceu" : match.winnerId ? "Voce perdeu" : "Empate"}</h1>
+        <h1>${playerWon ? "Você venceu" : match.winnerId ? "Você perdeu" : "Empate"}</h1>
         ${match.matchType === "ranked" ? `<p>${match.rankDelta >= 0 ? "+" : ""}${match.rankDelta} pontos · streak atualizado</p>` : ""}
         ${privateScore ? `<p>Placar privado: ${privateScore.playerWins} x ${privateScore.opponentWins}</p>` : ""}
         <div class="button-row">
@@ -1744,14 +2269,14 @@ export class App {
         <div class="section-heading">
           <h1>Ranking</h1>
         </div>
-        <nav class="ranking-tabs" aria-label="Visualizacao do ranking">
+        <nav class="ranking-tabs" aria-label="Visualização do ranking">
           <button class="ranking-tab ${this.rankingTab === "leaderboard" ? "active" : ""}" data-action="ranking-leaderboard" type="button" aria-pressed="${this.rankingTab === "leaderboard"}">Leaderboard</button>
           <button class="ranking-tab ${this.rankingTab === "progression" ? "active" : ""}" data-action="ranking-progression" type="button" aria-pressed="${this.rankingTab === "progression"}">Progressão</button>
         </nav>
         <div class="mobile-scroll-body ranking-scroll">
           ${this.rankingTab === "leaderboard" ? (this.state.leaderboard.length ? `
             <table class="ranking-table">
-              <caption>Classificacao ranked</caption>
+              <caption>Classificação ranked</caption>
               <colgroup>
                 <col class="ranking-player-col">
                 <col class="ranking-points-col">
@@ -1785,11 +2310,6 @@ export class App {
             </table>
           ` : `<p class="empty-state">Ranking vazio.</p>`) : `
             <div class="rank-ladder" aria-label="Progressao das divisoes">
-              <div class="rank-ladder-intro">
-                <span>Sua posição</span>
-                <strong>${rank?.division ?? "Autoprimata III"}</strong>
-                <b>${rank?.rankPoints ?? 0} pts</b>
-              </div>
               ${rankGroups.map((group) => `
                 <section class="rank-tier-group rank-tier-${group.name.toLowerCase().replaceAll(" ", "-")}" aria-label="${group.name}">
                   <div class="rank-tier-rows">
@@ -1799,8 +2319,9 @@ export class App {
                       const nextRule = RANK_RULES[ruleIndex + 1];
                       const range = nextRule ? `${rule.minimumPoints}–${nextRule.minimumPoints - 1} pts` : `${rule.minimumPoints}+ pts`;
                       const current = rank?.division === division;
+                      const rowVisual = rankHudVisual(division as Division);
                       return `
-                        <div class="rank-tier-row ${current ? "current" : ""}" ${current ? `aria-current="true"` : ""}>
+                        <div class="rank-tier-row ${rowVisual.className} ${current ? "current" : ""}" ${current ? `aria-current="true"` : ""}>
                           <span class="rank-tier-name">${division}</span>
                           ${current ? `<strong class="rank-you-marker">Você</strong>` : ""}
                           <span class="rank-tier-details">
@@ -1817,7 +2338,7 @@ export class App {
             </div>
           `}
         </div>
-        <nav class="mobile-bottom-actions" aria-label="Navegacao">
+        <nav class="mobile-bottom-actions" aria-label="Navegação">
           <button class="danger-command simple-back-command" data-nav="menu" type="button">Voltar</button>
         </nav>
       </section>

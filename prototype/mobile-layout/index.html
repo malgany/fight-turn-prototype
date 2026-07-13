@@ -39,16 +39,16 @@
       :root {
         --action-panel-backplate: url("../../game-assets/ui/action-panel/backplate.webp?v=20260605-1642");
         --health-frame: url("../../game-assets/ui/hud/health-frame.webp?v=20260605-health-frame");
-        --arena-background: url("../../game-assets/backgrounds/stage-training-zone.png?v=20260619-stages");
+        --arena-background: url("../../game-assets/backgrounds/stage-training-zone.webp?v=20260713-webp");
         --title-screen-art: url("../../game-assets/backgrounds/title-screen-fighters.webp?v=20260605-1340");
         --intro-splash-logo: url("../../game-assets/ui/intro/malgany-play-logo.webp?v=20260622-intro");
         --intro-final-genesis-logo: url("../../game-assets/ui/intro/final-genesis-intro-logo.webp?v=20260622-intro-logo");
         --intro-consent-bg: url("../../game-assets/ui/intro/start-consent-bg.webp?v=20260622-intro");
-        --menu-button-play: url("../../game-assets/ui/menu/jogar.webp?v=20260605-1340");
-        --menu-button-online: url("../../game-assets/ui/menu/online.png?v=20260609-1714");
-        --menu-button-help: url("../../game-assets/ui/menu/ajuda.webp?v=20260605-1340");
-        --menu-button-options: url("../../game-assets/ui/menu/opcoes.webp?v=20260605-1340");
-        --menu-button-exit: url("../../game-assets/ui/menu/sair.webp?v=20260605-1340");
+        --menu-button-play: url("../../game-assets/ui/menu/jogar.webp?v=20260712-unified");
+        --menu-button-online: url("../../game-assets/ui/menu/online.png?v=20260712-unified");
+        --menu-button-help: url("../../game-assets/ui/menu/ajuda.webp?v=20260712-unified");
+        --menu-button-options: url("../../game-assets/ui/menu/opcoes.webp?v=20260712-unified");
+        --menu-button-exit: url("../../game-assets/ui/menu/sair.webp?v=20260712-unified");
         --menu-button-back: url("../../game-assets/ui/menu/voltar.webp?v=20260606-2045");
         --menu-button-restart: url("../../game-assets/ui/menu/reiniciar.webp?v=20260606-2045");
         --battle-over-panel-art: url("../../game-assets/ui/panels/battle-over-panel.webp?v=20260606-2045");
@@ -2114,7 +2114,7 @@
 
       .menu-button {
         width: min(62%, 270px);
-        aspect-ratio: 960 / 300;
+        aspect-ratio: 3 / 1;
         min-height: 0;
         border: 0;
         background: center / contain no-repeat;
@@ -2134,7 +2134,6 @@
       }
 
       #onlineButton {
-        aspect-ratio: 2001 / 622;
         background-image: var(--menu-button-online);
       }
 
@@ -2143,12 +2142,10 @@
       }
 
       #optionsButton {
-        aspect-ratio: 960 / 248;
         background-image: var(--menu-button-options);
       }
 
       #exitAppButton {
-        aspect-ratio: 960 / 237;
         background-image: var(--menu-button-exit);
       }
 
@@ -3142,7 +3139,7 @@
 
       <section class="coming-soon-popup" id="comingSoonPopup" aria-label="Personagens em breve" aria-modal="true" role="dialog" aria-hidden="true">
         <div class="coming-soon-popup-panel">
-          <img class="coming-soon-popup-image" src="../../game-assets/ui/promotions/pacote-oriental-em-breve.png" alt="Pacote Oriental em breve: Cute Hong e Genjiro Musashi">
+          <img class="coming-soon-popup-image" src="../../game-assets/ui/promotions/pacote-oriental-em-breve.webp" alt="Pacote Oriental em breve: Cute Hong e Genjiro Musashi">
           <button class="coming-soon-popup-close" type="button" id="comingSoonPopupClose" aria-label="Fechar aviso de personagens em breve">×</button>
         </div>
       </section>
@@ -3241,7 +3238,7 @@
 
           <div class="help-panel" id="helpGuidePanel" role="tabpanel" aria-labelledby="helpGuideTab" data-help-panel="guide" hidden>
             <figure class="help-choice-guide">
-              <img src="../../game-assets/ui/help/combat-choice-guide.png?v=20260711" alt="Guia de melhores escolhas no combate em neutro, vantagem e contra opcoes defensivas">
+              <img src="../../game-assets/ui/help/combat-choice-guide.webp?v=20260713" alt="Guia de melhores escolhas no combate em neutro, vantagem e contra opcoes defensivas">
             </figure>
           </div>
 
@@ -3686,20 +3683,20 @@
       const STAGES = [
         {
           id: "training-zone",
-          backgrounds: ["../../game-assets/backgrounds/stage-training-zone.png?v=20260619-stages"],
+          backgrounds: ["../../game-assets/backgrounds/stage-training-zone.webp?v=20260713-webp"],
         },
         {
           id: "ravenfall-shore",
           musicTrack: "heavenfall-shore",
           backgrounds: [
-            "../../game-assets/backgrounds/stage-ravenfall-day.png?v=20260619-stages",
-            "../../game-assets/backgrounds/stage-ravenfall-night.png?v=20260619-stages",
+            "../../game-assets/backgrounds/stage-ravenfall-day.webp?v=20260713-webp",
+            "../../game-assets/backgrounds/stage-ravenfall-night.webp?v=20260713-webp",
           ],
         },
         {
           id: "black-forest-cellar",
           musicTrack: "black-forest-cellar",
-          backgrounds: ["../../game-assets/backgrounds/stage-black-forest-cellar.png?v=20260619-stages"],
+          backgrounds: ["../../game-assets/backgrounds/stage-black-forest-cellar.webp?v=20260713-webp"],
         },
       ];
       const CHARACTER_CONFIGS = {
@@ -3804,6 +3801,7 @@
       const BATTLE_MUSIC_PATH = "../../game-assets/audio/combo-clash-arena.mp3";
       const HEAVENFALL_SHORE_MUSIC_PATH = "../../game-assets/audio/new-vulka.mp3";
       const BLACK_FOREST_CELLAR_MUSIC_PATH = "../../game-assets/audio/black-forest-cellar.mp3";
+      const MATCH_EVENT_SOUND_PATH = "../../game-assets/audio/match-found-ultimate-hit.mp3";
       const MUSIC_TRACK_PATHS = {
         menu: MENU_MUSIC_PATH,
         battle: BATTLE_MUSIC_PATH,
@@ -3815,6 +3813,8 @@
       const MUSIC_STORAGE_KEY = "fightTurn.musicEnabled";
       const MUSIC_VOLUME_STORAGE_KEY = "fightTurn.musicVolume";
       const INTRO_COMPLETED_STORAGE_KEY = "finalGenesis.introCompleted";
+      const COMING_SOON_PROMOTION_STORAGE_KEY = "finalGenesis.promotion.pacoteOriental.lastShownAt";
+      const COMING_SOON_PROMOTION_INTERVAL_MS = 24 * 60 * 60 * 1000;
       const INTRO_SPLASH_DURATION = 3000;
       const IRIS_TRANSITION_DURATION = 860;
       const MOBILE_UI_ACTION_DELAY = 650;
@@ -7500,6 +7500,7 @@
 
         const winningAction = resultWinnerAction(result, p1Action, p2Action);
         const isUltimateHit = result.type === "hit" && winningAction === "Super";
+        const isDamagingUltimateHit = isUltimateHit && (result.damaged || []).length > 0;
         const damageLosses = getDamageLosses(beforeHealth);
         const useNinjaSpecialImpact = shouldUseNinjaSpecialImpact(result, winningAction);
         let gameOverQueued = false;
@@ -7520,6 +7521,9 @@
         window.setTimeout(() => {
           animateTokenClash(result);
           playTurnResultSound(result);
+          if (isDamagingUltimateHit) {
+            playActionAudio(MATCH_EVENT_SOUND_PATH);
+          }
           const ultimateCinematicBreak = isUltimateHit ? playUltimateCinematic(result.winner) : 0;
 
           if (result.type === "hit" && result.winner && !isUltimateHit && winningAction !== "Special") {
@@ -7789,12 +7793,32 @@
         el.exitConfirm.setAttribute("aria-hidden", "true");
       }
 
-      function showComingSoonPopup() {
-        if (comingSoonPopupShown) {
-          return;
+      function shouldShowComingSoonPopup() {
+        if (comingSoonPopupShown) return false;
+
+        try {
+          const lastShownAt = Number(window.localStorage.getItem(COMING_SOON_PROMOTION_STORAGE_KEY));
+          if (!Number.isFinite(lastShownAt) || lastShownAt <= 0) return true;
+          const elapsedMs = Date.now() - lastShownAt;
+          return elapsedMs < 0 || elapsedMs >= COMING_SOON_PROMOTION_INTERVAL_MS;
+        } catch {
+          return true;
         }
+      }
+
+      function markComingSoonPopupShown() {
+        try {
+          window.localStorage.setItem(COMING_SOON_PROMOTION_STORAGE_KEY, String(Date.now()));
+        } catch {
+          // Local storage is optional in embedded/native shells.
+        }
+      }
+
+      function showComingSoonPopup() {
+        if (!shouldShowComingSoonPopup()) return;
 
         comingSoonPopupShown = true;
+        markComingSoonPopupShown();
         el.comingSoonPopup.classList.add("show");
         el.comingSoonPopup.setAttribute("aria-hidden", "false");
         el.comingSoonPopupClose.focus();
@@ -8548,7 +8572,7 @@
 
         if (payload.status === "loading" || !payload.battleStartAt) {
           onlineBridgeStopStartCountdown();
-          onlineBridgeShowStartText("AGUARDANDO ADVERSARIO");
+          onlineBridgeShowStartText("AGUARDANDO ADVERSÁRIO");
           return true;
         }
 
@@ -9014,7 +9038,7 @@
         }
 
         setTokenDisplay(false);
-        if (options.pauseClock) {
+        if (options.pauseClock || payload.status !== "active") {
           onlineBridgePauseClockDisplay(payload);
         } else {
           onlineBridgeStartClock(payload, { restartFromNow: Boolean(options.restartClock) });

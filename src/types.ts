@@ -37,6 +37,7 @@ export interface CharacterDefinition {
 export interface PlayerProfile {
   id: string;
   displayName: string;
+  displayNameUpdatedAt: string | null;
   avatarUrl: string | null;
   accountType: AccountType;
   selectedCharacterId: string;

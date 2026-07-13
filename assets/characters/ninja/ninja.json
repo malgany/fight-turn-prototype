@@ -19,7 +19,7 @@
     "getUp": {
       "label": "Get Up",
       "framePattern": "../../game-assets/characters/ninja-get-up/ninja-get-up-{frame}.webp",
-      "frameCount": 65,
+      "frameCount": 61,
       "framePad": 3,
       "frameIntervalMs": 54,
       "scale": 1.3,

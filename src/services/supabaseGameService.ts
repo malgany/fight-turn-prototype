@@ -17,6 +17,7 @@ import type { GameService, QueueResult } from "./gameService";
 const SESSION_LOOKUP_TIMEOUT_MS = 750;
 const DEFAULT_FUNCTION_TIMEOUT_MS = 10_000;
 const ACTION_FUNCTION_TIMEOUT_MS = 1_600;
+const FORFEIT_FUNCTION_TIMEOUT_MS = 30_000;
 const SERVER_CLOCK_TIMEOUT_MS = 750;
 
 function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number, message: string): Promise<T> {
@@ -35,6 +36,11 @@ function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number, message: str
   });
 }
 
+export function isInvalidAuthSessionError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /invalid\s+jwt|jwt\s+(?:is\s+)?(?:invalid|expired)|(?:invalid|expired)\s+(?:access\s+)?token|(?:access\s+)?token\s+(?:is\s+)?(?:invalid|expired)/i.test(message);
+}
+
 export class SupabaseGameService implements GameService {
   readonly mode = "supabase" as const;
   private channels = new Set<RealtimeChannel>();
@@ -45,6 +51,15 @@ export class SupabaseGameService implements GameService {
       throw new Error("Supabase nao configurado.");
     }
     return supabase;
+  }
+
+  private async discardInvalidLocalSession(): Promise<void> {
+    this.cachedAccessToken = null;
+    try {
+      await this.client().auth.signOut({ scope: "local" });
+    } catch {
+      // The login screen must remain usable even if local cleanup reports an error.
+    }
   }
 
   private functionUrl(name: string): string {
@@ -218,12 +233,40 @@ export class SupabaseGameService implements GameService {
     };
   }
 
+  private async attachDisplayNameCooldown(snapshot: AppSnapshot): Promise<AppSnapshot> {
+    if (!snapshot.profile) return snapshot;
+    const { data, error } = await this.client()
+      .from("profiles")
+      .select("display_name_updated_at")
+      .eq("id", snapshot.profile.id)
+      .single();
+    if (error) throw error;
+    return {
+      ...snapshot,
+      profile: {
+        ...snapshot.profile,
+        displayNameUpdatedAt: data?.display_name_updated_at || null,
+      },
+    };
+  }
+
   async getSnapshot(): Promise<AppSnapshot> {
-    const { data } = await this.client().auth.getSession();
+    const { data, error } = await this.client().auth.getSession();
+    if (error) {
+      if (!isInvalidAuthSessionError(error)) throw error;
+      await this.discardInvalidLocalSession();
+      return { profile: null, rank: null, unlockedCharacterIds: [] };
+    }
     if (!data.session) {
       return { profile: null, rank: null, unlockedCharacterIds: [] };
     }
-    return this.bootstrapProfile();
+    try {
+      return await this.bootstrapProfile();
+    } catch (bootstrapError) {
+      if (!isInvalidAuthSessionError(bootstrapError)) throw bootstrapError;
+      await this.discardInvalidLocalSession();
+      return { profile: null, rank: null, unlockedCharacterIds: [] };
+    }
   }
 
   async signInWithGoogle(): Promise<void> {
@@ -247,11 +290,18 @@ export class SupabaseGameService implements GameService {
   }
 
   async bootstrapProfile(): Promise<AppSnapshot> {
-    return this.normalizeSnapshot(await this.invoke<AppSnapshot>("bootstrap-profile"));
+    const snapshot = this.normalizeSnapshot(await this.invoke<AppSnapshot>("bootstrap-profile"));
+    return this.attachDisplayNameCooldown(snapshot);
+  }
+
+  async updateDisplayName(displayName: string): Promise<AppSnapshot> {
+    await this.invokeRpc<unknown>("update_profile_display_name", { p_display_name: displayName }, DEFAULT_FUNCTION_TIMEOUT_MS);
+    return this.bootstrapProfile();
   }
 
   async selectCharacter(characterId: string): Promise<AppSnapshot> {
-    return this.normalizeSnapshot(await this.invoke<AppSnapshot>("select-character", { characterId }));
+    const snapshot = this.normalizeSnapshot(await this.invoke<AppSnapshot>("select-character", { characterId }));
+    return this.attachDisplayNameCooldown(snapshot);
   }
 
   async heartbeat(status: PlayerProfile["presenceStatus"], matchId?: string): Promise<void> {
@@ -278,6 +328,27 @@ export class SupabaseGameService implements GameService {
       losses: entry.losses,
       streak: entry.streak,
     }));
+  }
+
+  async getLeaderboardEntry(userId: string): Promise<LeaderboardEntry | null> {
+    const { data, error } = await this.client()
+      .from("leaderboard")
+      .select("position,user_id,display_name,avatar_url,rank_points,division,wins,losses,streak")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    return {
+      position: data.position,
+      userId: data.user_id,
+      displayName: data.display_name,
+      avatarUrl: data.avatar_url,
+      rankPoints: data.rank_points,
+      division: divisionForPoints(data.rank_points),
+      wins: data.wins,
+      losses: data.losses,
+      streak: data.streak,
+    };
   }
 
   async getHistory(): Promise<MatchHistoryEntry[]> {
@@ -411,8 +482,12 @@ export class SupabaseGameService implements GameService {
     return this.invoke<GameMatch>("resolve-turn", { matchId });
   }
 
+  async cancelMatchSelection(matchId: string): Promise<void> {
+    await this.invokeRpc<unknown>("cancel_match_selection", { p_match_id: matchId }, DEFAULT_FUNCTION_TIMEOUT_MS);
+  }
+
   forfeitMatch(matchId: string): Promise<GameMatch> {
-    return this.invoke<GameMatch>("forfeit-match", { matchId });
+    return this.invoke<GameMatch>("forfeit-match", { matchId }, FORFEIT_FUNCTION_TIMEOUT_MS);
   }
 
   postMatchChoice(matchId: string, choice: "again" | "lobby"): Promise<GameMatch> {

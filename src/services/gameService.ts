@@ -21,9 +21,11 @@ export interface GameService {
   signInWithGoogle(): Promise<void>;
   signOut(): Promise<void>;
   bootstrapProfile(): Promise<AppSnapshot>;
+  updateDisplayName(displayName: string): Promise<AppSnapshot>;
   selectCharacter(characterId: string): Promise<AppSnapshot>;
   heartbeat(status: PlayerProfile["presenceStatus"], matchId?: string): Promise<void>;
   getLeaderboard(): Promise<LeaderboardEntry[]>;
+  getLeaderboardEntry(userId: string): Promise<LeaderboardEntry | null>;
   getHistory(): Promise<MatchHistoryEntry[]>;
   getCharacterUsage(): Promise<Record<string, number>>;
   joinRankedQueue(): Promise<QueueResult>;
@@ -39,6 +41,7 @@ export interface GameService {
   markTurnReady(matchId: string, turnNumber: number): Promise<void>;
   submitAction(matchId: string, action: Action, turnNumber?: number): Promise<GameMatch | null>;
   resolveTurn(matchId: string): Promise<GameMatch>;
+  cancelMatchSelection(matchId: string): Promise<void>;
   forfeitMatch(matchId: string): Promise<GameMatch>;
   postMatchChoice(matchId: string, choice: RematchChoice): Promise<GameMatch>;
   watchMatch(matchId: string, onChange: () => void): () => void;

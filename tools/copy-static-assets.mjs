@@ -8,11 +8,12 @@ const gameAssets = resolve(dist, "game-assets");
 const spaIndex = resolve(dist, "index.html");
 
 const requiredBackgrounds = [
-  "stage-training-zone.png",
-  "stage-ravenfall-day.png",
-  "stage-ravenfall-night.png",
-  "stage-black-forest-cellar.png",
+  "stage-training-zone.webp",
+  "stage-ravenfall-day.webp",
+  "stage-ravenfall-night.webp",
+  "stage-black-forest-cellar.webp",
   "title-screen-fighters.webp",
+  "online-shell.webp",
 ];
 
 const scanFiles = [

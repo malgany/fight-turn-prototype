@@ -12,5 +12,8 @@ npm-debug.log*
 .codex-vite-*.err.log
 .codex-vite.log
 .codex-vite.err.log
+.codex-remote-attachments/
+artifacts/
+tmp/
 
 .vercel
