@@ -934,12 +934,24 @@
         height: 100%;
         object-fit: cover;
         object-position: top center;
+        translate: var(--ultimate-frame-offset-x, 0px) var(--ultimate-frame-offset-y, 0px);
         opacity: 0;
         animation: ultimate-frame-pop 420ms ease-out 180ms forwards;
       }
 
       .ultimate-cinematic.is-playing .ultimate-frame {
         filter: drop-shadow(0 0 14px rgba(255, 40, 40, 0.72));
+      }
+
+      .ultimate-cinematic.character-iop .ultimate-frame {
+        object-fit: contain;
+        object-position: center;
+        --ultimate-frame-offset-x: -2px;
+        --ultimate-frame-offset-y: 69px;
+      }
+
+      .ultimate-cinematic.character-iop .ultimate-cinematic-panel {
+        --ultimate-panel-translate-y: clamp(75.4px, 18.2cqw, 101.4px);
       }
 
       .ultimate-caption {
@@ -1344,7 +1356,9 @@
       .ultimate-cinematic-panel.advanced-debug-adjusted,
       .ultimate-frame.advanced-debug-adjusted,
       .ultimate-label-red.advanced-debug-adjusted {
-        translate: var(--advanced-debug-offset-x, 0px) var(--advanced-debug-offset-y, 0px);
+        translate:
+          calc(var(--ultimate-frame-offset-x, 0px) + var(--advanced-debug-offset-x, 0px))
+          calc(var(--ultimate-frame-offset-y, 0px) + var(--advanced-debug-offset-y, 0px));
         scale: var(--advanced-debug-scale, 1);
       }
 
@@ -5510,7 +5524,7 @@
       function clearUltimateCinematic() {
         ultimateCinematicState.timers.forEach((timerId) => window.clearTimeout(timerId));
         ultimateCinematicState.timers = [];
-        el.ultimateCinematic.classList.remove("is-active", "is-playing", "p1", "p2");
+        el.ultimateCinematic.classList.remove("is-active", "is-playing", "p1", "p2", "character-iop");
         el.ultimateCaption.classList.remove("is-visible");
         el.ultimateCaption.textContent = "";
         el.ultimateCaption.setAttribute("aria-hidden", "true");
@@ -5518,6 +5532,13 @@
         if (loadout.ultimateFrames.length) {
           el.ultimateFrame.src = loadout.ultimateFrames[0];
         }
+      }
+
+      function activateUltimateCinematic(side, options = {}) {
+        const loadout = characterLoadoutForSide(side);
+        el.ultimateCinematic.classList.add("is-active", side);
+        el.ultimateCinematic.classList.toggle("is-playing", Boolean(options.playing));
+        el.ultimateCinematic.classList.toggle("character-iop", loadout.id === "iop");
       }
 
       function syncUltimateCaption(loadout) {
@@ -5538,7 +5559,7 @@
         clearUltimateCinematic();
         el.ultimateFrame.src = frames[0];
         syncUltimateCaption(loadout);
-        el.ultimateCinematic.classList.add("is-active", side);
+        activateUltimateCinematic(side);
 
         const firstFrameHoldMs = animation.firstFrameHoldMs || 0;
         const playbackStartMs = ULTIMATE_CINEMATIC_INTRO_MS + ULTIMATE_CINEMATIC_HOLD_MS + firstFrameHoldMs;
@@ -6422,7 +6443,7 @@
 
         advancedDebugState.currentFrame = frameIndex;
         el.ultimateFrame.src = ultimateFrames[frameIndex];
-        el.ultimateCinematic.classList.add("is-active", "p1");
+        activateUltimateCinematic("p1");
         setAdvancedPreviewTarget(el.ultimateFrame, "Ultimate frames");
       }
 
@@ -6434,7 +6455,7 @@
           advancedDebugState.currentFrame = 0;
           el.ultimateFrame.src = ultimateFrames[0];
         }
-        el.ultimateCinematic.classList.add("is-active", "p1");
+        activateUltimateCinematic("p1");
         setAdvancedPreviewTarget(el.ultimateLabelRed, "Ultimate traco bg");
       }
 
@@ -6445,7 +6466,7 @@
 
         clearAdvancedDebugTimers();
         clearUltimateCinematic();
-        el.ultimateCinematic.classList.add("is-active", "p1", "is-playing");
+        activateUltimateCinematic("p1", { playing: true });
         setAdvancedPreviewTarget(el.ultimateFrame, "Ultimate frames");
 
         let frameIndex = 0;
