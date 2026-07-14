@@ -1,4 +1,4 @@
-const STATIC_CACHE = "fight-turn-static-v7";
+const STATIC_CACHE = "fight-turn-static-v9";
 const STATIC_PATHS = ["/assets/", "/game-assets/", "/prototype/"];
 const STATIC_CONTENT_TYPES = {
   ".css": "text/css",

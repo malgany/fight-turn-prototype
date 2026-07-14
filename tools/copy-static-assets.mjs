@@ -54,6 +54,8 @@ await copyDirectory("fonts");
 await copyDirectory("characters", {
   exclude: (relativePath) => relativePath === "old" || relativePath.startsWith("old/"),
 });
+await copyDirectory("characters-lite");
+await copyDirectory("characters-low");
 await copyDirectory("ui", {
   exclude: (relativePath) =>
     relativePath === "action-panel/buttons/old" ||
@@ -138,7 +140,7 @@ async function validateStaticReferences() {
     const text = await readFile(resolve(root, filePath), "utf8");
     for (const match of text.matchAll(assetPathPattern)) {
       const assetPath = normalizeAssetPath(match[1] || match[2]);
-      if (!assetPath || assetPath.includes("{frame}")) {
+      if (!assetPath || assetPath.includes("{frame}") || assetPath.includes("${")) {
         continue;
       }
       required.add(assetPath);
@@ -175,8 +177,19 @@ async function validateCharacterFrames() {
       const requiredFrames = sampleAnimationFrameNumbers(frameNumbers, animationFrameLimits[animationKey])
         .map((frame) => framePattern.replace("{frame}", String(frame).padStart(framePad, "0")));
       await assertExistingAssets(requiredFrames);
+      for (const directory of ["characters-lite", "characters-low"]) {
+        await assertExistingAssets(requiredFrames.map((assetPath) => toCharacterVariantPath(assetPath, directory)));
+      }
     }
   }
+}
+
+function toCharacterVariantPath(assetPath, directory) {
+  const prefix = "characters/";
+  if (!assetPath.startsWith(prefix)) {
+    throw new Error(`Character frame is outside ${prefix}: ${assetPath}`);
+  }
+  return `${directory}/${assetPath.slice(prefix.length)}`;
 }
 
 function sampleAnimationFrameNumbers(frameNumbers, frameLimit) {
