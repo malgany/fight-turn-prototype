@@ -1258,7 +1258,7 @@ p {
 }
 
 .character-grid-app {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .fighter-card {
@@ -1568,6 +1568,12 @@ p {
   --preview-scale: 1.02;
 }
 
+.match-select-screen .character-preview-art.iop {
+  --preview-width: min(98%, 462px);
+  --preview-y: -3%;
+  --preview-scale: 1.03;
+}
+
 .match-select-screen .character-preview-art.coming-soon {
   --preview-width: min(88%, 410px);
   --preview-y: -5%;
@@ -1577,7 +1583,7 @@ p {
   position: relative;
   z-index: 3;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-template-rows: auto;
   align-items: end;
   gap: clamp(5px, 1.3cqw, 8px);
@@ -1718,6 +1724,11 @@ p {
 .match-select-screen .character-art.doll {
   --character-position: center 5%;
   --character-zoom: 1.75;
+}
+
+.match-select-screen .character-art.iop {
+  --character-position: center 3%;
+  --character-zoom: 1.4;
 }
 
 .match-select-screen .character-art.coming-soon {

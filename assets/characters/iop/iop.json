@@ -1,0 +1,103 @@
+{
+  "id": "iop",
+  "name": "Iop",
+  "animations": {
+    "idle": {
+      "label": "Idle",
+      "framePattern": "../../assets/characters/iop-idle/iop-idle-{frame}.webp",
+      "frameCount": 74,
+      "framePad": 3,
+      "frameIntervalMs": 33,
+      "scale": 1,
+      "offsetXPercent": 0,
+      "offsetYPercent": 0,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": -17
+        },
+        "p2": {
+          "offsetXPercent": 17
+        }
+      }
+    },
+    "getUp": {
+      "label": "Get Up",
+      "framePattern": "../../assets/characters/iop-get-up/iop-get-up-{frame}.webp",
+      "frameCount": 119,
+      "framePad": 3,
+      "frameIntervalMs": 33,
+      "scale": 1.5,
+      "offsetXPercent": 0,
+      "offsetYPercent": -5,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": -22
+        },
+        "p2": {
+          "offsetXPercent": 22
+        }
+      }
+    },
+    "crouch": {
+      "label": "Crouch",
+      "framePattern": "../../assets/characters/iop-crouch/iop-crouch-{frame}.webp",
+      "frameCount": 292,
+      "framePad": 3,
+      "frameIntervalMs": 33,
+      "scale": 1.1232,
+      "offsetXPercent": 0,
+      "offsetYPercent": 0,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": -17
+        },
+        "p2": {
+          "offsetXPercent": 17
+        }
+      }
+    },
+    "jump": {
+      "label": "Jump",
+      "framePattern": "../../assets/characters/iop-jump/iop-jump-{frame}.webp",
+      "frameCount": 87,
+      "framePad": 3,
+      "frameIntervalMs": 33,
+      "scale": 1,
+      "offsetXPercent": 0,
+      "offsetYPercent": 0,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": -17
+        },
+        "p2": {
+          "offsetXPercent": 17
+        }
+      }
+    },
+    "special": {
+      "label": "Special",
+      "framePattern": "../../assets/characters/iop-special/iop-special-{frame}.webp",
+      "frameCount": 232,
+      "framePad": 3,
+      "frameIntervalMs": 33,
+      "scale": 2.31,
+      "offsetXPercent": 0,
+      "offsetYPercent": 12,
+      "sideOffsets": {
+        "p1": {
+          "offsetXPercent": 30
+        },
+        "p2": {
+          "offsetXPercent": -30
+        }
+      }
+    },
+    "ultimate": {
+      "label": "Ultimate",
+      "framePattern": "../../assets/characters/iop-ultimate/iop-ultimate-{frame}.webp",
+      "frameCount": 339,
+      "framePad": 3,
+      "frameIntervalMs": 33
+    }
+  }
+}

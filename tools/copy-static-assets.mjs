@@ -25,6 +25,7 @@ const scanFiles = [
   "assets/characters/itzcoatl/itzcoatl.json",
   "assets/characters/urban/urban.json",
   "assets/characters/doll/doll.json",
+  "assets/characters/iop/iop.json",
 ];
 
 const characterConfigPaths = [
@@ -32,6 +33,7 @@ const characterConfigPaths = [
   "characters/itzcoatl/itzcoatl.json",
   "characters/urban/urban.json",
   "characters/doll/doll.json",
+  "characters/iop/iop.json",
 ];
 
 const animationFrameLimits = {

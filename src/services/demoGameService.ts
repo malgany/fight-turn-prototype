@@ -74,6 +74,10 @@ function loadState(): DemoState {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (!stored) return fallback;
     const loaded = { ...fallback, ...JSON.parse(stored) } as DemoState;
+    loaded.unlockedCharacterIds = Array.from(new Set([
+      ...(Array.isArray(loaded.unlockedCharacterIds) ? loaded.unlockedCharacterIds : []),
+      ...defaultCharacterIds(),
+    ]));
     if (!loaded.replayMatches || typeof loaded.replayMatches !== "object" || Array.isArray(loaded.replayMatches)) {
       loaded.replayMatches = {};
     }

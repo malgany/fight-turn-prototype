@@ -1,7 +1,7 @@
 param(
   [Parameter(Mandatory = $true)][string]$ProjectRoot,
-  [Parameter(Mandatory = $true)][string]$ComboSource,
-  [Parameter(Mandatory = $true)][string]$PokeSource,
+  [string]$ComboSource,
+  [string]$PokeSource,
   [switch]$Force
 )
 
@@ -17,7 +17,11 @@ $ProjectRoot = (Resolve-Path -LiteralPath $ProjectRoot).Path
 $effectsRoot = (Resolve-Path -LiteralPath (Join-Path $ProjectRoot "assets\effects")).Path
 $audioRoot = (Resolve-Path -LiteralPath (Join-Path $ProjectRoot "assets\audio")).Path
 
-foreach ($source in @($ComboSource, $PokeSource)) {
+if (-not $ComboSource -and -not $PokeSource) {
+  throw "Provide at least one effect source."
+}
+
+foreach ($source in @($ComboSource, $PokeSource) | Where-Object { $_ }) {
   if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
     throw "Source file not found: $source"
   }
@@ -133,5 +137,10 @@ function Convert-Effect([string]$name, [string]$source, [int]$maxWidth) {
   Write-Output "$name`: $frameCount frames and $audioPath"
 }
 
-Convert-Effect "combo-impact" $ComboSource 960
-Convert-Effect "poke-impact" $PokeSource 960
+if ($ComboSource) {
+  Convert-Effect "combo-impact" $ComboSource 960
+}
+
+if ($PokeSource) {
+  Convert-Effect "poke-impact" $PokeSource 960
+}

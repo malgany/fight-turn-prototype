@@ -42,6 +42,16 @@ export const characters: CharacterDefinition[] = [
     requiredDivision: "Autoprimata III",
   },
   {
+    id: "iop",
+    name: "Iop",
+    portraitUrl: "/game-assets/ui/character-select/fighter-iop.png",
+    enabled: true,
+    isDefault: true,
+    unlockDescription: "Disponível desde o início",
+    requiredPoints: 0,
+    requiredDivision: "Autoprimata III",
+  },
+  {
     id: "coming-soon",
     name: "Em breve",
     portraitUrl: "/game-assets/ui/character-select/fighter-coming-soon-face-question.webp",

@@ -263,6 +263,7 @@ function characterVisualClass(characterId: string): string {
   if (characterId === "itzcoatl") return "shaman";
   if (characterId === "aton") return "aton";
   if (characterId === "doll") return "doll";
+  if (characterId === "iop") return "iop";
   if (characterId === "coming-soon") return "coming-soon";
   return "ninja";
 }

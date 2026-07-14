@@ -562,6 +562,11 @@
         --portrait-zoom: 1.75;
       }
 
+      .portrait-art.iop {
+        --portrait-position: center 3%;
+        --portrait-zoom: 1.65;
+      }
+
       .portrait-frame-image {
         position: absolute;
         left: -16%;
@@ -2393,6 +2398,12 @@
         --preview-scale: 1.03;
       }
 
+      .character-preview-art.iop {
+        --preview-width: min(98%, 462px);
+        --preview-y: -3%;
+        --preview-scale: 1.03;
+      }
+
       .character-preview-art.coming-soon {
         --preview-width: min(88%, 410px);
         --preview-y: -5%;
@@ -2402,7 +2413,7 @@
         position: relative;
         z-index: 3;
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         grid-template-rows: auto;
         align-items: end;
         gap: clamp(5px, 1.3cqw, 8px);
@@ -2543,6 +2554,11 @@
       .character-art.doll {
         --character-position: center 4%;
         --character-zoom: 1.6;
+      }
+
+      .character-art.iop {
+        --character-position: center 3%;
+        --character-zoom: 1.4;
       }
 
       .character-art.coming-soon {
@@ -3276,6 +3292,16 @@
             </span>
             <span class="character-nameplate"><span>DOLL</span></span>
           </button>
+
+          <button class="character-card" type="button" role="listitem" data-character="iop" aria-pressed="false">
+            <span class="character-card-frame" aria-hidden="true"></span>
+            <span class="character-selection-badge p1" aria-hidden="true">P1</span>
+            <span class="character-selection-badge p2" aria-hidden="true">P2</span>
+            <span class="character-portrait-window" aria-hidden="true">
+              <img class="character-art iop" src="../../game-assets/ui/character-select/fighter-iop.png?v=20260714-iop-portrait" alt="" draggable="false">
+            </span>
+            <span class="character-nameplate"><span>IOP</span></span>
+          </button>
         </div>
 
         <nav class="character-select-actions" aria-label="Ações da seleção de personagem">
@@ -3566,12 +3592,12 @@
         <div class="fighter p1" id="p1Fighter" aria-label="Personagem jogador 1">
           <img class="fighter-sprite" id="p1Sprite" src="../../game-assets/characters/ninja-idle/ninja-idle-001.webp" alt="">
           <img class="block-shield-effect" id="p1BlockShield" src="../../game-assets/effects/block-shield/block-shield.webp" alt="" draggable="false">
-          <img class="hit-effect" id="p1HitEffect" src="../../game-assets/effects/combo-impact/combo-impact-001.webp" alt="" draggable="false">
+          <img class="hit-effect" id="p1HitEffect" src="../../game-assets/effects/combo-impact/combo-impact-001.webp?v=20260714-combo" alt="" draggable="false">
         </div>
         <div class="fighter p2" id="p2Fighter" aria-label="Personagem jogador 2">
           <img class="fighter-sprite" id="p2Sprite" src="../../game-assets/characters/ninja-idle/ninja-idle-001.webp" alt="">
           <img class="block-shield-effect" id="p2BlockShield" src="../../game-assets/effects/block-shield/block-shield.webp" alt="" draggable="false">
-          <img class="hit-effect" id="p2HitEffect" src="../../game-assets/effects/combo-impact/combo-impact-001.webp" alt="" draggable="false">
+          <img class="hit-effect" id="p2HitEffect" src="../../game-assets/effects/combo-impact/combo-impact-001.webp?v=20260714-combo" alt="" draggable="false">
         </div>
         <div class="ultimate-cinematic" id="ultimateCinematic" aria-hidden="true">
           <div class="ultimate-cinematic-panel" id="ultimateCinematicPanel">
@@ -3793,6 +3819,7 @@
         itzcoatl: "../../game-assets/characters/itzcoatl/itzcoatl.json?v=20260609-special-offset",
         aton: "../../game-assets/characters/urban/urban.json?v=20260608-aton-position-plus",
         doll: "../../game-assets/characters/doll/doll.json?v=20260620-doll-jump-odd-slow",
+        iop: "../../game-assets/characters/iop/iop.json?v=20260714-iop-crouch-special-tune",
       };
       const CHARACTER_ABILITIES = {
         ninja: {
@@ -3855,6 +3882,21 @@
             description: "Liga sua caixa de som no volume máximo e canaliza sua energia através das ondas sonoras, causando 35% de dano.",
           },
         },
+        iop: {
+          characterName: "IOP",
+          passive: {
+            name: "EM DESENVOLVIMENTO",
+            description: "A habilidade passiva de Iop ainda não foi definida.",
+          },
+          special: {
+            name: "SPECIAL",
+            description: "Executa o golpe especial de Iop.",
+          },
+          ultimate: {
+            name: "ULTIMATE",
+            description: "Executa o golpe ultimate de Iop.",
+          },
+        },
       };
       const ANIMATION_FRAME_LIMITS = Object.freeze({
         idle: 60,
@@ -3880,6 +3922,10 @@
         doll: {
           src: "../../game-assets/ui/character-select/fighter-doll.png?v=20260618-doll-alpha-glitch",
           className: "doll",
+        },
+        iop: {
+          src: "../../game-assets/ui/character-select/fighter-iop.png?v=20260714-iop-portrait",
+          className: "iop",
         },
       };
       const ULTIMATE_CINEMATIC_INTRO_MS = 680;
@@ -3969,11 +4015,11 @@
       const hitEffects = {
         Combo: {
           className: "combo-impact",
-          framePattern: "../../game-assets/effects/combo-impact/combo-impact-{frame}.webp",
-          frameCount: 51,
+          framePattern: "../../game-assets/effects/combo-impact/combo-impact-{frame}.webp?v=20260714-combo",
+          frameCount: 47,
           framePad: 3,
           frameIntervalMs: 33,
-          audioPath: "../../game-assets/audio/combo-impact.mp3",
+          audioPath: "../../game-assets/audio/combo-impact.mp3?v=20260714-combo",
         },
         Poke: {
           className: "poke-impact",
@@ -5355,6 +5401,10 @@
         el.p2BlockShield.classList.remove("is-visible");
       }
 
+      function hideBlockShieldEffects(sides) {
+        sides.forEach((side) => blockShieldElement(side).classList.remove("is-visible"));
+      }
+
       function showBlockShieldEffects(sides) {
         sides.forEach((side) => {
           const shield = blockShieldElement(side);
@@ -5494,11 +5544,11 @@
         const blockingSides = [];
         const specialSides = [];
 
-        if (p1Action === "Block" && p2Action !== "Grab" && !deferredSides.includes("p1")) {
+        if (p1Action === "Block" && !deferredSides.includes("p1")) {
           blockingSides.push("p1");
         }
 
-        if (p2Action === "Block" && p1Action !== "Grab" && !deferredSides.includes("p2")) {
+        if (p2Action === "Block" && !deferredSides.includes("p2")) {
           blockingSides.push("p2");
         }
 
@@ -5510,11 +5560,11 @@
           crouchingSides.push("p2");
         }
 
-        if (p1Action === "Jump" && !["Poke", "Combo", "Special"].includes(p2Action)) {
+        if (p1Action === "Jump" && !["Poke", "Combo"].includes(p2Action)) {
           jumpingSides.push("p1");
         }
 
-        if (p2Action === "Jump" && !["Poke", "Combo", "Special"].includes(p1Action)) {
+        if (p2Action === "Jump" && !["Poke", "Combo"].includes(p1Action)) {
           jumpingSides.push("p2");
         }
 
@@ -5585,6 +5635,7 @@
         const knockedDown = result.knockedDown || [];
         addSequenceDamage(damageLosses);
         flashDamagedFighters(result.damaged || []);
+        hideBlockShieldEffects(knockedDown);
         playKnockdownAnimation(knockedDown);
         if (knockedDown.length) {
           playSound("knockdown");
@@ -7689,6 +7740,10 @@
 
           if (result.type === "hit" && result.winner && !isUltimateHit && winningAction !== "Special") {
             window.setTimeout(() => {
+              const losingAction = result.winner === "p1" ? p2Action : p1Action;
+              if (winningAction === "Poke" && losingAction === "Crouch" && result.loser) {
+                clearSpriteAnimation(result.loser);
+              }
               animateHit(result.winner);
               connectedHitEffects(result, p1Action, p2Action)
                 .forEach(({ side, action }) => playHitEffect(side, action));
@@ -9030,7 +9085,7 @@
           addVisualFrames(frameSet, loadout.crouchFrames);
         }
 
-        if (action === "Jump" && !["Poke", "Combo", "Special"].includes(opponentAction)) {
+        if (action === "Jump" && !["Poke", "Combo"].includes(opponentAction)) {
           addVisualFrames(frameSet, loadout.jumpFrames);
         }
 

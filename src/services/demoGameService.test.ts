@@ -24,6 +24,16 @@ describe("DemoGameService replay source", () => {
     vi.unstubAllGlobals();
   });
 
+  it("unlocks newly added default characters in existing demo saves", async () => {
+    window.localStorage.setItem("finalGenesis.demoState", JSON.stringify({
+      unlockedCharacterIds: ["ninja", "itzcoatl", "aton", "doll"],
+    }));
+
+    const snapshot = await new DemoGameService().getSnapshot();
+
+    expect(snapshot.unlockedCharacterIds).toContain("iop");
+  });
+
   it("keeps resolved turns after the current match changes and after sign out", async () => {
     const service = new DemoGameService();
     await service.signInWithGoogle();

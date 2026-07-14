@@ -15,6 +15,7 @@ const defaultCharacterRows = [
   { id: "itzcoatl", name: "Itzcoatl", portrait_url: "/assets/ui/character-select/fighter-shaman.webp", enabled: true, is_default: true, sort_order: 20 },
   { id: "aton", name: "Aton", portrait_url: "/assets/ui/character-select/fighter-urban.webp", enabled: true, is_default: true, sort_order: 30 },
   { id: "doll", name: "Doll.exe", portrait_url: "/assets/ui/character-select/fighter-doll.png", enabled: true, is_default: true, sort_order: 40 },
+  { id: "iop", name: "Iop", portrait_url: "/assets/ui/character-select/fighter-iop.png", enabled: true, is_default: true, sort_order: 50 },
   { id: "coming-soon", name: "Em breve", portrait_url: "/assets/ui/character-select/fighter-coming-soon-face-question.webp", enabled: false, is_default: false, sort_order: 90 },
 ];
 
@@ -23,6 +24,7 @@ const defaultCharacterUnlockRules = [
   { character_id: "itzcoatl", required_division: "Autoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
   { character_id: "aton", required_division: "Autoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
   { character_id: "doll", required_division: "Autoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
+  { character_id: "iop", required_division: "Autoprimata III", required_points: 0, description: "Disponivel desde o inicio" },
   { character_id: "coming-soon", required_division: "Prata III", required_points: 800, description: "Personagem futuro por ranking" },
 ];
 
