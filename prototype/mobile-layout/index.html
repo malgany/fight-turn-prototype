@@ -2374,6 +2374,25 @@
         transition: opacity 140ms ease, transform 180ms ease;
       }
 
+      .character-preview-art.is-entering {
+        animation: character-preview-enter 260ms cubic-bezier(0.2, 0.88, 0.28, 1) both;
+      }
+
+      @keyframes character-preview-enter {
+        0% {
+          opacity: 0;
+          transform: translate(var(--preview-x, 0), calc(var(--preview-y, 3%) + 4%)) scale(var(--preview-scale, 1));
+        }
+        68% {
+          opacity: 1;
+          transform: translate(var(--preview-x, 0), calc(var(--preview-y, 3%) - 0.6%)) scale(var(--preview-scale, 1));
+        }
+        100% {
+          opacity: 1;
+          transform: translate(var(--preview-x, 0), var(--preview-y, 3%)) scale(var(--preview-scale, 1));
+        }
+      }
+
       .character-preview-art.ninja {
         --preview-width: min(92%, 430px);
         --preview-y: -5%;
@@ -2602,6 +2621,10 @@
       .character-nameplate span {
         display: block;
         transform: skewX(8deg);
+      }
+
+      .character-card:is([data-character="ninja"], [data-character="itzcoatl"]) .character-nameplate {
+        font-size: clamp(6px, 1.95cqw, 10px);
       }
 
       .character-select-actions {
@@ -3260,7 +3283,7 @@
             <span class="character-portrait-window" aria-hidden="true">
               <img class="character-art ninja" src="../../game-assets/ui/character-select/fighter-ninja.webp?v=20260608-despill" alt="" draggable="false">
             </span>
-            <span class="character-nameplate"><span>NINJA</span></span>
+            <span class="character-nameplate"><span>KRAMPUS</span></span>
           </button>
 
           <button class="character-card" type="button" role="listitem" data-character="itzcoatl" aria-pressed="false">
@@ -3298,7 +3321,7 @@
             <span class="character-selection-badge p1" aria-hidden="true">P1</span>
             <span class="character-selection-badge p2" aria-hidden="true">P2</span>
             <span class="character-portrait-window" aria-hidden="true">
-              <img class="character-art iop" src="../../game-assets/ui/character-select/fighter-iop.png?v=20260714-iop-portrait" alt="" draggable="false">
+              <img class="character-art iop" src="../../game-assets/ui/character-select/fighter-iop.png?v=20260714-iop-portrait-v2" alt="" draggable="false">
             </span>
             <span class="character-nameplate"><span>IOP</span></span>
           </button>
@@ -3819,7 +3842,7 @@
         itzcoatl: "../../game-assets/characters/itzcoatl/itzcoatl.json?v=20260609-special-offset",
         aton: "../../game-assets/characters/urban/urban.json?v=20260608-aton-position-plus",
         doll: "../../game-assets/characters/doll/doll.json?v=20260620-doll-jump-odd-slow",
-        iop: "../../game-assets/characters/iop/iop.json?v=20260714-iop-crouch-special-tune",
+        iop: "../../game-assets/characters/iop/iop.json?v=20260714-iop-ultimate-audio-delay-1800",
       };
       const CHARACTER_ABILITIES = {
         ninja: {
@@ -3885,16 +3908,16 @@
         iop: {
           characterName: "IOP",
           passive: {
-            name: "EM DESENVOLVIMENTO",
-            description: "A habilidade passiva de Iop ainda não foi definida.",
+            name: "ÍRIS DE VHALOR",
+            description: "Após a Ultimate se conectar, ser bloqueada ou evitada com CROUCH, Iop desperta Berserk: seus ataques ofensivos recebem +5% de dano. Chip Damage não é alterado.",
           },
           special: {
-            name: "SPECIAL",
-            description: "Executa o golpe especial de Iop.",
+            name: "PUNIÇÃO DE KARYŪ",
+            description: "Iop libera a lendária Chama da Punição, a técnica que originou o sopro de fogo dominado pelos dragões atuais. Efeito: causa 25% de dano.",
           },
           ultimate: {
-            name: "ULTIMATE",
-            description: "Executa o golpe ultimate de Iop.",
+            name: "CATACLISMO PRIMORDIAL",
+            description: "Causa 25% de dano ao conectar. Se conectar, for bloqueada ou evitada com CROUCH, Iop recupera 10% de Vida, ativa Berserk e não pode usar Ultimate novamente. Se for interrompida, não aplica efeito.",
           },
         },
       };
@@ -3924,7 +3947,7 @@
           className: "doll",
         },
         iop: {
-          src: "../../game-assets/ui/character-select/fighter-iop.png?v=20260714-iop-portrait",
+          src: "../../game-assets/ui/character-select/fighter-iop.png?v=20260714-iop-portrait-v2",
           className: "iop",
         },
       };
@@ -4105,6 +4128,8 @@
         p1: { health: 100, super: 0 },
         p2: { health: 100, super: 0 },
         itzcoatlResurrectionUsed: { p1: false, p2: false },
+        iopPassiveActive: { p1: false, p2: false },
+        iopUltimateUsed: { p1: false, p2: false },
         ultimateHealthThresholdsReached: { p1: [], p2: [] },
         healthTrail: { p1: 100, p2: 100 },
         healthTrailTimers: { p1: null, p2: null },
@@ -5359,8 +5384,16 @@
       function specialAnimationFrameDelay(side, frameNumber) {
         const special = characterLoadoutForSide(side).specialAnimation;
         const startFrame = frameNumber ?? Math.max(1, special.frameCount - 20);
-        const startFrameIndex = Math.max(0, Math.min(special.frameCount - 1, startFrame - 1));
-        return animationStartDelay(special, startFrameIndex);
+        const frameStart = Number.isInteger(special.frameStart) ? special.frameStart : 1;
+        const frameStep = Number.isInteger(special.frameStep) && special.frameStep > 0 ? special.frameStep : 1;
+        const sourceFrameNumbers = Array.from(
+          { length: special.frameCount },
+          (_, index) => frameStart + index * frameStep,
+        );
+        const playbackFrameNumbers = sampleAnimationFrameNumbers(sourceFrameNumbers, ANIMATION_FRAME_LIMITS.special);
+        const matchingFrameIndex = playbackFrameNumbers.findIndex((sourceFrame) => sourceFrame >= startFrame);
+        const startFrameIndex = matchingFrameIndex >= 0 ? matchingFrameIndex : playbackFrameNumbers.length - 1;
+        return animationStartDelay(special, Math.max(0, startFrameIndex));
       }
 
       function scheduleSpecialLunge(side) {
@@ -5622,13 +5655,16 @@
         return duration + 120;
       }
 
-      function shouldUseNinjaSpecialImpact(result, winningAction) {
-        return result.type === "hit" && result.winner && characterLoadoutForSide(result.winner).id === "ninja" && winningAction === "Special";
+      function shouldUseConfiguredSpecialImpact(result, winningAction) {
+        return result.type === "hit"
+          && result.winner
+          && winningAction === "Special"
+          && Number.isFinite(characterLoadoutForSide(result.winner).specialAnimation.impactFrame);
       }
 
-      function ninjaSpecialImpactDelay(side) {
+      function configuredSpecialImpactDelay(side) {
         const special = characterLoadoutForSide(side).specialAnimation;
-        return specialAnimationFrameDelay(side, special.impactFrame ?? special.lungeStartFrame);
+        return specialAnimationFrameDelay(side, special.impactFrame);
       }
 
       function playTurnImpactFeedback(result, damageLosses, wasGuaranteedTurn) {
@@ -5855,7 +5891,7 @@
         }
 
         if (action === "Super") {
-          return state[side].super >= 3;
+          return state[side].super >= 3 && !(isIop(side) && state.iopUltimateUsed?.[side]);
         }
 
         return true;
@@ -7213,6 +7249,14 @@
         return activeCharacterIds[side] === "aton";
       }
 
+      function isIop(side) {
+        return activeCharacterIds[side] === "iop";
+      }
+
+      function isIopUltimate(side, action) {
+        return action === "Super" && isIop(side);
+      }
+
       function isDollAction(side, action, expectedAction) {
         return action === expectedAction && isDoll(side);
       }
@@ -7240,6 +7284,11 @@
 
         if (isDollSpecial(side, action)) {
           return 15;
+        }
+
+        if (isIop(side)) {
+          const baseDamage = action === "Special" ? 25 : actionData[action].damage;
+          return baseDamage + (state.iopPassiveActive?.[side] ? 5 : 0);
         }
 
         if (isItzcoatl(side) && action === "Special") {
@@ -7331,7 +7380,7 @@
       }
 
       function consumeSuper(side, action) {
-        if (action === "Super" && !state.debugMode) {
+        if (action === "Super" && !isIop(side) && !state.debugMode) {
           state[side].super = 0;
         }
       }
@@ -7391,6 +7440,27 @@
           knockedDown: [],
           guaranteedTurn: null,
         };
+      }
+
+      function activateIopUltimate(result, side) {
+        state[side].super = 0;
+        state.iopUltimateUsed = { ...state.iopUltimateUsed, [side]: true };
+        state.iopPassiveActive = { ...state.iopPassiveActive, [side]: true };
+        return addHealingToResult(result, side, applyHeal(side, 10));
+      }
+
+      function applyIopUltimateOutcome(result, p1Action, p2Action) {
+        let nextResult = result;
+        ["p1", "p2"].forEach((side) => {
+          const action = side === "p1" ? p1Action : p2Action;
+          const response = side === "p1" ? p2Action : p1Action;
+          const ultimateResolved = isIopUltimate(side, action)
+            && (result.winner === side || response === "Block" || response === "Crouch");
+          if (ultimateResolved) {
+            nextResult = activateIopUltimate(nextResult, side);
+          }
+        });
+        return nextResult;
       }
 
       function resolveAttackVsAttack(p1Action, p2Action) {
@@ -7601,6 +7671,14 @@
           p1: Boolean(after.itzcoatlResurrectionUsed?.p1),
           p2: Boolean(after.itzcoatlResurrectionUsed?.p2),
         };
+        state.iopPassiveActive = {
+          p1: Boolean(after.iopPassiveActive?.p1),
+          p2: Boolean(after.iopPassiveActive?.p2),
+        };
+        state.iopUltimateUsed = {
+          p1: Boolean(after.iopUltimateUsed?.p1),
+          p2: Boolean(after.iopUltimateUsed?.p2),
+        };
         state.ultimateHealthThresholdsReached = {
           p1: [...(after.ultimateHealthThresholdsReached?.p1 || [])],
           p2: [...(after.ultimateHealthThresholdsReached?.p2 || [])],
@@ -7682,6 +7760,7 @@
             result = { type: "draw", winner: null, loser: null, primary: "NEUTRO", secondary: `${displayActionName(p1Action)} vs ${displayActionName(p2Action)}`, damaged: [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: null };
           }
 
+          result = applyIopUltimateOutcome(result, p1Action, p2Action);
           result = applyItzcoatlResurrection(result);
 
           if (state.p1.health > 0 && state.p2.health > 0) {
@@ -7714,17 +7793,17 @@
 
         const isUltimateHit = result.type === "hit" && winningAction === "Super";
         const damageLosses = getDamageLosses(beforeHealth);
-        const useNinjaSpecialImpact = shouldUseNinjaSpecialImpact(result, winningAction);
+        const useConfiguredSpecialImpact = shouldUseConfiguredSpecialImpact(result, winningAction);
         let gameOverQueued = false;
 
-        if (useNinjaSpecialImpact) {
+        if (useConfiguredSpecialImpact) {
           window.setTimeout(() => {
             playTurnImpactFeedback(result, damageLosses, wasGuaranteedTurn);
             if (state.p1.health <= 0 || state.p2.health <= 0) {
               gameOverQueued = true;
               window.setTimeout(showGameOver, 900);
             }
-          }, ninjaSpecialImpactDelay(result.winner));
+          }, configuredSpecialImpactDelay(result.winner));
         }
 
         el.turnMeterFill.style.width = "0%";
@@ -7761,14 +7840,14 @@
             if (deferUltimateResponse) {
               playDeferredUltimateResponseAnimation(ultimateResponseSide, ultimateResponseAction);
             }
-            if (!useNinjaSpecialImpact) {
+            if (!useConfiguredSpecialImpact) {
               playTurnImpactFeedback(result, damageLosses, wasGuaranteedTurn);
             }
             showStatePopups(result);
             flashNotice(result.primary);
 
             if (state.p1.health <= 0 || state.p2.health <= 0) {
-              if (useNinjaSpecialImpact) {
+              if (useConfiguredSpecialImpact) {
                 return;
               }
 
@@ -7890,6 +7969,8 @@
         state.p1.super = 0;
         state.p2.super = 0;
         state.itzcoatlResurrectionUsed = { p1: false, p2: false };
+        state.iopPassiveActive = { p1: false, p2: false };
+        state.iopUltimateUsed = { p1: false, p2: false };
         state.ultimateHealthThresholdsReached = { p1: [], p2: [] };
         state.advantage = null;
         state.guaranteedTurn = null;
@@ -8164,8 +8245,18 @@
         if (selectedCard && el.characterPreviewArt) {
           const selectedArt = selectedCard.querySelector(".character-art");
           const characterClasses = [...selectedArt.classList].filter((className) => className !== "character-art");
-          el.characterPreviewArt.src = selectedArt.getAttribute("src");
+          const currentCharacterClasses = [...el.characterPreviewArt.classList]
+            .filter((className) => !["character-preview-art", "is-entering"].includes(className));
+          const nextSrc = selectedArt.getAttribute("src");
+          const characterChanged = el.characterPreviewArt.getAttribute("src") !== nextSrc
+            || currentCharacterClasses.join(" ") !== characterClasses.join(" ");
+
+          el.characterPreviewArt.src = nextSrc;
           el.characterPreviewArt.className = ["character-preview-art", ...characterClasses].join(" ");
+          if (characterChanged) {
+            void el.characterPreviewArt.offsetWidth;
+            el.characterPreviewArt.classList.add("is-entering");
+          }
         }
 
         el.characterConfirmButton.disabled = !CHARACTER_CONFIGS[state.selectedP1Character] || !CHARACTER_CONFIGS[state.selectedP2Character];
@@ -8861,6 +8952,14 @@
         state.itzcoatlResurrectionUsed = {
           p1: Boolean(battleState.itzcoatlResurrectionUsed?.p1),
           p2: Boolean(battleState.itzcoatlResurrectionUsed?.p2),
+        };
+        state.iopPassiveActive = {
+          p1: Boolean(battleState.iopPassiveActive?.p1),
+          p2: Boolean(battleState.iopPassiveActive?.p2),
+        };
+        state.iopUltimateUsed = {
+          p1: Boolean(battleState.iopUltimateUsed?.p1),
+          p2: Boolean(battleState.iopUltimateUsed?.p2),
         };
         state.ultimateHealthThresholdsReached = {
           p1: [...(battleState.ultimateHealthThresholdsReached?.p1 || [])],

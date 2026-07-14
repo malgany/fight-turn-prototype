@@ -1694,6 +1694,14 @@ export class App {
         p1: Boolean(state.itzcoatlResurrectionUsed?.[match.playerSide]),
         p2: Boolean(state.itzcoatlResurrectionUsed?.[opponentSide]),
       },
+      iopPassiveActive: {
+        p1: Boolean(state.iopPassiveActive?.[match.playerSide]),
+        p2: Boolean(state.iopPassiveActive?.[opponentSide]),
+      },
+      iopUltimateUsed: {
+        p1: Boolean(state.iopUltimateUsed?.[match.playerSide]),
+        p2: Boolean(state.iopUltimateUsed?.[opponentSide]),
+      },
       ultimateHealthThresholdsReached: {
         p1: [...(state.ultimateHealthThresholdsReached?.[match.playerSide] || [])],
         p2: [...(state.ultimateHealthThresholdsReached?.[opponentSide] || [])],

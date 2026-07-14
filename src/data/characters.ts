@@ -3,7 +3,7 @@ import type { CharacterDefinition } from "../types";
 export const characters: CharacterDefinition[] = [
   {
     id: "ninja",
-    name: "Ninja",
+    name: "Krampus",
     portraitUrl: "/game-assets/ui/character-select/fighter-ninja.webp",
     enabled: true,
     isDefault: true,

@@ -1,6 +1,6 @@
 {
   "id": "ninja",
-  "name": "Ninja",
+  "name": "Krampus",
   "actionAudio": {
     "special": "../../game-assets/audio/actions/special-ninja.mp3",
     "ultimate": "../../game-assets/audio/actions/ultimate-ninja.mp3"
@@ -69,7 +69,7 @@
       "frameCount": 107,
       "framePad": 3,
       "frameIntervalMs": 33,
-      "impactFrame": 72,
+      "impactFrame": 77,
       "scale": 1.84,
       "offsetXPercent": 0,
       "offsetYPercent": 0,

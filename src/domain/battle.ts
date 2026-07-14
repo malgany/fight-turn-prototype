@@ -47,6 +47,8 @@ export function createInitialBattleState(): BattleState {
     advantage: null,
     activeGuaranteedTurn: null,
     itzcoatlResurrectionUsed: { p1: false, p2: false },
+    iopPassiveActive: { p1: false, p2: false },
+    iopUltimateUsed: { p1: false, p2: false },
     ultimateHealthThresholdsReached: { p1: [], p2: [] },
     turnNumber: 1,
   };
@@ -56,7 +58,7 @@ export function displayActionName(action: Action | "Wait"): string {
   return actionNames[action];
 }
 
-export function canUseAction(state: BattleState, side: Side, action: Action): boolean {
+export function canUseAction(state: BattleState, side: Side, action: Action, context: BattleCharacterContext = {}): boolean {
   const guaranteedTurn = state.activeGuaranteedTurn;
 
   if (guaranteedTurn) {
@@ -65,7 +67,7 @@ export function canUseAction(state: BattleState, side: Side, action: Action): bo
   }
 
   if (action === "Super") {
-    return state[side].super >= 3;
+    return state[side].super >= 3 && !(isIop(side, context) && state.iopUltimateUsed?.[side]);
   }
 
   return true;
@@ -78,6 +80,8 @@ function cloneState(state: BattleState): BattleState {
     advantage: state.advantage,
     activeGuaranteedTurn: state.activeGuaranteedTurn ? { ...state.activeGuaranteedTurn, allowedActions: [...state.activeGuaranteedTurn.allowedActions] } : null,
     itzcoatlResurrectionUsed: { ...(state.itzcoatlResurrectionUsed || {}) },
+    iopPassiveActive: { ...(state.iopPassiveActive || {}) },
+    iopUltimateUsed: { ...(state.iopUltimateUsed || {}) },
     ultimateHealthThresholdsReached: {
       p1: [...(state.ultimateHealthThresholdsReached?.p1 || [])],
       p2: [...(state.ultimateHealthThresholdsReached?.p2 || [])],
@@ -142,8 +146,8 @@ function applyHeal(state: BattleState, side: Side, amount: number): number {
   return Math.max(0, state[side].health - previousHealth);
 }
 
-function consumeSuper(state: BattleState, side: Side, action: Action | null): void {
-  if (action === "Super") {
+function consumeSuper(state: BattleState, side: Side, action: Action | null, context: BattleCharacterContext): void {
+  if (action === "Super" && !isIop(side, context)) {
     state[side].super = 0;
   }
 }
@@ -164,6 +168,14 @@ function isAton(side: Side, context: BattleCharacterContext): boolean {
   return (side === "p1" ? context.p1CharacterId : context.p2CharacterId) === "aton";
 }
 
+function isIop(side: Side, context: BattleCharacterContext): boolean {
+  return (side === "p1" ? context.p1CharacterId : context.p2CharacterId) === "iop";
+}
+
+function isIopUltimate(side: Side, action: Action | "Wait" | null, context: BattleCharacterContext): boolean {
+  return action === "Super" && isIop(side, context);
+}
+
 function isDollAction(side: Side, action: Action | "Wait" | null, expectedAction: Action, context: BattleCharacterContext): boolean {
   return action === expectedAction && isDoll(side, context);
 }
@@ -181,9 +193,13 @@ function causesKnockdown(action: Action | "Wait", targetAction: Action | "Wait",
   return action === "Combo" && targetAction === "Jump";
 }
 
-function actionDamage(side: Side, action: Action | "Wait", context: BattleCharacterContext): number {
+function actionDamage(state: BattleState, side: Side, action: Action | "Wait", context: BattleCharacterContext): number {
   if (action === "Wait") return 0;
   if (isDollSpecial(side, action, context)) return 15;
+  if (isIop(side, context)) {
+    const baseDamage = action === "Special" ? 25 : actionData[action].damage || 0;
+    return baseDamage + (state.iopPassiveActive?.[side] ? 5 : 0);
+  }
   if (isItzcoatl(side, context) && action === "Special") return 25;
   if (isItzcoatl(side, context) && action === "Super") return 35;
   if (isAton(side, context) && action === "Special") return 25;
@@ -325,12 +341,41 @@ function resolveBothDollUltimatesHeal(state: BattleState) {
   };
 }
 
+function activateIopUltimate<T extends { healed: Side[]; healing?: Partial<Record<Side, number>> }>(
+  state: BattleState,
+  result: T,
+  side: Side,
+): T {
+  state[side].super = 0;
+  state.iopUltimateUsed = { ...state.iopUltimateUsed, [side]: true };
+  state.iopPassiveActive = { ...state.iopPassiveActive, [side]: true };
+  return addHealingToResult(result, side, applyHeal(state, side, 10));
+}
+
+function applyIopUltimateOutcome<T extends { winner: Side | null; healed: Side[]; healing?: Partial<Record<Side, number>> }>(
+  state: BattleState,
+  result: T,
+  p1Action: Action | null,
+  p2Action: Action | null,
+  context: BattleCharacterContext,
+): T {
+  let nextResult = result;
+  (["p1", "p2"] as Side[]).forEach((side) => {
+    const action = side === "p1" ? p1Action : p2Action;
+    const response = side === "p1" ? p2Action : p1Action;
+    const ultimateResolved = isIopUltimate(side, action, context)
+      && (result.winner === side || response === "Block" || response === "Crouch");
+    if (ultimateResolved) nextResult = activateIopUltimate(state, nextResult, side);
+  });
+  return nextResult;
+}
+
 function resolveHit(state: BattleState, winner: Side, p1Action: Action | "Wait", p2Action: Action | "Wait", advantageWin = false, context: BattleCharacterContext = {}) {
   const loser = opposite(winner);
   const action = winner === "p1" ? p1Action : p2Action;
   const targetAction = winner === "p1" ? p2Action : p1Action;
   const isDollSpecialHit = isDollSpecial(winner, action, context);
-  const damage = actionDamage(winner, action, context);
+  const damage = actionDamage(state, winner, action, context);
   const knockedDown = causesKnockdown(action, targetAction, winner, context) ? [loser] : [];
   const guaranteedTurn = action === "Combo" && targetAction !== "Jump" ? guaranteeTurn(winner, comboGuaranteedActions, "COMBO ACERTOU") : null;
 
@@ -499,8 +544,8 @@ export function resolveBattleTurn(currentState: BattleState, p1Action: Action | 
   const guaranteedTurn = currentState.activeGuaranteedTurn;
   state.activeGuaranteedTurn = null;
 
-  consumeSuper(state, "p1", p1Action);
-  consumeSuper(state, "p2", p2Action);
+  consumeSuper(state, "p1", p1Action, context);
+  consumeSuper(state, "p2", p2Action, context);
 
   let partial = baseResult(state, p1Action, p2Action);
   const dollUltimateSide = isDollUltimate("p1", p1Action, context)
@@ -547,6 +592,7 @@ export function resolveBattleTurn(currentState: BattleState, p1Action: Action | 
     partial = { ...partial, primary: "NEUTRO", secondary: `${displayActionName(p1Action)} vs ${displayActionName(p2Action)}` };
   }
 
+  partial = applyIopUltimateOutcome(state, partial, p1Action, p2Action, context);
   state.activeGuaranteedTurn = partial.guaranteedTurn;
   state.turnNumber = currentState.turnNumber + 1;
 

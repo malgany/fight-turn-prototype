@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createInitialBattleState, resolveBattleTurn } from "./battle";
+import { canUseAction, createInitialBattleState, resolveBattleTurn } from "./battle";
 
 describe("resolveBattleTurn", () => {
   it("keeps both actions hidden until resolution and resolves faster attack", () => {
@@ -120,6 +120,75 @@ describe("resolveBattleTurn", () => {
     expect(result.type).toBe("hit");
     expect(result.winner).toBe("p1");
     expect(result.after.p2.health).toBe(84);
+  });
+
+  it("uses Iop's 25% base Special damage", () => {
+    const result = resolveBattleTurn(createInitialBattleState(), "Special", "Jump", { p1CharacterId: "iop", p2CharacterId: "ninja" });
+
+    expect(result.after.p2.health).toBe(75);
+  });
+
+  it("activates Iop's passive and heals after an Ultimate connects", () => {
+    const state = createInitialBattleState();
+    state.p1.health = 70;
+    state.p1.super = 3;
+    const ultimate = resolveBattleTurn(state, "Super", "Jump", { p1CharacterId: "iop", p2CharacterId: "ninja" });
+    const empoweredSpecial = resolveBattleTurn(ultimate.after, "Special", "Jump", { p1CharacterId: "iop", p2CharacterId: "ninja" });
+
+    expect(ultimate.after.p2.health).toBe(75);
+    expect(ultimate.after.p1.health).toBe(80);
+    expect(ultimate.healing?.p1).toBe(10);
+    expect(ultimate.after.iopPassiveActive?.p1).toBe(true);
+    expect(ultimate.after.iopUltimateUsed?.p1).toBe(true);
+    expect(ultimate.after.p1.super).toBe(0);
+    expect(empoweredSpecial.after.p2.health).toBe(45);
+  });
+
+  it.each(["Block", "Crouch"] as const)("activates Iop's Ultimate benefits when the opponent uses %s", (response) => {
+    const state = createInitialBattleState();
+    state.p1.health = 70;
+    state.p1.super = 3;
+    const result = resolveBattleTurn(state, "Super", response, { p1CharacterId: "iop", p2CharacterId: "ninja" });
+
+    expect(result.after.p1.health).toBe(80);
+    expect(result.after.iopPassiveActive?.p1).toBe(true);
+    expect(result.after.iopUltimateUsed?.p1).toBe(true);
+    expect(result.after.p1.super).toBe(0);
+    expect(canUseAction(result.after, "p1", "Super", { p1CharacterId: "iop" })).toBe(false);
+  });
+
+  it("keeps Iop's Ultimate ready when an attack interrupts it", () => {
+    const state = createInitialBattleState();
+    state.p1.super = 3;
+    const result = resolveBattleTurn(state, "Super", "Poke", { p1CharacterId: "iop", p2CharacterId: "ninja" });
+
+    expect(result.winner).toBe("p2");
+    expect(result.after.p1.health).toBe(94);
+    expect(result.after.iopPassiveActive?.p1).toBe(false);
+    expect(result.after.iopUltimateUsed?.p1).toBe(false);
+    expect(result.after.p1.super).toBe(3);
+    expect(canUseAction(result.after, "p1", "Super", { p1CharacterId: "iop" })).toBe(true);
+  });
+
+  it("does not apply Iop's passive to block damage", () => {
+    const state = createInitialBattleState();
+    state.iopPassiveActive = { p1: true, p2: false };
+    const result = resolveBattleTurn(state, "Special", "Block", { p1CharacterId: "iop", p2CharacterId: "ninja" });
+
+    expect(result.after.p2.health).toBe(98);
+  });
+
+  it.each([
+    ["Poke", "Jump", 11],
+    ["Combo", "Jump", 25],
+    ["Grab", "Block", 21],
+    ["Special", "Jump", 30],
+  ] as const)("raises Iop's %s damage to %i while Berserk is active", (action, response, damage) => {
+    const state = createInitialBattleState();
+    state.iopPassiveActive = { p1: true, p2: false };
+    const result = resolveBattleTurn(state, action, response, { p1CharacterId: "iop", p2CharacterId: "ninja" });
+
+    expect(result.after.p2.health).toBe(100 - damage);
   });
 
   it("applies updated Doll special damage and lifesteal on hit", () => {

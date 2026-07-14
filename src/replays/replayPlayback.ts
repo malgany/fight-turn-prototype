@@ -38,6 +38,8 @@ function cloneBattleState(state: BattleState): BattleState {
       ? { ...state.activeGuaranteedTurn, allowedActions: [...state.activeGuaranteedTurn.allowedActions] }
       : null,
     itzcoatlResurrectionUsed: { ...(state.itzcoatlResurrectionUsed || {}) },
+    iopPassiveActive: { ...(state.iopPassiveActive || {}) },
+    iopUltimateUsed: { ...(state.iopUltimateUsed || {}) },
     ultimateHealthThresholdsReached: {
       p1: [...(state.ultimateHealthThresholdsReached?.p1 || [])],
       p2: [...(state.ultimateHealthThresholdsReached?.p2 || [])],

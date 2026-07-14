@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 const defaultCharacterRows = [
-  { id: "ninja", name: "Ninja", portrait_url: "/assets/ui/character-select/fighter-ninja.webp", enabled: true, is_default: true, sort_order: 10 },
+  { id: "ninja", name: "Krampus", portrait_url: "/assets/ui/character-select/fighter-ninja.webp", enabled: true, is_default: true, sort_order: 10 },
   { id: "itzcoatl", name: "Itzcoatl", portrait_url: "/assets/ui/character-select/fighter-shaman.webp", enabled: true, is_default: true, sort_order: 20 },
   { id: "aton", name: "Aton", portrait_url: "/assets/ui/character-select/fighter-urban.webp", enabled: true, is_default: true, sort_order: 30 },
   { id: "doll", name: "Doll.exe", portrait_url: "/assets/ui/character-select/fighter-doll.png", enabled: true, is_default: true, sort_order: 40 },
@@ -173,6 +173,8 @@ function initialBattleState() {
     advantage: null,
     activeGuaranteedTurn: null,
     itzcoatlResurrectionUsed: { p1: false, p2: false },
+    iopPassiveActive: { p1: false, p2: false },
+    iopUltimateUsed: { p1: false, p2: false },
     ultimateHealthThresholdsReached: { p1: [], p2: [] },
     turnNumber: 1,
   };
@@ -232,8 +234,8 @@ function applyHeal(state: any, side: Side, amount: number) {
   return Math.max(0, state[side].health - previousHealth);
 }
 
-function consumeSuper(state: any, side: Side, action: Action | null) {
-  if (action === "Super") state[side].super = 0;
+function consumeSuper(state: any, side: Side, action: Action | null, context: any) {
+  if (action === "Super" && !isIop(side, context)) state[side].super = 0;
 }
 
 function isDoll(side: Side, context: any) {
@@ -252,6 +254,14 @@ function isAton(side: Side, context: any) {
   return (side === "p1" ? context?.p1CharacterId : context?.p2CharacterId) === "aton";
 }
 
+function isIop(side: Side, context: any) {
+  return (side === "p1" ? context?.p1CharacterId : context?.p2CharacterId) === "iop";
+}
+
+function isIopUltimate(side: Side, action: Action | "Wait" | null, context: any) {
+  return action === "Super" && isIop(side, context);
+}
+
 function isDollAction(side: Side, action: Action | "Wait" | null, expectedAction: Action, context: any) {
   return action === expectedAction && isDoll(side, context);
 }
@@ -268,9 +278,13 @@ function causesKnockdown(action: Action | "Wait", targetAction: Action | "Wait",
   return action === "Grab" || action === "Special" || action === "Super" || (action === "Combo" && targetAction === "Jump");
 }
 
-function actionDamage(side: Side, action: Action | "Wait", context: any) {
+function actionDamage(state: any, side: Side, action: Action | "Wait", context: any) {
   if (action === "Wait") return 0;
   if (isDollSpecial(side, action, context)) return 15;
+  if (isIop(side, context)) {
+    const baseDamage = action === "Special" ? 25 : actionData[action].damage || 0;
+    return baseDamage + (state.iopPassiveActive?.[side] ? 5 : 0);
+  }
   if (isItzcoatl(side, context) && action === "Special") return 25;
   if (isItzcoatl(side, context) && action === "Super") return 35;
   if (isAton(side, context) && action === "Special") return 25;
@@ -377,12 +391,31 @@ function resolveBothDollUltimatesHeal(state: any) {
   };
 }
 
+function activateIopUltimate(state: any, result: any, side: Side) {
+  state[side].super = 0;
+  state.iopUltimateUsed = { ...state.iopUltimateUsed, [side]: true };
+  state.iopPassiveActive = { ...state.iopPassiveActive, [side]: true };
+  return addHealingToResult(result, side, applyHeal(state, side, 10));
+}
+
+function applyIopUltimateOutcome(state: any, result: any, p1Action: Action | null, p2Action: Action | null, context: any) {
+  let nextResult = result;
+  (["p1", "p2"] as Side[]).forEach((side) => {
+    const action = side === "p1" ? p1Action : p2Action;
+    const response = side === "p1" ? p2Action : p1Action;
+    const ultimateResolved = isIopUltimate(side, action, context)
+      && (result.winner === side || response === "Block" || response === "Crouch");
+    if (ultimateResolved) nextResult = activateIopUltimate(state, nextResult, side);
+  });
+  return nextResult;
+}
+
 function resolveHit(state: any, winner: Side, p1Action: Action | "Wait", p2Action: Action | "Wait", advantageWin = false, context: any = {}) {
   const loser = opposite(winner);
   const action = winner === "p1" ? p1Action : p2Action;
   const targetAction = winner === "p1" ? p2Action : p1Action;
   const isDollSpecialHit = isDollSpecial(winner, action, context);
-  const damage = actionDamage(winner, action, context);
+  const damage = actionDamage(state, winner, action, context);
   const knockedDown = causesKnockdown(action, targetAction, winner, context) ? [loser] : [];
   const guaranteedTurn = action === "Combo" && targetAction !== "Jump" ? guaranteeTurn(winner, comboGuaranteedActions, "COMBO ACERTOU") : null;
   applyDamage(state, loser, damage, action, { comboKnockdown: knockedDown.length > 0 });
@@ -412,8 +445,8 @@ export function resolveTurn(stateInput: any, p1Action: Action | null, p2Action: 
   };
   const guaranteedTurn = stateInput.activeGuaranteedTurn;
   state.activeGuaranteedTurn = null;
-  consumeSuper(state, "p1", p1Action);
-  consumeSuper(state, "p2", p2Action);
+  consumeSuper(state, "p1", p1Action, context);
+  consumeSuper(state, "p2", p2Action, context);
   let result: any = { type: "draw", winner: null, loser: null, primary: "NEUTRO", secondary: "Sem vantagem", damaged: [], healed: [], healing: {}, knockedDown: [], guaranteedTurn: null };
   const dollUltimateSide = isDollUltimate("p1", p1Action, context) ? "p1" : isDollUltimate("p2", p2Action, context) ? "p2" : null;
   const p1DollUltimate = isDollUltimate("p1", p1Action, context);
@@ -489,6 +522,7 @@ export function resolveTurn(stateInput: any, p1Action: Action | null, p2Action: 
     }
   }
 
+  result = applyIopUltimateOutcome(state, result, p1Action, p2Action, context);
   state.activeGuaranteedTurn = result.guaranteedTurn;
   state.turnNumber = state.turnNumber + 1;
   result = applyItzcoatlResurrection(state, result, context);
@@ -503,10 +537,10 @@ export function resolveTurn(stateInput: any, p1Action: Action | null, p2Action: 
   return { ...result, p1Action, p2Action, before, after: state, finished: p1DeadAfterPassive || p2DeadAfterPassive, matchWinner };
 }
 
-function canUseAction(state: any, side: Side, action: Action) {
+function canUseAction(state: any, side: Side, action: Action, context: any) {
   const guaranteed = state.activeGuaranteedTurn;
   if (guaranteed && (guaranteed.side !== side || !guaranteed.allowedActions.includes(action))) return false;
-  if (action === "Super") return state[side].super >= 3;
+  if (action === "Super") return state[side].super >= 3 && !(isIop(side, context) && state.iopUltimateUsed?.[side]);
   return true;
 }
 
@@ -1166,7 +1200,10 @@ async function operation(req: Request, name: string) {
       return toGameMatch(db, match, user.id);
     }
     const side: Side = match.player1_id === user.id ? "p1" : "p2";
-    if (!canUseAction(match.state, side, action)) throw new Error("Acao nao permitida neste turno.");
+    if (!canUseAction(match.state, side, action, {
+      p1CharacterId: match.player1_character_id,
+      p2CharacterId: match.player2_character_id,
+    })) throw new Error("Acao nao permitida neste turno.");
     if (new Date(match.turn_deadline_at).getTime() + ACTION_SUBMIT_GRACE_MS < Date.now()) {
       const updated = await resolveAndPersist(db, match);
       return toGameMatch(db, updated, user.id);

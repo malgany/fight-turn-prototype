@@ -141,6 +141,8 @@ export interface BattleState {
   advantage: Side | null;
   activeGuaranteedTurn: GuaranteedTurn | null;
   itzcoatlResurrectionUsed?: Partial<Record<Side, boolean>>;
+  iopPassiveActive?: Partial<Record<Side, boolean>>;
+  iopUltimateUsed?: Partial<Record<Side, boolean>>;
   ultimateHealthThresholdsReached?: Partial<Record<Side, number[]>>;
   turnNumber: number;
 }
