@@ -193,9 +193,17 @@ Projeto remoto configurado:
 
 Arquivos versionados:
 
-- `supabase/migrations/20260609190000_initial_online_schema.sql`
+- `supabase/migrations/*`
 - `supabase/functions/*`
 - `supabase/config.toml`
+
+Retencao automatica:
+
+- O job `final-genesis-data-retention` roda diariamente as `07:17 UTC`.
+- Salas privadas vencidas e filas encerradas sao preservadas por pelo menos 24 horas.
+- Partidas finalizadas ou abandonadas, incluindo turnos, acoes e historico relacionado, sao preservadas por 365 dias.
+- Partidas em andamento e filas com status `waiting` nunca sao removidas pelo job.
+- A funcao `cleanup_expired_game_data()` nao pode ser executada por clientes `anon` ou `authenticated`.
 
 Fluxo esperado:
 
