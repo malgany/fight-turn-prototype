@@ -78,6 +78,51 @@ export interface MatchHistoryEntry {
   createdAt: string;
 }
 
+export interface ReplayPlayerSnapshot {
+  userId: string;
+  displayName: string;
+  characterId: string;
+  rankPoints: number | null;
+  division: Division | null;
+}
+
+export interface ReplayTurnRecord {
+  turnNumber: number;
+  result: TurnResolution;
+}
+
+export interface ReplaySource {
+  matchId: string;
+  matchType: Extract<MatchType, "ranked" | "private">;
+  player1Id: string;
+  player2Id: string;
+  player1CharacterId: string | null;
+  player2CharacterId: string | null;
+  winnerId: string | null;
+  finishedReason: string | null;
+  createdAt: string;
+  finishedAt: string | null;
+  turns: ReplayTurnRecord[];
+}
+
+export interface LocalReplay {
+  schemaVersion: 1;
+  ownerId: string;
+  matchId: string;
+  matchType: Extract<MatchType, "ranked" | "private">;
+  playerSide: Side;
+  p1: ReplayPlayerSnapshot;
+  p2: ReplayPlayerSnapshot;
+  winnerId: string | null;
+  result: MatchResult | null;
+  finishedReason: string | null;
+  createdAt: string | null;
+  finishedAt: string | null;
+  favorite: boolean;
+  status: "pending" | "complete";
+  turns: ReplayTurnRecord[];
+}
+
 export interface FighterState {
   health: number;
   super: number;

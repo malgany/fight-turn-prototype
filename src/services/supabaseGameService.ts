@@ -11,6 +11,8 @@ import type {
   MatchHistoryEntry,
   PlayerProfile,
   PrivateRoom,
+  ReplaySource,
+  TurnResolution,
 } from "../types";
 import type { GameService, QueueResult } from "./gameService";
 
@@ -19,6 +21,21 @@ const DEFAULT_FUNCTION_TIMEOUT_MS = 10_000;
 const ACTION_FUNCTION_TIMEOUT_MS = 1_600;
 const FORFEIT_FUNCTION_TIMEOUT_MS = 30_000;
 const SERVER_CLOCK_TIMEOUT_MS = 750;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function isStoredTurnResolution(value: unknown): value is TurnResolution {
+  if (!isRecord(value) || !isRecord(value.before) || !isRecord(value.after)) return false;
+  return (
+    typeof value.primary === "string"
+    && typeof value.secondary === "string"
+    && typeof value.finished === "boolean"
+    && (value.p1Action === null || typeof value.p1Action === "string")
+    && (value.p2Action === null || typeof value.p2Action === "string")
+  );
+}
 
 function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number, message: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -48,7 +65,7 @@ export class SupabaseGameService implements GameService {
 
   private client() {
     if (!supabase) {
-      throw new Error("Supabase nao configurado.");
+      throw new Error("Supabase não configurado.");
     }
     return supabase;
   }
@@ -64,14 +81,14 @@ export class SupabaseGameService implements GameService {
 
   private functionUrl(name: string): string {
     if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error("Supabase nao configurado.");
+      throw new Error("Supabase não configurado.");
     }
     return `${supabaseUrl}/functions/v1/${encodeURIComponent(name)}`;
   }
 
   private rpcUrl(name: string): string {
     if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error("Supabase nao configurado.");
+      throw new Error("Supabase não configurado.");
     }
     return `${supabaseUrl}/rest/v1/rpc/${encodeURIComponent(name)}`;
   }
@@ -133,10 +150,10 @@ export class SupabaseGameService implements GameService {
       const {
         data: { session },
         error: sessionError,
-      } = await withTimeout(client.auth.getSession(), SESSION_LOOKUP_TIMEOUT_MS, "Timeout ao recuperar sessao.");
+      } = await withTimeout(client.auth.getSession(), SESSION_LOOKUP_TIMEOUT_MS, "Timeout ao recuperar sessão.");
 
       if (sessionError) throw sessionError;
-      if (!session) throw new Error("Sessao ausente.");
+      if (!session) throw new Error("Sessão ausente.");
       this.cachedAccessToken = session.access_token;
       return session.access_token;
     } catch (error) {
@@ -412,6 +429,61 @@ export class SupabaseGameService implements GameService {
     } catch {
       return null;
     }
+  }
+
+  async getReplaySource(matchId: string): Promise<ReplaySource> {
+    if (!matchId.trim()) throw new Error("Identificador da partida ausente para o replay.");
+
+    const { data: match, error: matchError } = await this.client()
+      .from("matches")
+      .select("id,match_type,player1_id,player2_id,player1_character_id,player2_character_id,winner_id,finished_reason,created_at,finished_at")
+      .eq("id", matchId)
+      .maybeSingle();
+    if (matchError) {
+      throw new Error(`Não foi possível carregar a partida do replay: ${matchError.message}`);
+    }
+    if (!match) throw new Error("Partida não encontrada para o replay.");
+    if (match.match_type !== "ranked" && match.match_type !== "private") {
+      throw new Error("Somente partidas ranqueadas ou privadas podem gerar replay.");
+    }
+    const { data: storedTurns, error: turnsError } = await this.client()
+      .from("match_turns")
+      .select("turn_number,result")
+      .eq("match_id", matchId)
+      .order("turn_number", { ascending: true });
+    if (turnsError) {
+      throw new Error(`Não foi possível carregar os turnos do replay: ${turnsError.message}`);
+    }
+
+    const turns = (storedTurns || []).map((storedTurn) => {
+      if (!Number.isInteger(storedTurn.turn_number) || storedTurn.turn_number < 1) {
+        throw new Error("O replay contem um numero de turno invalido.");
+      }
+      if (!isStoredTurnResolution(storedTurn.result)) {
+        throw new Error(`O turno ${storedTurn.turn_number} possui uma resolucao invalida.`);
+      }
+      return {
+        turnNumber: storedTurn.turn_number,
+        result: storedTurn.result,
+      };
+    });
+    if (turns.length > 0 && (!match.player1_character_id || !match.player2_character_id)) {
+      throw new Error("O replay não está disponível porque a seleção de personagens não foi concluída.");
+    }
+
+    return {
+      matchId: match.id,
+      matchType: match.match_type,
+      player1Id: match.player1_id,
+      player2Id: match.player2_id,
+      player1CharacterId: match.player1_character_id,
+      player2CharacterId: match.player2_character_id,
+      winnerId: match.winner_id,
+      finishedReason: match.finished_reason,
+      createdAt: match.created_at,
+      finishedAt: match.finished_at,
+      turns,
+    };
   }
 
   async getMatchedQueueMatch(): Promise<GameMatch | null> {

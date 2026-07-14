@@ -14,7 +14,7 @@ export function isNativeMobileApp(): boolean {
 
 export function authRedirectUrl(): string {
   if (isNativeMobileApp()) return mobileAuthRedirectUrl;
-  return `${window.location.origin}/auth/callback/`;
+  return `${window.location.origin}/auth/callback`;
 }
 
 function trimTrailingSlashes(value: string): string {

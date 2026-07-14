@@ -1098,13 +1098,11 @@
         transform: translateX(-50%) scale(1);
       }
 
-      .combo-hit-effect {
+      .hit-effect {
         position: absolute;
         left: 50%;
-        top: 48%;
+        top: 50%;
         z-index: 6;
-        width: 118%;
-        height: auto;
         opacity: 0;
         translate: -50% -50%;
         filter: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.48));
@@ -1112,7 +1110,22 @@
         pointer-events: none;
       }
 
-      .combo-hit-effect.is-visible {
+      .hit-effect.combo-impact {
+        width: auto;
+        height: 185%;
+      }
+
+      .hit-effect.poke-impact {
+        top: 62%;
+        width: 175%;
+        height: auto;
+      }
+
+      .fighter.p2 .hit-effect.poke-impact {
+        scale: -1 1;
+      }
+
+      .hit-effect.is-visible {
         opacity: 1;
       }
 
@@ -1341,7 +1354,7 @@
         scale: calc(1.452 * var(--advanced-debug-scale, 1));
       }
 
-      .combo-hit-effect.advanced-debug-adjusted {
+      .hit-effect.advanced-debug-adjusted {
         translate:
           calc(-50% + var(--advanced-debug-offset-x, 0px))
           calc(-50% + var(--advanced-debug-offset-y, 0px));
@@ -1629,6 +1642,54 @@
         padding: clamp(2px, 0.65cqw, 5px);
         background: transparent;
         z-index: 40;
+      }
+
+      .offline-exit-button {
+        position: absolute;
+        right: 2.8%;
+        bottom: 30.4%;
+        z-index: 96;
+        display: none;
+        width: clamp(40px, 11cqw, 52px);
+        aspect-ratio: 1;
+        padding: 7px;
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        border-radius: 7px;
+        background: rgba(239, 243, 247, 0.94);
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.48);
+      }
+
+      .offline-exit-button img {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      body.offline-battle-active .offline-exit-button {
+        display: block;
+      }
+
+      html.online-bridge-mode .offline-exit-button,
+      body.online-bridge-mode .offline-exit-button {
+        display: none !important;
+      }
+
+      .offline-exit-button:focus-visible {
+        outline: 3px solid #ffffff;
+        outline-offset: 3px;
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        .offline-exit-button:hover {
+          background: #ffffff;
+          transform: translateY(-1px);
+        }
+      }
+
+      .offline-exit-button:active,
+      .offline-exit-button.is-pressing {
+        transform: translateY(1px);
       }
 
       .action {
@@ -2534,8 +2595,8 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
         align-items: end;
         gap: clamp(7px, 2cqw, 12px);
-        width: 125%;
-        margin-left: -12.5%;
+        width: 100%;
+        margin: 0;
         padding: 0;
       }
 
@@ -2543,27 +2604,40 @@
         width: 100%;
         aspect-ratio: 2048 / 682;
         min-height: 0;
-        border: 0;
-        padding: 0;
-        background: center / contain no-repeat;
-        color: transparent;
+        border: clamp(1px, 0.45cqw, 2px) solid rgba(255, 255, 255, 0.72);
+        border-radius: 6px;
+        padding: 0 clamp(6px, 1.6cqw, 10px);
+        background: #172331;
+        color: #ffffff;
         font: inherit;
-        font-size: 0;
+        font-size: clamp(7px, 2.25cqw, 12px);
+        font-weight: 900;
+        line-height: 1;
         cursor: pointer;
+        text-shadow: 0 2px 0 #000;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.36), 0 0 8px rgba(0, 0, 0, 0.28);
         filter: drop-shadow(0 9px 6px rgba(0, 0, 0, 0.58));
         transition: filter 150ms ease, transform 150ms ease;
       }
 
       .character-select-button.back {
-        background-image: var(--character-select-back);
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 32%),
+          linear-gradient(#e14d4d, #a9141d 66%, #56070b);
+        border-color: rgba(255, 126, 126, 0.92);
+        box-shadow: inset 0 0 0 1px rgba(65, 0, 3, 0.52), 0 0 9px rgba(218, 31, 40, 0.28);
       }
 
       .character-select-button.confirm {
-        background-image: var(--character-select-confirm);
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent 32%),
+          linear-gradient(#55bd69, #22793a 66%, #0c3c1c);
+        border-color: rgba(137, 239, 155, 0.94);
+        box-shadow: inset 0 0 0 1px rgba(3, 54, 18, 0.54), 0 0 9px rgba(60, 205, 93, 0.28);
       }
 
       .character-select-button.abilities {
-        width: 70%;
+        width: 100%;
         aspect-ratio: 2048 / 682;
         justify-self: center;
         border: clamp(1px, 0.45cqw, 2px) solid rgba(116, 218, 232, 0.9);
@@ -3137,6 +3211,16 @@
         </div>
       </section>
 
+      <section class="exit-confirm" id="battleExitConfirm" aria-label="Confirmar saída da luta" aria-modal="true" role="dialog" aria-hidden="true">
+        <div class="exit-confirm-panel">
+          <h2 class="exit-confirm-title">Deseja sair da luta?</h2>
+          <div class="exit-confirm-actions">
+            <button class="exit-confirm-action" type="button" id="cancelBattleExitButton">Cancelar</button>
+            <button class="exit-confirm-action danger" type="button" id="confirmBattleExitButton">Sair</button>
+          </div>
+        </div>
+      </section>
+
       <section class="coming-soon-popup" id="comingSoonPopup" aria-label="Personagens em breve" aria-modal="true" role="dialog" aria-hidden="true">
         <div class="coming-soon-popup-panel">
           <img class="coming-soon-popup-image" src="../../game-assets/ui/promotions/pacote-oriental-em-breve.webp" alt="Pacote Oriental em breve: Cute Hong e Genjiro Musashi">
@@ -3482,12 +3566,12 @@
         <div class="fighter p1" id="p1Fighter" aria-label="Personagem jogador 1">
           <img class="fighter-sprite" id="p1Sprite" src="../../game-assets/characters/ninja-idle/ninja-idle-001.webp" alt="">
           <img class="block-shield-effect" id="p1BlockShield" src="../../game-assets/effects/block-shield/block-shield.webp" alt="" draggable="false">
-          <img class="combo-hit-effect" id="p1ComboHitEffect" src="../../game-assets/effects/combo-hit/combo-hit-001.webp" alt="" draggable="false">
+          <img class="hit-effect" id="p1HitEffect" src="../../game-assets/effects/combo-impact/combo-impact-001.webp" alt="" draggable="false">
         </div>
         <div class="fighter p2" id="p2Fighter" aria-label="Personagem jogador 2">
           <img class="fighter-sprite" id="p2Sprite" src="../../game-assets/characters/ninja-idle/ninja-idle-001.webp" alt="">
           <img class="block-shield-effect" id="p2BlockShield" src="../../game-assets/effects/block-shield/block-shield.webp" alt="" draggable="false">
-          <img class="combo-hit-effect" id="p2ComboHitEffect" src="../../game-assets/effects/combo-hit/combo-hit-001.webp" alt="" draggable="false">
+          <img class="hit-effect" id="p2HitEffect" src="../../game-assets/effects/combo-impact/combo-impact-001.webp" alt="" draggable="false">
         </div>
         <div class="ultimate-cinematic" id="ultimateCinematic" aria-hidden="true">
           <div class="ultimate-cinematic-panel" id="ultimateCinematicPanel">
@@ -3518,6 +3602,10 @@
       <section class="turn-meter" aria-label="Tempo do turno">
         <div class="turn-meter-fill" id="turnMeterFill"></div>
       </section>
+
+      <button class="offline-exit-button" id="offlineExitButton" type="button" aria-label="Sair da luta e voltar ao menu principal">
+        <img src="../../game-assets/ui/icons/battle-exit.svg" alt="">
+      </button>
 
       <section class="controls" aria-label="Painel de ações">
         <button class="action" type="button" aria-label="Poke" data-action="Poke">
@@ -3640,6 +3728,7 @@
             <button class="debug-advanced-button" type="button" data-advanced-effect="health-p1">VIDA P1</button>
             <button class="debug-advanced-button" type="button" data-advanced-effect="shield-p1">ESCUDO</button>
             <button class="debug-advanced-button" type="button" data-advanced-effect="combo-hit-p1">COMBO HIT</button>
+            <button class="debug-advanced-button" type="button" data-advanced-effect="poke-hit-p1">POKE</button>
             <button class="debug-advanced-button" type="button" data-advanced-effect="ultimate-p1">ULTIMATE</button>
             <button class="debug-advanced-button" type="button" data-advanced-effect="clear">LIMPAR</button>
           </div>
@@ -3801,7 +3890,7 @@
       const BATTLE_MUSIC_PATH = "../../game-assets/audio/combo-clash-arena.mp3";
       const HEAVENFALL_SHORE_MUSIC_PATH = "../../game-assets/audio/new-vulka.mp3";
       const BLACK_FOREST_CELLAR_MUSIC_PATH = "../../game-assets/audio/black-forest-cellar.mp3";
-      const MATCH_EVENT_SOUND_PATH = "../../game-assets/audio/match-found-ultimate-hit.mp3";
+      const ULTIMATE_CONNECT_SOUND_PATH = "../../game-assets/audio/ultimate-connect.mp3";
       const MUSIC_TRACK_PATHS = {
         menu: MENU_MUSIC_PATH,
         battle: BATTLE_MUSIC_PATH,
@@ -3877,13 +3966,27 @@
       let specialFrames = [];
       let ultimateFrames = [];
       setCharacterAssets(characterConfig);
-      const comboHitEffect = {
-        framePattern: "../../game-assets/effects/combo-hit/combo-hit-{frame}.webp",
-        frameCount: 53,
-        framePad: 3,
-        frameIntervalMs: 33,
+      const hitEffects = {
+        Combo: {
+          className: "combo-impact",
+          framePattern: "../../game-assets/effects/combo-impact/combo-impact-{frame}.webp",
+          frameCount: 51,
+          framePad: 3,
+          frameIntervalMs: 33,
+          audioPath: "../../game-assets/audio/combo-impact.mp3",
+        },
+        Poke: {
+          className: "poke-impact",
+          framePattern: "../../game-assets/effects/poke-impact/poke-impact-{frame}.webp",
+          frameCount: 26,
+          framePad: 3,
+          frameIntervalMs: 33,
+          audioPath: "../../game-assets/audio/poke-impact.mp3",
+        },
       };
-      const comboHitFrames = buildAnimationFrames(comboHitEffect);
+      const hitEffectFrames = Object.fromEntries(
+        Object.entries(hitEffects).map(([action, effect]) => [action, buildAnimationFrames(effect)]),
+      );
       const LOCAL_DEBUG_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"]);
       const capacitorBridge = window.Capacitor;
       const isNativeShell = Boolean(
@@ -4014,8 +4117,8 @@
         p2Sprite: document.querySelector("#p2Sprite"),
         p1BlockShield: document.querySelector("#p1BlockShield"),
         p2BlockShield: document.querySelector("#p2BlockShield"),
-        p1ComboHitEffect: document.querySelector("#p1ComboHitEffect"),
-        p2ComboHitEffect: document.querySelector("#p2ComboHitEffect"),
+        p1HitEffect: document.querySelector("#p1HitEffect"),
+        p2HitEffect: document.querySelector("#p2HitEffect"),
         ultimateCinematic: document.querySelector("#ultimateCinematic"),
         ultimateCinematicPanel: document.querySelector("#ultimateCinematicPanel"),
         ultimateLabelRed: document.querySelector("#ultimateLabelRed"),
@@ -4046,6 +4149,9 @@
         exitConfirm: document.querySelector("#exitConfirm"),
         cancelExitButton: document.querySelector("#cancelExitButton"),
         confirmExitButton: document.querySelector("#confirmExitButton"),
+        battleExitConfirm: document.querySelector("#battleExitConfirm"),
+        cancelBattleExitButton: document.querySelector("#cancelBattleExitButton"),
+        confirmBattleExitButton: document.querySelector("#confirmBattleExitButton"),
         comingSoonPopup: document.querySelector("#comingSoonPopup"),
         comingSoonPopupClose: document.querySelector("#comingSoonPopupClose"),
         backFromHelpButton: document.querySelector("#backFromHelpButton"),
@@ -4062,6 +4168,7 @@
         battleOverTitle: document.querySelector("#battleOverTitle"),
         resetButton: document.querySelector("#resetButton"),
         exitBattleButton: document.querySelector("#exitBattleButton"),
+        offlineExitButton: document.querySelector("#offlineExitButton"),
         irisTransition: document.querySelector("#irisTransition"),
         irisTransitionHole: document.querySelector("#irisTransitionHole"),
         debugPanel: document.querySelector("#debugPanel"),
@@ -4099,7 +4206,7 @@
       let idleTimerId = null;
       const spriteAnimations = { p1: null, p2: null };
       const ultimateCinematicState = { timers: [] };
-      const comboHitEffectTimers = { p1: null, p2: null };
+      const hitEffectTimers = { p1: null, p2: null };
       let mobileUiActionLocked = false;
       let introSplashTimerId = null;
       let comingSoonPopupShown = false;
@@ -5257,52 +5364,55 @@
         });
       }
 
-      function comboHitEffectElement(side) {
-        return side === "p1" ? el.p1ComboHitEffect : el.p2ComboHitEffect;
+      function hitEffectElement(side) {
+        return side === "p1" ? el.p1HitEffect : el.p2HitEffect;
       }
 
-      function clearComboHitEffect(side) {
-        const timerId = comboHitEffectTimers[side];
+      function clearHitEffect(side) {
+        const timerId = hitEffectTimers[side];
         if (timerId) {
           window.clearTimeout(timerId);
-          comboHitEffectTimers[side] = null;
+          hitEffectTimers[side] = null;
         }
 
-        const effect = comboHitEffectElement(side);
-        effect.classList.remove("is-visible");
-        if (comboHitFrames.length) {
-          effect.src = comboHitFrames[0];
+        const element = hitEffectElement(side);
+        element.classList.remove("is-visible", "combo-impact", "poke-impact");
+        if (hitEffectFrames.Combo.length) {
+          element.src = hitEffectFrames.Combo[0];
         }
       }
 
-      function clearComboHitEffects() {
-        clearComboHitEffect("p1");
-        clearComboHitEffect("p2");
+      function clearHitEffects() {
+        clearHitEffect("p1");
+        clearHitEffect("p2");
       }
 
-      function playComboHitEffect(side) {
-        if (!comboHitFrames.length) {
+      function playHitEffect(side, action) {
+        const config = hitEffects[action];
+        const frames = hitEffectFrames[action] || [];
+        if (!config || !frames.length) {
           return;
         }
 
-        clearComboHitEffect(side);
-        const effect = comboHitEffectElement(side);
+        clearHitEffect(side);
+        const element = hitEffectElement(side);
         let frameIndex = 0;
-        effect.classList.add("is-visible");
+        element.classList.add(config.className, "is-visible");
+        playActionAudio(config.audioPath);
 
         const advance = () => {
-          effect.src = comboHitFrames[frameIndex];
+          element.src = frames[frameIndex];
           frameIndex += 1;
 
-          if (frameIndex < comboHitFrames.length) {
-            comboHitEffectTimers[side] = window.setTimeout(advance, comboHitEffect.frameIntervalMs);
+          if (frameIndex < frames.length) {
+            hitEffectTimers[side] = window.setTimeout(advance, config.frameIntervalMs);
             return;
           }
 
-          comboHitEffectTimers[side] = window.setTimeout(() => {
-            effect.classList.remove("is-visible");
-            comboHitEffectTimers[side] = null;
-          }, comboHitEffect.frameIntervalMs);
+          hitEffectTimers[side] = window.setTimeout(() => {
+            element.classList.remove("is-visible", config.className);
+            hitEffectTimers[side] = null;
+          }, config.frameIntervalMs);
         };
 
         advance();
@@ -5378,25 +5488,25 @@
         return action === "Special" && result?.type === "hit" && result.winner === side;
       }
 
-      function playResponseAnimations(p1Action, p2Action, result) {
+      function playResponseAnimations(p1Action, p2Action, result, deferredSides = []) {
         const crouchingSides = [];
         const jumpingSides = [];
         const blockingSides = [];
         const specialSides = [];
 
-        if (p1Action === "Block" && p2Action !== "Grab") {
+        if (p1Action === "Block" && p2Action !== "Grab" && !deferredSides.includes("p1")) {
           blockingSides.push("p1");
         }
 
-        if (p2Action === "Block" && p1Action !== "Grab") {
+        if (p2Action === "Block" && p1Action !== "Grab" && !deferredSides.includes("p2")) {
           blockingSides.push("p2");
         }
 
-        if (p1Action === "Crouch") {
+        if (p1Action === "Crouch" && !deferredSides.includes("p1")) {
           crouchingSides.push("p1");
         }
 
-        if (p2Action === "Crouch") {
+        if (p2Action === "Crouch" && !deferredSides.includes("p2")) {
           crouchingSides.push("p2");
         }
 
@@ -5420,6 +5530,14 @@
         playJumpAnimation(jumpingSides);
         playSpecialAnimation(specialSides);
         showBlockShieldEffects(blockingSides);
+      }
+
+      function playDeferredUltimateResponseAnimation(side, action) {
+        if (action === "Block") {
+          showBlockShieldEffects([side]);
+        } else if (action === "Crouch") {
+          playCrouchAnimation([side]);
+        }
       }
 
       function responseAnimationBreak(p1Action, p2Action, result) {
@@ -5921,7 +6039,7 @@
         el.p1Sprite.src = idleFrames[idleFrameIndex] || idleFrames[0] || el.p1Sprite.src;
         el.p1Fighter.classList.remove("attack-left", "attack-right");
         clearBlockShieldEffects();
-        clearComboHitEffects();
+        clearHitEffects();
         clearUltimateCinematic();
         clearGuaranteedCountdown();
 
@@ -6267,15 +6385,19 @@
         setAdvancedPreviewTarget(el.p1BlockShield, "Escudo P1");
       }
 
-      function showAdvancedComboHitPreview(play = false) {
-        clearComboHitEffect("p1");
-        el.p1ComboHitEffect.classList.add("is-visible");
-        if (comboHitFrames.length) {
-          el.p1ComboHitEffect.src = comboHitFrames[0];
+      function showAdvancedHitEffectPreview(action, label, play = false) {
+        const config = hitEffects[action];
+        const frames = hitEffectFrames[action] || [];
+        if (!config || !frames.length) {
+          return;
         }
-        setAdvancedPreviewTarget(el.p1ComboHitEffect, "Combo hit P1");
 
-        if (!play || !comboHitFrames.length) {
+        clearHitEffect("p1");
+        el.p1HitEffect.classList.add(config.className, "is-visible");
+        el.p1HitEffect.src = frames[0];
+        setAdvancedPreviewTarget(el.p1HitEffect, label);
+
+        if (!play) {
           return;
         }
 
@@ -6283,17 +6405,25 @@
         let frameIndex = 0;
         const advance = () => {
           advancedDebugState.currentFrame = frameIndex;
-          el.p1ComboHitEffect.src = comboHitFrames[frameIndex];
+          el.p1HitEffect.src = frames[frameIndex];
           frameIndex += 1;
 
-          if (frameIndex < comboHitFrames.length) {
-            scheduleAdvancedDebug(advance, comboHitEffect.frameIntervalMs);
+          if (frameIndex < frames.length) {
+            scheduleAdvancedDebug(advance, config.frameIntervalMs);
           } else {
             syncAdvancedSelectionFrame();
           }
         };
 
         advance();
+      }
+
+      function showAdvancedComboHitPreview(play = false) {
+        showAdvancedHitEffectPreview("Combo", "Combo hit P1", play);
+      }
+
+      function showAdvancedPokeHitPreview(play = false) {
+        showAdvancedHitEffectPreview("Poke", "Poke hit P1", play);
       }
 
       function playAdvancedAttackPreview(option) {
@@ -6458,6 +6588,7 @@
           "health-p1": () => showAdvancedHealthFramePreview(),
           "shield-p1": () => showAdvancedBlockPreview(),
           "combo-hit-p1": () => showAdvancedComboHitPreview(true),
+          "poke-hit-p1": () => showAdvancedPokeHitPreview(true),
           "ultimate-p1": () => playAdvancedUltimatePreview(),
         };
 
@@ -7377,6 +7508,33 @@
         return result.winner === "p1" ? p1Action : p2Action;
       }
 
+      function connectedHitEffects(result, p1Action, p2Action) {
+        if (result.type === "hit" && result.loser) {
+          const action = resultWinnerAction(result, p1Action, p2Action);
+          return hitEffects[action] ? [{ side: result.loser, action }] : [];
+        }
+
+        if (result.type !== "trade") {
+          return [];
+        }
+
+        return [
+          hitEffects[p1Action] && (result.damaged || []).includes("p2") ? { side: "p2", action: p1Action } : null,
+          hitEffects[p2Action] && (result.damaged || []).includes("p1") ? { side: "p1", action: p2Action } : null,
+        ].filter(Boolean);
+      }
+
+      function ultimateCinematicSide(result, p1Action, p2Action) {
+        const p1UsedUltimateAgainstResponse = p1Action === "Super" && !attackActions.includes(p2Action);
+        const p2UsedUltimateAgainstResponse = p2Action === "Super" && !attackActions.includes(p1Action);
+
+        if (p1UsedUltimateAgainstResponse) return "p1";
+        if (p2UsedUltimateAgainstResponse) return "p2";
+
+        const winningAction = resultWinnerAction(result, p1Action, p2Action);
+        return result.type === "hit" && winningAction === "Super" ? result.winner : null;
+      }
+
       function applyAuthoritativeTurnResult(turn) {
         const after = turn?.after;
         if (!after) {
@@ -7495,12 +7653,15 @@
         revealCpuToken();
         playSound("reveal");
 
-        const responseBreak = responseAnimationBreak(p1Action, p2Action, result);
-        playResponseAnimations(p1Action, p2Action, result);
-
         const winningAction = resultWinnerAction(result, p1Action, p2Action);
+        const ultimateSide = ultimateCinematicSide(result, p1Action, p2Action);
+        const ultimateResponseSide = ultimateSide === "p1" ? "p2" : ultimateSide === "p2" ? "p1" : null;
+        const ultimateResponseAction = ultimateResponseSide === "p1" ? p1Action : ultimateResponseSide === "p2" ? p2Action : null;
+        const deferUltimateResponse = Boolean(ultimateResponseSide && ["Block", "Crouch"].includes(ultimateResponseAction));
+        const responseBreak = responseAnimationBreak(p1Action, p2Action, result);
+        playResponseAnimations(p1Action, p2Action, result, deferUltimateResponse ? [ultimateResponseSide] : []);
+
         const isUltimateHit = result.type === "hit" && winningAction === "Super";
-        const isDamagingUltimateHit = isUltimateHit && (result.damaged || []).length > 0;
         const damageLosses = getDamageLosses(beforeHealth);
         const useNinjaSpecialImpact = shouldUseNinjaSpecialImpact(result, winningAction);
         let gameOverQueued = false;
@@ -7521,22 +7682,30 @@
         window.setTimeout(() => {
           animateTokenClash(result);
           playTurnResultSound(result);
-          if (isDamagingUltimateHit) {
-            playActionAudio(MATCH_EVENT_SOUND_PATH);
+          if (isUltimateHit) {
+            playActionAudio(ULTIMATE_CONNECT_SOUND_PATH);
           }
-          const ultimateCinematicBreak = isUltimateHit ? playUltimateCinematic(result.winner) : 0;
+          const ultimateCinematicBreak = ultimateSide ? playUltimateCinematic(ultimateSide) : 0;
 
           if (result.type === "hit" && result.winner && !isUltimateHit && winningAction !== "Special") {
-            window.setTimeout(() => animateHit(result.winner), 250);
-            if (winningAction === "Combo") {
-              window.setTimeout(() => playComboHitEffect(result.loser), 250);
-            }
+            window.setTimeout(() => {
+              animateHit(result.winner);
+              connectedHitEffects(result, p1Action, p2Action)
+                .forEach(({ side, action }) => playHitEffect(side, action));
+            }, 250);
           } else if (result.type === "trade") {
-            window.setTimeout(() => flashDamagedFighters(result.damaged || []), 250);
+            window.setTimeout(() => {
+              flashDamagedFighters(result.damaged || []);
+              connectedHitEffects(result, p1Action, p2Action)
+                .forEach(({ side, action }) => playHitEffect(side, action));
+            }, 250);
           }
 
           window.setTimeout(() => {
             const knockedDown = result.knockedDown || [];
+            if (deferUltimateResponse) {
+              playDeferredUltimateResponseAnimation(ultimateResponseSide, ultimateResponseAction);
+            }
             if (!useNinjaSpecialImpact) {
               playTurnImpactFeedback(result, damageLosses, wasGuaranteedTurn);
             }
@@ -7590,7 +7759,7 @@
       function startTurn() {
         clearSpriteAnimations();
         clearBlockShieldEffects();
-        clearComboHitEffects();
+        clearHitEffects();
         clearUltimateCinematic();
         window.clearInterval(state.timerId);
         state.activeGuaranteedTurn = state.guaranteedTurn;
@@ -7659,7 +7828,7 @@
         leaveAdvancedDebugMode();
         clearSpriteAnimations();
         clearBlockShieldEffects();
-        clearComboHitEffects();
+        clearHitEffects();
         clearUltimateCinematic();
         state.p1.health = 100;
         state.p2.health = 100;
@@ -7683,13 +7852,14 @@
         leaveAdvancedDebugMode();
         clearSpriteAnimations();
         clearBlockShieldEffects();
-        clearComboHitEffects();
+        clearHitEffects();
         clearUltimateCinematic();
         window.clearInterval(state.timerId);
         state.timerId = null;
         clearGuaranteedCountdown();
         resetSequenceDamage();
         el.battleOver.classList.remove("show");
+        hideBattleExitConfirm();
         showStartScreen();
       }
 
@@ -7713,6 +7883,7 @@
         el.helpScreen.classList.add("is-hidden");
         el.optionsScreen.classList.add("is-hidden");
         hideExitConfirm();
+        hideBattleExitConfirm();
         hideComingSoonPopup();
         hideAbilitiesPopup();
       }
@@ -7742,6 +7913,7 @@
         clearIntroSplashTimer();
         state.phase = "intro-consent";
         hideExitConfirm();
+        hideBattleExitConfirm();
         el.splashScreen.classList.add("is-hidden");
         el.consentScreen.classList.remove("is-hidden");
         el.startScreen.classList.add("is-hidden");
@@ -7755,6 +7927,7 @@
         clearIntroSplashTimer();
         state.phase = "intro-splash";
         hideExitConfirm();
+        hideBattleExitConfirm();
         el.splashScreen.classList.remove("is-hidden");
         el.consentScreen.classList.add("is-hidden");
         el.startScreen.classList.add("is-hidden");
@@ -7772,8 +7945,10 @@
         leaveAdvancedDebugMode();
         window.clearInterval(state.timerId);
         clearUltimateCinematic();
+        document.body.classList.remove("offline-battle-active");
         state.phase = "menu";
         hideExitConfirm();
+        hideBattleExitConfirm();
         el.startScreen.classList.remove("is-hidden");
         el.characterSelectScreen.classList.add("is-hidden");
         el.helpScreen.classList.add("is-hidden");
@@ -7791,6 +7966,16 @@
       function hideExitConfirm() {
         el.exitConfirm.classList.remove("show");
         el.exitConfirm.setAttribute("aria-hidden", "true");
+      }
+
+      function showBattleExitConfirm() {
+        el.battleExitConfirm.classList.add("show");
+        el.battleExitConfirm.setAttribute("aria-hidden", "false");
+      }
+
+      function hideBattleExitConfirm() {
+        el.battleExitConfirm.classList.remove("show");
+        el.battleExitConfirm.setAttribute("aria-hidden", "true");
       }
 
       function shouldShowComingSoonPopup() {
@@ -8145,6 +8330,7 @@
         el.characterSelectScreen.classList.add("is-hidden");
         el.helpScreen.classList.add("is-hidden");
         el.optionsScreen.classList.add("is-hidden");
+        document.body.classList.add("offline-battle-active");
         resetBattle();
       }
 
@@ -8295,6 +8481,9 @@
       el.exitBattleButton.addEventListener("click", () => {
         runUiButtonAction(el.exitBattleButton, exitBattleToMenu);
       });
+      el.offlineExitButton.addEventListener("click", () => {
+        runUiButtonAction(el.offlineExitButton, showBattleExitConfirm);
+      });
       el.consentStartButton.addEventListener("click", () => {
         runUiButtonAction(el.consentStartButton, () => {
           void runMenuIrisTransition(showStartScreen);
@@ -8359,6 +8548,14 @@
       el.confirmExitButton.addEventListener("click", () => {
         playSound("ui");
         confirmExitApp();
+      });
+      el.cancelBattleExitButton.addEventListener("click", () => {
+        playSound("ui");
+        hideBattleExitConfirm();
+      });
+      el.confirmBattleExitButton.addEventListener("click", () => {
+        playSound("ui");
+        exitBattleToMenu();
       });
       el.comingSoonPopupClose.addEventListener("click", () => {
         playSound("ui");
@@ -8795,12 +8992,13 @@
         ].join("|");
       }
 
-      function onlineBridgeUltimateBreak(turn, winningAction) {
-        if (turn.type !== "hit" || winningAction !== "Super" || !turn.winner) {
+      function onlineBridgeUltimateBreak(turn) {
+        const cinematicSide = ultimateCinematicSide(turn, turn.p1Action, turn.p2Action);
+        if (!cinematicSide) {
           return 0;
         }
 
-        const loadout = characterLoadoutForSide(turn.winner);
+        const loadout = characterLoadoutForSide(cinematicSide);
         return ULTIMATE_CINEMATIC_INTRO_MS
           + ULTIMATE_CINEMATIC_HOLD_MS
           + (loadout.ultimateAnimation.firstFrameHoldMs || 0)
@@ -8812,8 +9010,7 @@
         const p1Action = turn.p1Action;
         const p2Action = turn.p2Action;
         const responseBreak = responseAnimationBreak(p1Action, p2Action, turn);
-        const winningAction = resultWinnerAction(turn, p1Action, p2Action);
-        const ultimateBreak = onlineBridgeUltimateBreak(turn, winningAction);
+        const ultimateBreak = onlineBridgeUltimateBreak(turn);
         const knockdownBreak = (turn.knockedDown || []).reduce((duration, side) => {
           const loadout = characterLoadoutForSide(side);
           return Math.max(duration, GET_UP_FIRST_FRAME_HOLD + loadout.getUpFrames.length * loadout.getUpAnimation.frameIntervalMs + 220);
@@ -8846,7 +9043,6 @@
         const frameSet = new Set();
         const p1Action = turn.p1Action;
         const p2Action = turn.p2Action;
-        const winningAction = resultWinnerAction(turn, p1Action, p2Action);
 
         addActionVisualFrames(frameSet, "p1", p1Action, p2Action, turn);
         addActionVisualFrames(frameSet, "p2", p2Action, p1Action, turn);
@@ -8856,14 +9052,14 @@
           addVisualFrames(frameSet, loadout.getUpFrames);
         });
 
-        if (turn.type === "hit" && winningAction === "Super" && turn.winner) {
-          const loadout = characterLoadoutForSide(turn.winner);
+        const ultimateSide = ultimateCinematicSide(turn, p1Action, p2Action);
+        if (ultimateSide) {
+          const loadout = characterLoadoutForSide(ultimateSide);
           addVisualFrames(frameSet, loadout.ultimateFrames);
         }
 
-        if (turn.type === "hit" && winningAction === "Combo") {
-          addVisualFrames(frameSet, comboHitFrames);
-        }
+        connectedHitEffects(turn, p1Action, p2Action)
+          .forEach(({ action }) => addVisualFrames(frameSet, hitEffectFrames[action]));
 
         return [...frameSet];
       }
@@ -8910,8 +9106,8 @@
           preloadFrames(loadout.specialFrames);
         } else if (action === "Super") {
           preloadFrames(loadout.ultimateFrames);
-        } else if (action === "Combo") {
-          preloadFrames(comboHitFrames);
+        } else if (hitEffectFrames[action]) {
+          preloadFrames(hitEffectFrames[action]);
         }
       }
 
@@ -8969,7 +9165,7 @@
         state.phase = "over";
         onlineBridgeApplyState(payload.lastTurn?.after || payload.battleState);
         clearBlockShieldEffects();
-        clearComboHitEffects();
+        clearHitEffects();
         clearUltimateCinematic();
         clearGuaranteedCountdown();
         clearStatePopups();
@@ -9022,7 +9218,7 @@
         if (payload.status === "active") {
           clearSpriteAnimations();
           clearBlockShieldEffects();
-          clearComboHitEffects();
+          clearHitEffects();
           clearUltimateCinematic();
           syncCharacterSpritesToIdle();
         }

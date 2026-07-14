@@ -8,6 +8,7 @@ import type {
   PlayerRank,
   PrivateRoom,
   RematchChoice,
+  ReplaySource,
 } from "../types";
 
 export interface QueueResult {
@@ -31,6 +32,7 @@ export interface GameService {
   joinRankedQueue(): Promise<QueueResult>;
   leaveRankedQueue(): Promise<void>;
   getMatch(matchId: string): Promise<GameMatch | null>;
+  getReplaySource(matchId: string): Promise<ReplaySource>;
   getCurrentMatch(): Promise<GameMatch | null>;
   getMatchedQueueMatch(): Promise<GameMatch | null>;
   createPrivateRoom(): Promise<PrivateRoom>;

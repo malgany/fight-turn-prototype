@@ -16,7 +16,7 @@ setupMobileAuthRedirect();
 const root = document.querySelector<HTMLDivElement>("#app");
 
 if (!root) {
-  throw new Error("Elemento #app nao encontrado.");
+  throw new Error("Elemento #app não encontrado.");
 }
 
 const service = isSupabaseConfigured ? new SupabaseGameService() : new DemoGameService();

@@ -366,7 +366,7 @@ function resolveAttackVsAttack(state: BattleState, p1Action: Action, p2Action: A
         type: "draw" as const,
         winner: null,
         loser: null,
-        primary: "AGARRAO QUEBRADO",
+        primary: "AGARRÃO QUEBRADO",
         secondary: "Os dois tentaram agarrar",
         damaged: [],
         healed: [],
@@ -463,7 +463,7 @@ function resolveAttackVsResponse(state: BattleState, attacker: Side, attack: Act
       winner: defender,
       loser: attacker,
       primary: "PULOU",
-      secondary: `${defender.toUpperCase()} escapou do agarro`,
+      secondary: `${defender.toUpperCase()} escapou do agarrão`,
       damaged: [],
       healed: [],
       healing: {},
@@ -484,7 +484,7 @@ function resolveAttackVsResponse(state: BattleState, attacker: Side, attack: Act
     winner: null,
     loser: null,
     primary: "NEUTRO",
-    secondary: `${displayActionName(attack)} nao conectou`,
+    secondary: `${displayActionName(attack)} não conectou`,
     damaged: [],
     healed: [],
     healing: {},
@@ -521,13 +521,13 @@ export function resolveBattleTurn(currentState: BattleState, p1Action: Action | 
     partial = { ...partial, ...resolveDollUltimateHeal(state, dollUltimateSide) };
   } else if (!p1Action && !p2Action) {
     state.advantage = null;
-    partial = { ...partial, primary: "TEMPO ESGOTADO", secondary: "Ninguem escolheu ataque" };
+    partial = { ...partial, primary: "TEMPO ESGOTADO", secondary: "Ninguém escolheu ataque" };
   } else if (!p1Action) {
     if (p2Action && attackActions.includes(p2Action)) {
-      partial = { ...partial, ...resolveHit(state, "p2", "Wait", p2Action, false, context), primary: "P1 SEM ACAO" };
+      partial = { ...partial, ...resolveHit(state, "p2", "Wait", p2Action, false, context), primary: "P1 SEM AÇÃO" };
     } else {
       state.advantage = null;
-      partial = { ...partial, primary: "P1 SEM ACAO", secondary: "Sem ataque direto" };
+      partial = { ...partial, primary: "P1 SEM AÇÃO", secondary: "Sem ataque direto" };
     }
   } else if (!p2Action) {
     if (attackActions.includes(p1Action)) {

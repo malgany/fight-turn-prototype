@@ -13,23 +13,42 @@ import type {
   PlayerRank,
   PrivateRoom,
   RematchChoice,
+  ReplaySource,
+  TurnResolution,
 } from "../types";
 import type { GameService, QueueResult } from "./gameService";
 
 const STORAGE_KEY = "finalGenesis.demoState";
+const REPLAY_SOURCE_LIMIT = 25;
 
 interface DemoState {
+  accountId: string | null;
   profile: PlayerProfile | null;
   rank: PlayerRank | null;
   unlockedCharacterIds: string[];
   history: MatchHistoryEntry[];
   currentMatch: GameMatch | null;
   privateRoom: PrivateRoom | null;
+  replayMatches: Record<string, DemoReplayMatch>;
 }
 
-function makeGoogleLikeProfile(): PlayerProfile {
+interface DemoReplayMatch {
+  matchId: string;
+  matchType: ReplaySource["matchType"];
+  player1Id: string;
+  player2Id: string;
+  player1CharacterId: string | null;
+  player2CharacterId: string | null;
+  winnerId: string | null;
+  finishedReason: string | null;
+  createdAt: string;
+  finishedAt: string | null;
+  turns: ReplaySource["turns"];
+}
+
+function makeGoogleLikeProfile(accountId = `google-${crypto.randomUUID()}`): PlayerProfile {
   return {
-    id: `google-${crypto.randomUUID()}`,
+    id: accountId,
     displayName: "Jogador Demo",
     displayNameUpdatedAt: null,
     avatarUrl: null,
@@ -41,18 +60,27 @@ function makeGoogleLikeProfile(): PlayerProfile {
 
 function loadState(): DemoState {
   const fallback: DemoState = {
+    accountId: null,
     profile: null,
     rank: null,
     unlockedCharacterIds: defaultCharacterIds(),
     history: [],
     currentMatch: null,
     privateRoom: null,
+    replayMatches: {},
   };
 
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (!stored) return fallback;
     const loaded = { ...fallback, ...JSON.parse(stored) } as DemoState;
+    if (!loaded.replayMatches || typeof loaded.replayMatches !== "object" || Array.isArray(loaded.replayMatches)) {
+      loaded.replayMatches = {};
+    }
+    loaded.accountId = loaded.accountId
+      || loaded.profile?.id
+      || Object.values(loaded.replayMatches)[0]?.player1Id
+      || null;
     if (loaded.rank) loaded.rank.division = divisionForPoints(loaded.rank.rankPoints);
     return loaded;
   } catch {
@@ -108,6 +136,67 @@ function makeMatch(profile: PlayerProfile, type: "ranked" | "private"): GameMatc
   };
 }
 
+function makeReplayMatch(match: GameMatch, createdAt = new Date().toISOString()): DemoReplayMatch {
+  if (match.matchType !== "ranked" && match.matchType !== "private") {
+    throw new Error("Somente partidas ranqueadas ou privadas podem gerar replay.");
+  }
+  return {
+    matchId: match.id,
+    matchType: match.matchType,
+    player1Id: match.p1.userId,
+    player2Id: match.p2.userId,
+    player1CharacterId: match.p1.characterId,
+    player2CharacterId: match.p2.characterId,
+    winnerId: match.winnerId,
+    finishedReason: match.finishedReason || null,
+    createdAt,
+    finishedAt: null,
+    turns: [],
+  };
+}
+
+function updateReplayMatch(
+  replayMatches: DemoState["replayMatches"],
+  match: GameMatch,
+  options: { turn?: TurnResolution; finishedAt?: string | null } = {},
+): DemoState["replayMatches"] {
+  if (match.matchType !== "ranked" && match.matchType !== "private") return replayMatches;
+  const previous = replayMatches[match.id] || makeReplayMatch(match);
+  let turns = previous.turns;
+  if (options.turn) {
+    const turnNumber = options.turn.before.turnNumber;
+    const nextTurn = { turnNumber, result: options.turn };
+    const existingIndex = turns.findIndex((turn) => turn.turnNumber === turnNumber);
+    turns = existingIndex >= 0
+      ? turns.map((turn, index) => index === existingIndex ? nextTurn : turn)
+      : [...turns, nextTurn].sort((left, right) => left.turnNumber - right.turnNumber);
+  }
+
+  const updated = {
+    ...replayMatches,
+    [match.id]: {
+      ...previous,
+      matchType: match.matchType,
+      player1Id: match.p1.userId,
+      player2Id: match.p2.userId,
+      player1CharacterId: match.p1.characterId,
+      player2CharacterId: match.p2.characterId,
+      winnerId: match.winnerId,
+      finishedReason: match.finishedReason || null,
+      finishedAt: options.finishedAt === undefined ? previous.finishedAt : options.finishedAt,
+      turns,
+    },
+  };
+  const current = updated[match.id];
+  const previousSources = Object.values(updated)
+    .filter((replay) => replay.matchId !== match.id)
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+      .slice(0, REPLAY_SOURCE_LIMIT - 1);
+  return Object.fromEntries(
+    [current, ...previousSources].map((replay) => [replay.matchId, replay]),
+  );
+}
+
 function createLeaderboard(currentRank: PlayerRank | null, profile: PlayerProfile | null): LeaderboardEntry[] {
   const base: LeaderboardEntry[] = [
     { position: 1, userId: "demo-1", displayName: "Astra", avatarUrl: null, rankPoints: 3160, division: "Primordial", wins: 91, losses: 34, streak: 8 },
@@ -151,10 +240,11 @@ export class DemoGameService implements GameService {
   }
 
   async signInWithGoogle(): Promise<void> {
-    const profile = makeGoogleLikeProfile();
     const state = this.state();
+    const profile = makeGoogleLikeProfile(state.accountId || undefined);
     this.commit({
       ...state,
+      accountId: profile.id,
       profile,
       rank: createInitialRank(profile.id),
       unlockedCharacterIds: defaultCharacterIds(),
@@ -162,7 +252,17 @@ export class DemoGameService implements GameService {
   }
 
   async signOut(): Promise<void> {
-    this.commit({ profile: null, rank: null, unlockedCharacterIds: defaultCharacterIds(), history: [], currentMatch: null, privateRoom: null });
+    const state = this.state();
+    this.commit({
+      accountId: state.accountId,
+      profile: null,
+      rank: null,
+      unlockedCharacterIds: defaultCharacterIds(),
+      history: [],
+      currentMatch: null,
+      privateRoom: null,
+      replayMatches: state.replayMatches,
+    });
   }
 
   async bootstrapProfile(): Promise<AppSnapshot> {
@@ -201,16 +301,18 @@ export class DemoGameService implements GameService {
   async cancelMatchSelection(matchId: string): Promise<void> {
     const state = this.state();
     if (!state.currentMatch || state.currentMatch.id !== matchId) return;
+    const nextMatch: GameMatch = {
+      ...state.currentMatch,
+      status: "forfeited",
+      winnerId: null,
+      finishedReason: "selection_cancelled",
+    };
     this.commit({
       ...state,
-      currentMatch: {
-        ...state.currentMatch,
-        status: "forfeited",
-        winnerId: null,
-        finishedReason: "selection_cancelled",
-      },
+      currentMatch: nextMatch,
       privateRoom: null,
       profile: state.profile ? { ...state.profile, presenceStatus: "online" } : null,
+      replayMatches: updateReplayMatch(state.replayMatches, nextMatch, { finishedAt: new Date().toISOString() }),
     });
   }
 
@@ -250,7 +352,12 @@ export class DemoGameService implements GameService {
     const state = this.state();
     if (!state.profile) throw new Error("Entre no jogo antes de jogar ranked.");
     const match = makeMatch(state.profile, "ranked");
-    this.commit({ ...state, currentMatch: match, profile: { ...state.profile, presenceStatus: "in_match" } });
+    this.commit({
+      ...state,
+      currentMatch: match,
+      profile: { ...state.profile, presenceStatus: "in_match" },
+      replayMatches: updateReplayMatch(state.replayMatches, match),
+    });
     return { status: "matched", match };
   }
 
@@ -266,6 +373,32 @@ export class DemoGameService implements GameService {
   async getMatch(matchId: string): Promise<GameMatch | null> {
     const match = this.state().currentMatch;
     return match?.id === matchId ? match : null;
+  }
+
+  async getReplaySource(matchId: string): Promise<ReplaySource> {
+    if (!matchId.trim()) throw new Error("Identificador da partida ausente para o replay.");
+    const replay = this.state().replayMatches[matchId];
+    if (!replay) throw new Error("Partida não encontrada para o replay demo.");
+    if (replay.matchType !== "ranked" && replay.matchType !== "private") {
+      throw new Error("Somente partidas ranqueadas ou privadas podem gerar replay.");
+    }
+    if (replay.turns.length > 0 && (!replay.player1CharacterId || !replay.player2CharacterId)) {
+      throw new Error("O replay não está disponível porque a seleção de personagens não foi concluída.");
+    }
+
+    return {
+      matchId: replay.matchId,
+      matchType: replay.matchType,
+      player1Id: replay.player1Id,
+      player2Id: replay.player2Id,
+      player1CharacterId: replay.player1CharacterId,
+      player2CharacterId: replay.player2CharacterId,
+      winnerId: replay.winnerId || null,
+      finishedReason: replay.finishedReason || null,
+      createdAt: replay.createdAt,
+      finishedAt: replay.finishedAt || null,
+      turns: [...(replay.turns || [])].sort((left, right) => left.turnNumber - right.turnNumber),
+    };
   }
 
   async getMatchedQueueMatch(): Promise<GameMatch | null> {
@@ -300,20 +433,26 @@ export class DemoGameService implements GameService {
       matchId: match.id,
       inviteUrl: privateRoomInviteUrl(code),
     };
-    this.commit({ ...state, privateRoom: room, currentMatch: match, profile: { ...state.profile, presenceStatus: "in_match" } });
+    this.commit({
+      ...state,
+      privateRoom: room,
+      currentMatch: match,
+      profile: { ...state.profile, presenceStatus: "in_match" },
+      replayMatches: updateReplayMatch(state.replayMatches, match),
+    });
     return { room, match };
   }
 
   async getPrivateRoom(code: string): Promise<{ room: PrivateRoom; match: GameMatch | null }> {
     const state = this.state();
-    if (!state.privateRoom || state.privateRoom.code !== code.toUpperCase()) throw new Error("Sala nao encontrada.");
+    if (!state.privateRoom || state.privateRoom.code !== code.toUpperCase()) throw new Error("Sala não encontrada.");
     return { room: state.privateRoom, match: state.currentMatch };
   }
 
   async selectMatchCharacter(matchId: string, characterId: string): Promise<GameMatch> {
     const state = this.state();
     const match = state.currentMatch;
-    if (!match || match.id !== matchId) throw new Error("Partida nao encontrada.");
+    if (!match || match.id !== matchId) throw new Error("Partida não encontrada.");
     if (!state.unlockedCharacterIds.includes(characterId)) throw new Error("Personagem bloqueado.");
 
     const enabledCharacters = characters.filter((character) => character.enabled);
@@ -328,25 +467,29 @@ export class DemoGameService implements GameService {
       localReady: true,
       opponentReady: true,
     };
-    this.commit({ ...state, currentMatch: nextMatch });
+    this.commit({
+      ...state,
+      currentMatch: nextMatch,
+      replayMatches: updateReplayMatch(state.replayMatches, nextMatch),
+    });
     return nextMatch;
   }
 
   async markMatchReady(matchId: string): Promise<GameMatch> {
     const match = this.state().currentMatch;
-    if (!match || match.id !== matchId) throw new Error("Partida nao encontrada.");
+    if (!match || match.id !== matchId) throw new Error("Partida não encontrada.");
     return match;
   }
 
   async markTurnReady(matchId: string, _turnNumber: number): Promise<void> {
     const match = this.state().currentMatch;
-    if (!match || match.id !== matchId) throw new Error("Partida nao encontrada.");
+    if (!match || match.id !== matchId) throw new Error("Partida não encontrada.");
   }
 
   async submitAction(matchId: string, action: Action, _turnNumber?: number): Promise<GameMatch> {
     const state = this.state();
     const match = state.currentMatch;
-    if (!match || match.id !== matchId) throw new Error("Partida nao encontrada.");
+    if (!match || match.id !== matchId) throw new Error("Partida não encontrada.");
     if (match.status !== "active") return match;
 
     const opponentAction = selectableActions[Math.floor(Math.random() * selectableActions.length)];
@@ -365,10 +508,18 @@ export class DemoGameService implements GameService {
       lastTurn: result,
       status: result.finished ? "finished" : "active",
       winnerId: result.matchWinner ? match[result.matchWinner].userId : null,
+      finishedReason: result.finished ? "finished" : match.finishedReason,
       rematch: { localChoice: null, opponentChoice: null, nextMatchId: null },
     };
 
-    const nextState = { ...state, currentMatch: nextMatch };
+    const nextState: DemoState = {
+      ...state,
+      currentMatch: nextMatch,
+      replayMatches: updateReplayMatch(state.replayMatches, nextMatch, {
+        turn: result,
+        finishedAt: result.finished ? new Date().toISOString() : undefined,
+      }),
+    };
     if (result.finished && state.profile && state.rank) {
       const playerWon = nextMatch.winnerId === state.profile.id;
       if (match.matchType === "ranked") {
@@ -412,18 +563,24 @@ export class DemoGameService implements GameService {
 
   async resolveTurn(matchId: string): Promise<GameMatch> {
     const state = this.state();
-    if (!state.currentMatch || state.currentMatch.id !== matchId) throw new Error("Partida nao encontrada.");
+    if (!state.currentMatch || state.currentMatch.id !== matchId) throw new Error("Partida não encontrada.");
     return state.currentMatch;
   }
 
   async forfeitMatch(matchId: string): Promise<GameMatch> {
     const state = this.state();
     const match = state.currentMatch;
-    if (!match || match.id !== matchId || !state.profile) throw new Error("Partida nao encontrada.");
+    if (!match || match.id !== matchId || !state.profile) throw new Error("Partida não encontrada.");
     const rankDelta = match.matchType === "ranked" && state.rank
       ? rankedDeltaForResult(state.rank.rankPoints, "forfeit")
       : 0;
-    const nextMatch = { ...match, status: "forfeited" as const, winnerId: match.p2.userId, rankDelta };
+    const nextMatch = {
+      ...match,
+      status: "forfeited" as const,
+      winnerId: match.p2.userId,
+      rankDelta,
+      finishedReason: "forfeit",
+    };
     const history: MatchHistoryEntry = {
       id: crypto.randomUUID(),
       matchId,
@@ -438,14 +595,21 @@ export class DemoGameService implements GameService {
     const rank = match.matchType === "ranked" && state.rank
       ? applyRankedResult(state.rank, "forfeit")
       : state.rank;
-    this.commit({ ...state, rank, currentMatch: nextMatch, history: [history, ...state.history], profile: { ...state.profile, presenceStatus: "online" } });
+    this.commit({
+      ...state,
+      rank,
+      currentMatch: nextMatch,
+      history: [history, ...state.history],
+      profile: { ...state.profile, presenceStatus: "online" },
+      replayMatches: updateReplayMatch(state.replayMatches, nextMatch, { finishedAt: new Date().toISOString() }),
+    });
     return nextMatch;
   }
 
   async postMatchChoice(matchId: string, choice: RematchChoice): Promise<GameMatch> {
     const state = this.state();
     const match = state.currentMatch;
-    if (!match || match.id !== matchId) throw new Error("Partida nao encontrada.");
+    if (!match || match.id !== matchId) throw new Error("Partida não encontrada.");
     if (choice === "lobby") {
       const nextMatch = {
         ...match,
@@ -465,7 +629,11 @@ export class DemoGameService implements GameService {
       privateScore: match.matchType === "private" ? match.privateScore : null,
       rematch: { localChoice: "again" as const, opponentChoice: "again" as const, nextMatchId: null },
     };
-    this.commit({ ...state, currentMatch: nextMatch });
+    this.commit({
+      ...state,
+      currentMatch: nextMatch,
+      replayMatches: updateReplayMatch(state.replayMatches, nextMatch),
+    });
     return nextMatch;
   }
 

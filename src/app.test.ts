@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateLocalTurnDeadlineMs, canForwardOnlineAction, hasAuthoritativeBattleStarted, isMatchRefreshStillRelevant, isRetryableOnlineActionError, MATCH_FOUND_REVEAL_DELAY_MS, rankAfterFinishedMatch, rankHudVisual, shouldPreserveMatchFoundRevealDom, shouldShowMatchFoundReveal, validateProfileDisplayName } from "./app";
+import { calculateLocalTurnDeadlineMs, canForwardOnlineAction, hasAuthoritativeBattleStarted, isMatchRefreshStillRelevant, isReplayScrollNearLatest, isRetryableOnlineActionError, MATCH_FOUND_REVEAL_DELAY_MS, normalizeReplayResolutionText, normalizedAudioVolume, rankAfterFinishedMatch, rankHudVisual, rankProgressPresentation, shouldPreserveMatchFoundRevealDom, shouldShowMatchFoundReveal, validateProfileDisplayName } from "./app";
 import { createInitialBattleState } from "./domain/battle";
 
 describe("calculateLocalTurnDeadlineMs", () => {
@@ -30,6 +30,36 @@ describe("calculateLocalTurnDeadlineMs", () => {
     const deadline = new Date(now + 1_250).toISOString();
 
     expect(calculateLocalTurnDeadlineMs(deadline, createInitialBattleState(), 0, true, now)).toBe(now + 1_250);
+  });
+});
+
+describe("normalizedAudioVolume", () => {
+  it("keeps an absent preference muted so online matches the local options screen", () => {
+    expect(normalizedAudioVolume(null)).toBe(0);
+  });
+
+  it("clamps stored percentage values to the valid audio range", () => {
+    expect(normalizedAudioVolume("0")).toBe(0);
+    expect(normalizedAudioVolume("50")).toBe(0.5);
+    expect(normalizedAudioVolume("500")).toBe(1);
+    expect(normalizedAudioVolume("invalid")).toBe(0);
+  });
+});
+
+describe("normalizeReplayResolutionText", () => {
+  it("corrects legacy replay accents and uses agarrão as the noun", () => {
+    expect(normalizeReplayResolutionText("P1 SEM ACAO")).toBe("P1 SEM AÇÃO");
+    expect(normalizeReplayResolutionText("P2 escapou do agarro")).toBe("P2 escapou do agarrão");
+    expect(normalizeReplayResolutionText("AGARRAO QUEBRADO")).toBe("AGARRÃO QUEBRADO");
+    expect(normalizeReplayResolutionText("Combo nao conectou")).toBe("Combo não conectou");
+    expect(normalizeReplayResolutionText("Ninguem escolheu ataque")).toBe("Ninguém escolheu ataque");
+  });
+});
+
+describe("isReplayScrollNearLatest", () => {
+  it("keeps automatic following near the end of the replay list", () => {
+    expect(isReplayScrollNearLatest(440, 1000, 500)).toBe(true);
+    expect(isReplayScrollNearLatest(200, 1000, 500)).toBe(false);
   });
 });
 
@@ -102,6 +132,35 @@ describe("rankHudVisual", () => {
     expect(rankHudVisual("Desperto")).toEqual({ className: "rank-hud-desperto", badge: "D" });
     expect(rankHudVisual("Arcanjo")).toEqual({ className: "rank-hud-arcanjo", badge: "A" });
     expect(rankHudVisual("Primordial")).toEqual({ className: "rank-hud-primordial", badge: "P" });
+  });
+});
+
+describe("rankProgressPresentation", () => {
+  it("calculates progress inside the current division", () => {
+    expect(rankProgressPresentation(130)).toEqual({
+      division: "Autoprimata II",
+      nextDivision: "Autoprimata I",
+      progress: 30,
+      pointsRemaining: 70,
+    });
+  });
+
+  it("switches presentation exactly at a promotion boundary", () => {
+    expect(rankProgressPresentation(200)).toEqual({
+      division: "Autoprimata I",
+      nextDivision: "Bronze III",
+      progress: 0,
+      pointsRemaining: 100,
+    });
+  });
+
+  it("clamps negative points to the bottom of the ladder", () => {
+    expect(rankProgressPresentation(-10)).toEqual({
+      division: "Autoprimata III",
+      nextDivision: "Autoprimata II",
+      progress: 0,
+      pointsRemaining: 100,
+    });
   });
 });
 

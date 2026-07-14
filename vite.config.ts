@@ -12,6 +12,7 @@ const contentTypes: Record<string, string> = {
   ".json": "application/json; charset=utf-8",
   ".mp3": "audio/mpeg",
   ".png": "image/png",
+  ".svg": "image/svg+xml",
   ".ttf": "font/ttf",
   ".webp": "image/webp",
 };

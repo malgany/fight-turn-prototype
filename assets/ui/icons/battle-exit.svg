@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-labelledby="title">
+  <title id="title">Sair da luta</title>
+  <path fill="#090b0e" d="M65 10h27v80H65V62h9v9l16-16-16-16v9h-9V10Z"/>
+  <circle cx="48" cy="17" r="8" fill="#090b0e"/>
+  <path fill="#090b0e" d="M14 52c-3-1-4-5-2-8l13-15c2-2 4-3 7-2l18 4 11 10h13v14H56c-2 0-4-1-6-3l-9-8-6 8 16 10c3 2 4 5 3 8l-8 20c-1 4-5 5-8 4-4-1-5-5-4-8l6-16-18-11c-2-1-3-3-4-5l-1-2-8 3c-3 1-6-1-7-5Z"/>
+  <path fill="#090b0e" d="m21 65 17 9-6 14-8-3 4-9-10-4c-4-1-5-5-3-8 1-2 4-2 6 1Z"/>
+</svg>
