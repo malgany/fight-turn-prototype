@@ -118,7 +118,7 @@
                                    },
                        "ultimate":  {
                                         "label":  "Ultimate",
-                                        "framePattern":  "../../game-assets/characters/doll-ultimate/doll-ultimate-{frame}.webp",
+                                        "framePattern":  "../../game-assets/characters/doll-ultimate/doll-ultimate-{frame}.webp?v=20260715-doll-ultimate-wide",
                                         "frameCount":  126,
                                         "framePad":  3,
                                         "frameIntervalMs":  33,

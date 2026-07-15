@@ -54,6 +54,12 @@ export default defineConfig({
   plugins: [gameAssetsDevServer()],
   server: {
     port: 5173,
+    watch: {
+      // The prototype reads these files through the custom middleware above.
+      // Watching tens of thousands of generated Android files and animation
+      // frames on Windows exhausts handles and starves local asset responses.
+      ignored: ["**/android/**", "**/assets/**"],
+    },
   },
   preview: {
     port: 4173,

@@ -106,7 +106,7 @@
     },
     "ultimate": {
       "label": "Ultimate",
-      "framePattern": "../../game-assets/characters/itzcoatl-ultimate/itzcoatl-ultimate-{frame}.webp",
+      "framePattern": "../../game-assets/characters/itzcoatl-ultimate/itzcoatl-ultimate-{frame}.webp?v=20260714-ultimate-wide",
       "frameCount": 176,
       "framePad": 3,
       "frameIntervalMs": 33

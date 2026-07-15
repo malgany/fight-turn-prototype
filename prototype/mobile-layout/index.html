@@ -1120,7 +1120,12 @@
         --ultimate-frame-offset-y: max(0px, min(16.1458%, calc(100% - 83.8542cqw)));
       }
 
-      .ultimate-cinematic[data-character="iop"] .ultimate-frame {
+      .ultimate-cinematic:is(
+        [data-character="iop"],
+        [data-character="itzcoatl"],
+        [data-character="aton"],
+        [data-character="doll"]
+      ) .ultimate-frame {
         object-fit: contain;
         object-position: center bottom;
         --ultimate-frame-offset-x: -2px;
@@ -4155,9 +4160,9 @@
       ];
       const CHARACTER_CONFIGS = {
         ninja: "../../game-assets/characters/ninja/ninja.json?v=20260608-special-position-plus",
-        itzcoatl: "../../game-assets/characters/itzcoatl/itzcoatl.json?v=20260609-special-offset",
-        aton: "../../game-assets/characters/urban/urban.json?v=20260608-aton-position-plus",
-        doll: "../../game-assets/characters/doll/doll.json?v=20260620-doll-jump-odd-slow",
+        itzcoatl: "../../game-assets/characters/itzcoatl/itzcoatl.json?v=20260714-ultimate-wide",
+        aton: "../../game-assets/characters/urban/urban.json?v=20260714-ultimate-wide",
+        doll: "../../game-assets/characters/doll/doll.json?v=20260715-doll-ultimate-wide",
         iop: "../../game-assets/characters/iop/iop.json?v=20260714-iop-ultimate-audio-delay-1800",
       };
       const CHARACTER_ABILITIES = {
@@ -6153,13 +6158,20 @@
         });
       }
 
-      function playFrameTimeline(frames, timeline, { onFrame, onUpdate, onComplete } = {}) {
+      function playFrameTimeline(
+        frames,
+        timeline,
+        { onFrame, onUpdate, onComplete, waitForFrame = false, warmAhead = false } = {},
+      ) {
         const playback = {
           animationFrameId: null,
           frameIndex: 0,
           isDone: false,
           awaitingFinalPaint: false,
           finalFrameReady: false,
+          waitingForFrame: false,
+          frameWaitMs: 0,
+          frameRequestId: 0,
           done: null,
           complete: null,
           cancel: null,
@@ -6193,19 +6205,36 @@
         const startedAt = performance.now();
         const lastFrameIndex = frames.length - 1;
         const presentFrame = (frameIndex) => {
+          if (warmAhead) {
+            warmFrameWindow(frames, frameIndex + 1);
+          }
+
           const readiness = onFrame?.(frames[frameIndex], frameIndex);
+          const readinessPromise = Promise.resolve(readiness).catch(() => false);
+          if (waitForFrame) {
+            const requestId = ++playback.frameRequestId;
+            const waitStartedAt = performance.now();
+            playback.waitingForFrame = true;
+            readinessPromise.then(() => {
+              if (playback.isDone || playback.frameRequestId !== requestId) {
+                return;
+              }
+
+              playback.frameWaitMs += Math.max(0, performance.now() - waitStartedAt);
+              playback.waitingForFrame = false;
+            });
+          }
+
           if (frameIndex !== lastFrameIndex) {
             return;
           }
 
           playback.finalFrameReady = false;
-          Promise.resolve(readiness)
-            .catch(() => {})
-            .then(() => {
-              if (!playback.isDone) {
-                playback.finalFrameReady = true;
-              }
-            });
+          readinessPromise.then(() => {
+            if (!playback.isDone && playback.frameIndex === lastFrameIndex) {
+              playback.finalFrameReady = true;
+            }
+          });
         };
         framePerformanceStats.animationsPlayed += 1;
         framePerformanceStats.framesPresented += 1;
@@ -6217,7 +6246,12 @@
             return;
           }
 
-          const elapsed = Math.max(0, timestamp - startedAt);
+          if (playback.waitingForFrame) {
+            playback.animationFrameId = window.requestAnimationFrame(advance);
+            return;
+          }
+
+          const elapsed = Math.max(0, timestamp - startedAt - playback.frameWaitMs);
           onUpdate?.(elapsed);
 
           let targetFrameIndex = playback.frameIndex;
@@ -6619,6 +6653,8 @@
 
         let playback = null;
         playback = playFrameTimeline(frames, timeline, {
+          waitForFrame: true,
+          warmAhead: true,
           onFrame: (frame, frameIndex) => {
             return presentImageFrameWhenReady(
               el.ultimateFrame,
@@ -10830,7 +10866,10 @@
           void legacyResolveTurn({ skipVisualPreload: true, authoritativeResult: payload.lastTurn });
           onlineBridge.allowLocalResolve = false;
           onlineBridge.resolutionTimerId = window.setTimeout(() => {
-            void waitForActiveSpriteAnimations().then(() => onlineBridgeFinishResolution(payload));
+            void Promise.all([
+              waitForActiveSpriteAnimations(),
+              ultimateCinematicState.done,
+            ]).then(() => onlineBridgeFinishResolution(payload));
           }, resolutionDelay);
           return;
         }
