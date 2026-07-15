@@ -43,6 +43,24 @@ describe("resolveBattleTurn", () => {
     expect(result.after.p2.super).toBe(0);
   });
 
+  it.each([
+    ["trades with another Ultimate", "Super"],
+    ["is interrupted", "Poke"],
+    ["is blocked", "Block"],
+    ["connects", "Jump"],
+    ["is ducked", "Crouch"],
+  ] as const)("consumes all three bars when an Ultimate %s", (_scenario, response) => {
+    const state = createInitialBattleState();
+    state.p1.super = 3;
+    if (response === "Super") state.p2.super = 3;
+    if (response === "Poke") state.p1.health = 76;
+
+    const result = resolveBattleTurn(state, "Super", response);
+
+    expect(result.after.p1.super).toBe(0);
+    if (response === "Super") expect(result.after.p2.super).toBe(0);
+  });
+
   it("gives one ultimate bar for each health threshold crossed", () => {
     const state = createInitialBattleState();
     state.p2.health = 80;
@@ -157,7 +175,7 @@ describe("resolveBattleTurn", () => {
     expect(canUseAction(result.after, "p1", "Super", { p1CharacterId: "iop" })).toBe(false);
   });
 
-  it("keeps Iop's Ultimate ready when an attack interrupts it", () => {
+  it("consumes Iop's Ultimate when an attack interrupts it without activating its benefits", () => {
     const state = createInitialBattleState();
     state.p1.super = 3;
     const result = resolveBattleTurn(state, "Super", "Poke", { p1CharacterId: "iop", p2CharacterId: "ninja" });
@@ -166,8 +184,8 @@ describe("resolveBattleTurn", () => {
     expect(result.after.p1.health).toBe(94);
     expect(result.after.iopPassiveActive?.p1).toBe(false);
     expect(result.after.iopUltimateUsed?.p1).toBe(false);
-    expect(result.after.p1.super).toBe(3);
-    expect(canUseAction(result.after, "p1", "Super", { p1CharacterId: "iop" })).toBe(true);
+    expect(result.after.p1.super).toBe(0);
+    expect(canUseAction(result.after, "p1", "Super", { p1CharacterId: "iop" })).toBe(false);
   });
 
   it("does not apply Iop's passive to block damage", () => {
@@ -500,17 +518,17 @@ describe("resolveBattleTurn", () => {
   });
 
   it.each([
-    ["Grab", "Block"],
-    ["Special", "Jump"],
-    ["Super", null],
-    ["Combo", "Jump"],
-  ] as const)("gives Krampus one ultimate bar when %s knocks down", (action, response) => {
+    { action: "Grab", response: "Block", expectedSuper: 1 },
+    { action: "Special", response: "Jump", expectedSuper: 1 },
+    { action: "Super", response: null, expectedSuper: 0 },
+    { action: "Combo", response: "Jump", expectedSuper: 1 },
+  ] as const)("keeps Krampus ultimate bars consistent after $action knocks down", ({ action, response, expectedSuper }) => {
     const state = createInitialBattleState();
     if (action === "Super") state.p1.super = 3;
     const result = resolveBattleTurn(state, action, response, { p1CharacterId: "ninja", p2CharacterId: "itzcoatl" });
 
     expect(result.knockedDown).toEqual(["p2"]);
-    expect(result.after.p1.super).toBe(1);
+    expect(result.after.p1.super).toBe(expectedSuper);
   });
 
   it("caps Krampus knockdown passive at three ultimate bars", () => {

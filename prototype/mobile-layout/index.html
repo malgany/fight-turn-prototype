@@ -4230,7 +4230,7 @@
           characterName: "IOP",
           passive: {
             name: "ÍRIS DE VHALOR",
-            description: "Após a Ultimate se conectar, ser bloqueada ou evitada com CROUCH, Iop desperta Berserk: seus ataques ofensivos recebem +5% de dano. Chip Damage não é alterado.",
+            description: "APÓS IOP DESPERTAR SEU ESTADO BERSERK QUANDO UTILIZA SUA ULTIMATE, SEUS ATAQUES OFENSIVOS RECEBEM +5% DE DANO (NÃO AFETANDO O CHIP DAMAGE).",
           },
           special: {
             name: "PUNIÇÃO DE KARYŪ",
@@ -4238,7 +4238,7 @@
           },
           ultimate: {
             name: "CATACLISMO PRIMORDIAL",
-            description: "Causa 25% de dano ao conectar. Se conectar, for bloqueada ou evitada com CROUCH, Iop recupera 10% de Vida, ativa Berserk e não pode usar Ultimate novamente. Se for interrompida, não aplica efeito.",
+            description: "IOP RECUPERA 10% DE VIDA, ENTRA EM ESTADO BERSERK E EXPELE UM MAR DE CHAMAR DEVASTADORAS, CAUSA 25% DE DANO E PODE SER USADO APENAS 1 VEZ.",
           },
         },
       };
@@ -6353,6 +6353,7 @@
         );
         let playback = null;
         playback = playFrameTimeline(frames, timeline, {
+          warmAhead: true,
           onFrame: (frame, frameIndex) => {
             return presentSpriteFrameWhenReady(
               side,
@@ -6418,7 +6419,7 @@
       function playCrouchAnimation(sides) {
         sides.forEach((side) => {
           const loadout = characterLoadoutForSide(side);
-          playSpriteAnimation(side, loadout.crouchAnimation, loadout.crouchFrames, { holdLastFrame: true });
+          playSpriteAnimation(side, loadout.crouchAnimation, loadout.crouchFrames);
         });
       }
 
@@ -8599,7 +8600,7 @@
       }
 
       function consumeSuper(side, action) {
-        if (action === "Super" && !isIop(side) && !state.debugMode) {
+        if (action === "Super") {
           state[side].super = 0;
         }
       }
@@ -8986,6 +8987,10 @@
             result = applyDollKnockdownPassive(result);
           }
         }
+
+        // Ultimate consumption wins over any charge granted during its resolution.
+        consumeSuper("p1", p1Action);
+        consumeSuper("p2", p2Action);
 
         if (!options.skipVisualPreload) {
           el.noticePrimary.textContent = "CARREGANDO";

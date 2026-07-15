@@ -146,8 +146,8 @@ function applyHeal(state: BattleState, side: Side, amount: number): number {
   return Math.max(0, state[side].health - previousHealth);
 }
 
-function consumeSuper(state: BattleState, side: Side, action: Action | null, context: BattleCharacterContext): void {
-  if (action === "Super" && !isIop(side, context)) {
+function consumeSuper(state: BattleState, side: Side, action: Action | null): void {
+  if (action === "Super") {
     state[side].super = 0;
   }
 }
@@ -544,8 +544,8 @@ export function resolveBattleTurn(currentState: BattleState, p1Action: Action | 
   const guaranteedTurn = currentState.activeGuaranteedTurn;
   state.activeGuaranteedTurn = null;
 
-  consumeSuper(state, "p1", p1Action, context);
-  consumeSuper(state, "p2", p2Action, context);
+  consumeSuper(state, "p1", p1Action);
+  consumeSuper(state, "p2", p2Action);
 
   let partial = baseResult(state, p1Action, p2Action);
   const dollUltimateSide = isDollUltimate("p1", p1Action, context)
@@ -603,6 +603,10 @@ export function resolveBattleTurn(currentState: BattleState, p1Action: Action | 
   if (!p1DeadAfterResurrection && !p2DeadAfterResurrection) {
     partial = applyDollKnockdownPassive(state, partial, context);
   }
+
+  // Ultimate consumption wins over any charge granted during its resolution.
+  consumeSuper(state, "p1", p1Action);
+  consumeSuper(state, "p2", p2Action);
 
   const p1DeadAfterPassive = state.p1.health <= 0;
   const p2DeadAfterPassive = state.p2.health <= 0;

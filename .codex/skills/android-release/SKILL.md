@@ -1,6 +1,6 @@
 ---
 name: android-release
-description: Commit and push Fight Turn / Final Genesis changes, bump Android version, build a signed release AAB, then use the user's Chrome via the Codex extension to open Google Play Console at the Final Genesis internal test release creation screen. Use when the user asks to publish, prepare, build, upload, release, or generate an Android/Google Play internal test release for this project.
+description: Bump the Fight Turn / Final Genesis Android version, test and build a signed release AAB, immediately open the Final Genesis internal-testing track in the user's Chrome, then verify, commit, push, and prepare the Google Play internal test release. Use when the user asks to publish, prepare, build, upload, release, or generate an Android/Google Play internal test release for this project.
 ---
 
 # Android Release
@@ -15,7 +15,7 @@ Use this workflow for this repository only: `E:\projects-game\Fight Turn`.
 - Developer ID: `8946663153831936589`
 - App ID: `4972209376419290126`
 - Target track: `Teste interno`
-- Track URL: `https://play.google.com/console/u/1/developers/8946663153831936589/app/4972209376419290126/tracks/internal-testing?releaseType=defaultReleases`
+- Track URL: `https://play.google.com/console/u/1/developers/8946663153831936589/app/4972209376419290126/tracks/internal-testing`
 - New release prepare URL shape: `https://play.google.com/console/u/1/developers/8946663153831936589/app/4972209376419290126/tracks/4700337006519489256/releases/<release-number>/prepare`
 - Final AAB path: `E:\projects-game\Fight Turn\android\app\build\outputs\bundle\release\app-release.aab`
 
@@ -51,13 +51,21 @@ Use this workflow for this repository only: `E:\projects-game\Fight Turn`.
    .\gradlew.bat clean bundleRelease
    ```
 
-6. Confirm the AAB exists:
+6. As soon as the signed AAB build succeeds, use the Codex Chrome extension to control the user's real Chrome, open a new tab, and navigate directly to:
+
+   ```text
+   https://play.google.com/console/u/1/developers/8946663153831936589/app/4972209376419290126/tracks/internal-testing
+   ```
+
+   Do not wait for user interaction or pause the release workflow after opening the link. Leave the tab open and immediately continue with the remaining local steps.
+
+7. Confirm the AAB exists:
 
    ```powershell
    Get-ChildItem android\app\build\outputs\bundle\release\app-release.aab
    ```
 
-7. Stage and commit all relevant source changes:
+8. Stage and commit all relevant source changes:
 
    ```powershell
    git add -A
@@ -68,7 +76,7 @@ Use this workflow for this repository only: `E:\projects-game\Fight Turn`.
 
    Do not commit build outputs, APKs, AABs, `dist/`, or local Codex/Vite logs. If no source changes exist, skip the commit and report that there was nothing to commit.
 
-8. Push the current branch:
+9. Push the current branch:
 
    ```powershell
    git push origin main
@@ -80,29 +88,13 @@ Use this workflow for this repository only: `E:\projects-game\Fight Turn`.
 
 Use the user's real Chrome controlled through the Codex Chrome extension. If the `prefer-chrome-browser` or browser-control skills are available, read them before browser work. Do not use the embedded browser unless the user explicitly approves fallback.
 
-1. List browser surfaces and choose `Chrome` with `type: "extension"`.
-2. Open a new Chrome tab.
-3. Navigate directly to:
+Continue this part only after the local verification, commit, and push steps finish.
 
-   ```text
-   https://play.google.com/console/u/1/developers/8946663153831936589/app-list
-   ```
-
-4. Verify the app list contains:
-
-   ```text
-   Final Genesis
-   com.malganiplay.finalgenesis
-   ```
-
-   Do not continue with any other app or package.
-
-5. Open `Final Genesis`.
-6. Open `Testar e lançar`.
-7. Open `Teste interno`.
-8. Verify the page title is `Teste interno | Final Genesis` and the latest version shown matches the previous Android release.
-9. Click `Criar nova versão`.
-10. Stop at the page `Criar versão de teste interno`, section `Pacotes de apps`, where the `Enviar` button is visible.
+1. Return to the internal-testing tab opened immediately after the AAB build. Do not navigate through the app list or sidebar menus.
+2. Verify that the page is `Teste interno | Final Genesis`, the package is `com.malganiplay.finalgenesis`, and the visible account identity matches the expected publisher account. Do not continue with any other app, package, or account.
+3. Verify that the latest version shown matches the previous Android release.
+4. Click `Criar nova versão`.
+5. Stop at the page `Criar versão de teste interno`, section `Pacotes de apps`, where the `Enviar` button is visible.
 
 ## User Handoff
 
