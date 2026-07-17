@@ -105,6 +105,20 @@ describe("resolveBattleTurn", () => {
     expect(result.after.advantage).toBeNull();
   });
 
+  it.each([
+    ["p1", null, "Block"],
+    ["p2", "Block", null],
+  ] as const)("clears %s advantage when that player takes no action", (advantage, p1Action, p2Action) => {
+    const state = createInitialBattleState();
+    state.advantage = advantage;
+
+    const result = resolveBattleTurn(state, p1Action, p2Action);
+
+    expect(result.type).toBe("draw");
+    expect(result.winner).toBeNull();
+    expect(result.after.advantage).toBeNull();
+  });
+
   it("does not give the opponent ultimate bar when Combo hits without knockdown", () => {
     const result = resolveBattleTurn(createInitialBattleState(), "Combo", "Special");
 

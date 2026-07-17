@@ -440,8 +440,8 @@ export function resolveTurn(stateInput: any, p1Action: Action | null, p2Action: 
   const before = structuredClone(stateInput);
   const state = structuredClone(stateInput);
   const context = {
-    p1CharacterId: matchContext?.player1_character_id,
-    p2CharacterId: matchContext?.player2_character_id,
+    p1CharacterId: matchContext?.player1_character_id ?? matchContext?.p1CharacterId,
+    p2CharacterId: matchContext?.player2_character_id ?? matchContext?.p2CharacterId,
   };
   const guaranteedTurn = stateInput.activeGuaranteedTurn;
   state.activeGuaranteedTurn = null;
@@ -465,9 +465,19 @@ export function resolveTurn(stateInput: any, p1Action: Action | null, p2Action: 
     result.primary = "TEMPO ESGOTADO";
     result.secondary = "Ninguem escolheu ataque";
   } else if (!p1Action && p2Action) {
-    result = attackActions.includes(p2Action) ? { ...resolveHit(state, "p2", "Wait", p2Action, false, context), primary: "P1 SEM ACAO" } : result;
+    if (attackActions.includes(p2Action)) {
+      result = { ...resolveHit(state, "p2", "Wait", p2Action, false, context), primary: "P1 SEM ACAO" };
+    } else {
+      state.advantage = null;
+      result = { ...result, primary: "P1 SEM ACAO", secondary: "Sem ataque direto" };
+    }
   } else if (p1Action && !p2Action) {
-    result = attackActions.includes(p1Action) ? { ...resolveHit(state, "p1", p1Action, "Wait", false, context), primary: "GOLPE LIVRE" } : result;
+    if (attackActions.includes(p1Action)) {
+      result = { ...resolveHit(state, "p1", p1Action, "Wait", false, context), primary: "GOLPE LIVRE" };
+    } else {
+      state.advantage = null;
+      result = { ...result, primary: "NEUTRO", secondary: "Sem ataque direto" };
+    }
   } else if (p1Action && p2Action && attackActions.includes(p1Action) && attackActions.includes(p2Action)) {
     const ignoresAdvantage = isDollUltimate("p1", p1Action, context) || isDollUltimate("p2", p2Action, context);
     if (p1Action === p2Action) {
